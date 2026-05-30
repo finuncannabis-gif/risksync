@@ -155,16 +155,9 @@ footer a{color:var(--accent);text-decoration:none}
 <!-- NAV -->
 <nav>
   <div class="nav-logo">
-    <div class="nav-logo-icon">🛡</div>
+    <div class="nav-logo-icon"><span style="font-size:14px">🛡</span></div>
     <span class="nav-logo-text">RiskSync</span>
     <span class="nav-badge">LIVE</span>
-  </div>
-  <div class="nav-links">
-    <a href="#threats" class="nav-link">Threats</a>
-    <a href="#kev" class="nav-link">KEV Alerts</a>
-    <a href="#industries" class="nav-link">By Industry</a>
-    <a href="index.html" class="nav-link">Full Platform</a>
-    <a href="index.html" class="nav-cta">Get Full Access →</a>
   </div>
 </nav>
 
@@ -183,7 +176,7 @@ footer a{color:var(--accent);text-decoration:none}
     <h1 class="hero-title">Today's <span>Cybersecurity</span><br/>Threat Brief</h1>
     <p class="hero-sub">Real-time threat intelligence ranked by exploitability. Pulling live data from NIST NVD, CISA KEV, and EPSS — scored and filtered for your industry.</p>
     <div class="hero-stats">
-      <div class="hero-stat"><div class="hero-stat-val mono" id="stat-total" style="color:var(--text)">—</div><div class="hero-stat-lbl">CVEs Analysed</div></div>
+      <div class="hero-stat"><div class="hero-stat-val mono" id="stat-total" style="color:var(--text)">—</div><div class="hero-stat-lbl">KEV Catalogue</div></div>
       <div class="hero-stat"><div class="hero-stat-val mono" id="stat-kev" style="color:var(--red)">—</div><div class="hero-stat-lbl">Actively Exploited</div></div>
       <div class="hero-stat"><div class="hero-stat-val mono" id="stat-critical" style="color:var(--amber)">—</div><div class="hero-stat-lbl">Critical Severity</div></div>
       <div class="hero-stat"><div class="hero-stat-val mono" id="stat-new" style="color:var(--green)">—</div><div class="hero-stat-lbl">New Today</div></div>
@@ -605,7 +598,8 @@ async function fetchLiveVulns(onProgress) {
     if (!res.ok) throw new Error('Function returned ' + res.status);
     const data = await res.json();
     if (!data.ok || !data.vulns) throw new Error('Invalid response');
-    onProgress('Live data ready — ' + data.count + ' CVEs loaded');
+    if (data.kevCount) liveKevCount = data.kevCount;
+    onProgress('Live data ready — ' + data.count + ' CVEs scored from ' + data.kevCount.toLocaleString() + ' KEV catalogue');
     return data.vulns;
   } catch(err) {
     // Fallback: try direct NVD (works on localhost/backend)
@@ -637,13 +631,15 @@ async function fetchLiveVulns(onProgress) {
 
 // ── STATE ──
 var allVulns = [];
+var liveKevCount = 0;
 var currentSev = 'all';
 var currentInd = 'all';
 var defaultProfile = {industry:'finance',scale:'mid',geo:'us',techPillars:['web','cloud'],sources:['cisa','nvd']};
 
 // ── INIT ──
-document.addEventListener('DOMContentLoaded', function() {
-// ── FUNCTIONS ──
+
+// ── ALL FUNCTIONS (global scope) ──
+
 function setStatus(msg) {
   document.getElementById('status-msg').textContent = msg;
 }
@@ -710,12 +706,13 @@ function applyFilters() {
     return true;
   });
 
-  updateStats(filtered);
+  updateStats(filtered, liveKevCount);
   document.getElementById('threat-count').textContent = filtered.length + ' threats';
   renderTable(filtered.slice(0, 20));
 }
 
 function colFor(n) { return n>=8?'#f04060':n>=6?'#f5a623':n>=4?'#2d7ef7':'#0ed27a'; }
+
 function lblFor(n) { return n>=8?'Critical':n>=6?'High':n>=4?'Medium':'Low'; }
 
 function isUnlocked() {
@@ -806,6 +803,7 @@ function renderTable(threats) {
 }
 
 // ── FILTER CONTROLS ──
+
 function setSev(sev, btn) {
   currentSev = sev;
   document.querySelectorAll('.filter-chip').forEach(function(b){b.classList.remove('active');});
@@ -814,6 +812,7 @@ function setSev(sev, btn) {
 }
 
 // ── EMAIL ──
+
 function subscribeEmail() {
   var email = document.getElementById('email-input').value;
   if (!email || !email.includes('@')) { alert('Please enter a valid email address'); return; }
@@ -825,48 +824,17 @@ function subscribeEmail() {
 // ── SHARE ──
 var shareUrl = encodeURIComponent(window.location.href);
 var shareText = encodeURIComponent("Today's cybersecurity threat brief — live CVE data ranked by exploitability via @RiskSync");
+
 function shareTwitter()  { window.open('https://twitter.com/intent/tweet?text='+shareText+'&url='+shareUrl,'_blank'); }
+
 function shareLinkedIn() { window.open('https://www.linkedin.com/sharing/share-offsite/?url='+shareUrl,'_blank'); }
+
 function copyLink()      { navigator.clipboard.writeText(window.location.href).then(function(){alert('Link copied!'); }); }
+
 function shareSlack()    { window.open('slack://open','_blank'); }
-
-// ── STRUCTURED DATA FOR SEO ──
-var sd = document.createElement('script');
-sd.type = 'application/ld+json';
-sd.textContent = JSON.stringify({
-  "@context":"https://schema.org",
-  "@type":"WebPage",
-  "name":"RiskSync Daily Threat Brief",
-  "description":"Daily cybersecurity threat intelligence ranked by exploitability. CISA KEV confirmed threats and CVSS scores.",
-  "url":"https://risksync.io/daily",
-  "publisher":{"@type":"Organization","name":"RiskSync","url":"https://risksync.io"}
-});
-document.head.appendChild(sd);
-
-// ── INIT ──
-document.getElementById('hero-date').textContent = 
-  new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'}).toUpperCase();
-
-// Populate industry dropdowns
-INDUSTRIES.forEach(function(ind) {
-  ['ind-select','email-industry'].forEach(function(id) {
-    var el = document.getElementById(id);
-    if (!el) return;
-    var opt = document.createElement('option');
-    opt.value = ind.id;
-    opt.textContent = ind.icon + ' ' + ind.label;
-    el.appendChild(opt);
-  });
-});
-
-// ── FETCH LIVE DATA ──
-
-// Load static data immediately - outside try/catch so always available
-allVulns = VULNS;
-
-function updateStats(list) {
-  var src = list || allVulns;
-  var total = src.length;
+function updateStats(list, kevTotal) {
+  var src   = list || allVulns;
+  var total = kevTotal || liveKevCount || src.length;
   var kev   = src.filter(function(v){return v.kev;}).length;
   var crit  = src.filter(function(v){return (v.contextScore||v.cvss||0)>=8;}).length;
   var now48 = Date.now() - 86400000 * 2;
@@ -886,37 +854,63 @@ function updateStats(list) {
   if (newEl) newEl.textContent = newT;
 }
 
-// Run immediately with static data
-var _steps = ['updateStats','renderKEV','renderIndScores','applyFilters'];
-var _done  = [];
-try { updateStats(allVulns);   _done.push('updateStats');   } catch(e) { setStatus('ERR updateStats: '+e.message); throw e; }
-try { renderKEV();             _done.push('renderKEV');     } catch(e) { setStatus('ERR renderKEV: '+e.message); throw e; }
-try { renderIndScores();       _done.push('renderIndScores'); } catch(e) { setStatus('ERR renderIndScores: '+e.message); throw e; }
-try { applyFilters();          _done.push('applyFilters');  } catch(e) { setStatus('ERR applyFilters: '+e.message); throw e; }
-setStatus('✓ ' + allVulns.length + ' CVEs loaded · Connecting to live feeds...');
-
-// Try live fetch in background — skip on file:// (security restriction)
-if (window.location.protocol === 'file:') {
-  setStatus('✓ ' + allVulns.length + ' curated CVEs loaded · Deploy to Cloudflare for live data');
-} else {
-fetchLiveVulns(function(){}).then(function(vulns) {
-  if (vulns && vulns.length > 0) {
-    allVulns = vulns;
-    updateStats(vulns);
-    renderKEV();
-    renderIndScores();
-    applyFilters();
-    setStatus('✓ Live data loaded — ' + vulns.length + ' CVEs from NIST NVD · CISA KEV · EPSS · Updated '
-      + new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) + ' UTC');
-  } else {
-    setStatus('✓ ' + allVulns.length + ' curated CVEs · CISA KEV + NVD + EPSS scored · Updated daily');
-  }
-}).catch(function() {
-  setStatus('✓ ' + allVulns.length + ' curated CVEs · CISA KEV + NVD + EPSS scored · Updated daily');
+// ── STRUCTURED DATA FOR SEO ──
+var sd = document.createElement('script');
+sd.type = 'application/ld+json';
+sd.textContent = JSON.stringify({
+  "@context":"https://schema.org",
+  "@type":"WebPage",
+  "name":"RiskSync Daily Threat Brief",
+  "description":"Daily cybersecurity threat intelligence ranked by exploitability. CISA KEV confirmed threats and CVSS scores.",
+  "url":"https://risksync.io/daily",
+  "publisher":{"@type":"Organization","name":"RiskSync","url":"https://risksync.io"}
 });
-} // end file:// protocol check
+document.head.appendChild(sd);
 
 // ── RENDER ──
+
+document.addEventListener('DOMContentLoaded', function() {
+
+  // Set date
+  document.getElementById('hero-date').textContent =
+    new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'}).toUpperCase();
+
+  // Populate industry dropdowns
+  INDUSTRIES.forEach(function(ind) {
+    ['ind-select','email-industry'].forEach(function(id) {
+      var el = document.getElementById(id);
+      if (!el) return;
+      var opt = document.createElement('option');
+      opt.value = ind.id;
+      opt.textContent = ind.icon + ' ' + ind.label;
+      el.appendChild(opt);
+    });
+  });
+
+  // Load static data and render immediately
+  allVulns = VULNS;
+  updateStats(allVulns);
+  renderKEV();
+  renderIndScores();
+  applyFilters();
+  setStatus('✓ ' + allVulns.length + ' CVEs loaded · Fetching live feed...');
+
+  // Fetch live data
+  fetchLiveVulns(function(){}).then(function(vulns) {
+    if (vulns && vulns.length > 0) {
+      allVulns = vulns;
+      updateStats(vulns, liveKevCount);
+      renderKEV();
+      renderIndScores();
+      applyFilters();
+      setStatus('✓ ' + vulns.length + ' threats scored from ' + (liveKevCount||vulns.length).toLocaleString() + ' KEV catalogue · Updated '
+        + new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) + ' UTC');
+    } else {
+      setStatus('✓ ' + allVulns.length + ' curated CVEs · Updated daily');
+    }
+  }).catch(function() {
+    setStatus('✓ ' + allVulns.length + ' curated CVEs · Updated daily');
+  });
 
 }); // end DOMContentLoaded
 </script>
