@@ -12,97 +12,114 @@ export async function onRequest(context) {
     'CWE-427':'supply_chain','CWE-601':'phishing','CWE-918':'api_abuse',
   };
 
-  const NVD_KEY = context.env.NVD_API_KEY || '';
-  const nvdHeaders = { 'User-Agent':'RiskSync/1.0', ...(NVD_KEY ? {'apiKey':NVD_KEY} : {}) };
-
-  const sleep = ms => new Promise(r => setTimeout(r, ms));
-
-  async function safeFetch(url, headers={}, retries=3) {
-    for (let i = 0; i < retries; i++) {
-      try {
-        if (i > 0) await sleep(6000 * i); // 6s, 12s between retries
-        const res = await fetch(url, { headers: {'User-Agent':'RiskSync/1.0', ...headers} });
-        if (res.status === 429) { await sleep(8000); continue; } // rate limit — wait 8s
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const text = await res.text();
-        if (!text || !text.trim()) throw new Error('Empty response');
-        return JSON.parse(text);
-      } catch(e) {
-        if (i === retries - 1) throw e;
-      }
-    }
+  async function safeFetch(url, opts={}) {
+    const res  = await fetch(url, { headers:{'User-Agent':'RiskSync/1.0'}, ...opts });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const text = await res.text();
+    if (!text.trim()) throw new Error('Empty');
+    return JSON.parse(text);
   }
 
   try {
-    const since = new Date(Date.now()-30*86400000).toISOString().split('.')[0]+'.000';
+    // ── SOURCE 1: CISA KEV — always works, 1600+ real exploited CVEs ──
+    const kevData  = await safeFetch('https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json');
+    const kevVulns = kevData.vulnerabilities || [];
 
-    // CISA KEV
-    let kevSet = new Set();
+    // ── SOURCE 2: EPSS top exploitable CVEs from FIRST.org ──
+    // Returns top CVEs by exploitation probability — no IP blocking
+    let epssTop = [];
     try {
-      const kev = await safeFetch('https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json');
-      kevSet = new Set((kev.vulnerabilities||[]).map(v=>v.cveID));
+      const epss = await safeFetch('https://api.first.org/data/v1/epss?order=!epss&limit=100');
+      epssTop = epss.data || [];
     } catch(e) {}
 
-    // NVD — fetch one at a time to avoid rate limit
-    let critVulns = [], highVulns = [];
+    // ── SOURCE 3: GitHub Advisory Database — open, no rate limits ──
+    let ghAdvisories = [];
     try {
-      const c = await safeFetch(
-        `https://services.nvd.nist.gov/rest/json/cves/2.0?cvssV3Severity=CRITICAL&pubStartDate=${since}&resultsPerPage=100`,
-        nvdHeaders
+      const gh = await safeFetch(
+        'https://api.github.com/advisories?type=reviewed&severity=critical&per_page=50',
+        { headers:{'User-Agent':'RiskSync/1.0','Accept':'application/vnd.github+json'} }
       );
-      critVulns = c.vulnerabilities || [];
+      ghAdvisories = Array.isArray(gh) ? gh : [];
     } catch(e) {}
 
-    // Wait 2s between NVD calls even with API key
-    await sleep(2000);
+    // ── Map KEV entries to internal schema ──
+    // KEV has: cveID, vendorProject, product, vulnerabilityName, dateAdded, 
+    //          shortDescription, requiredAction, dueDate, cwes
+    const epssMap = {};
+    epssTop.forEach(e => { epssMap[e.cve] = parseFloat(e.epss); });
 
-    try {
-      const h = await safeFetch(
-        `https://services.nvd.nist.gov/rest/json/cves/2.0?cvssV3Severity=HIGH&pubStartDate=${since}&resultsPerPage=60`,
-        nvdHeaders
-      );
-      highVulns = h.vulnerabilities || [];
-    } catch(e) {}
+    // Take most recent 60 KEV entries (sorted by dateAdded desc)
+    const recentKev = [...kevVulns]
+      .sort((a,b) => new Date(b.dateAdded) - new Date(a.dateAdded))
+      .slice(0, 60);
 
-    const allNvd = [...critVulns, ...highVulns];
+    const kevMapped = recentKev.map(v => {
+      const epss  = epssMap[v.cveID] || 0.85; // KEV = known exploited, high EPSS
+      const cwes  = (v.cwes || []);
+      const cwe   = cwes[0] || 'CWE-0';
+      // Estimate CVSS from EPSS and KEV status
+      const cvss  = epss > 0.8 ? 9.0 : epss > 0.5 ? 7.5 : 6.5;
+      return {
+        id:            v.cveID,
+        cvss,
+        desc:          (v.shortDescription || v.vulnerabilityName || '').slice(0, 120),
+        type:          CWE_MAP[cwe] || 'injection',
+        src:           'CISA KEV',
+        kev:           true,
+        epss,
+        affects:       ['onprem'],
+        industries:    ['all'],
+        cwe,
+        publishedDate: v.dateAdded,
+        product:       v.vendorProject + ' ' + v.product,
+        action:        v.requiredAction,
+        dueDate:       v.dueDate,
+      };
+    });
 
-    if (allNvd.length === 0) {
-      return new Response(JSON.stringify({
-        ok: false,
-        error: 'NVD unavailable after retries — try again shortly',
-        kevCount: kevSet.size,
-        hasApiKey: !!NVD_KEY,
-      }), { status: 503, headers: CORS });
-    }
+    // ── Map GitHub advisories ──
+    const ghMapped = ghAdvisories.map(a => {
+      const cvss = a.cvss?.score || 7.0;
+      const cve  = a.cve_id || (a.identifiers||[]).find(i=>i.type==='CVE')?.value || a.ghsa_id;
+      return {
+        id:            cve || a.ghsa_id,
+        cvss:          parseFloat(cvss),
+        desc:          (a.summary || '').slice(0, 120),
+        type:          'supply_chain',
+        src:           'GitHub Advisory',
+        kev:           false,
+        epss:          epssMap[cve] || 0.3,
+        affects:       ['cicd'],
+        industries:    ['all'],
+        cwe:           'CWE-0',
+        publishedDate: a.published_at,
+      };
+    }).filter(v => v.cvss >= 7.0);
 
-    const mapped = allNvd.map(entry => {
-      const cve  = entry.cve, id = cve.id;
-      const desc = (cve.descriptions?.find(d=>d.lang==='en')?.value||'').slice(0,120);
-      const cwe  = cve.weaknesses?.[0]?.description?.[0]?.value||'CWE-0';
-      const m    = cve.metrics?.cvssMetricV31?.[0]||cve.metrics?.cvssMetricV30?.[0];
-      const cvss = parseFloat(m?.cvssData?.baseScore||5.0);
-      const isKev = kevSet.has(id);
-      return { id, cvss, desc, type:CWE_MAP[cwe]||'injection',
-        src:isKev?'NVD+KEV':'NVD', kev:isKev, epss:isKev?0.85:0.3,
-        affects:['onprem'], industries:['all'], cwe, publishedDate:cve.published };
-    }).filter(v=>v.cvss>=5.0);
+    // ── Combine + deduplicate ──
+    const seen = new Set();
+    const all  = [...kevMapped, ...ghMapped].filter(v => {
+      if (seen.has(v.id)) return false;
+      seen.add(v.id);
+      return v.cvss >= 5.0;
+    });
 
-    // EPSS
-    try {
-      const ids = mapped.slice(0,80).map(v=>v.id).join(',');
-      const ep  = await safeFetch(`https://api.first.org/data/v1/epss?cve=${ids}`);
-      const em  = {};
-      (ep.data||[]).forEach(e=>{em[e.cve]=parseFloat(e.epss);});
-      mapped.forEach(v=>{if(em[v.id]!==undefined)v.epss=em[v.id];});
-    } catch(e) {}
+    // Sort by EPSS desc (most likely to be exploited today)
+    all.sort((a,b) => b.epss - a.epss || b.cvss - a.cvss);
 
     return new Response(JSON.stringify({
-      ok: true, count: mapped.length, kevCount: kevSet.size,
-      hasApiKey: !!NVD_KEY, updatedAt: new Date().toISOString(), vulns: mapped,
+      ok:        true,
+      count:     all.length,
+      kevCount:  kevVulns.length,
+      sources:   ['CISA KEV', 'FIRST EPSS', 'GitHub Advisory'],
+      updatedAt: new Date().toISOString(),
+      vulns:     all,
     }), { status:200, headers:CORS });
 
   } catch(err) {
-    return new Response(JSON.stringify({ ok:false, error:err.message }),
-      { status:500, headers:CORS });
+    return new Response(JSON.stringify({
+      ok: false, error: err.message,
+    }), { status:500, headers:CORS });
   }
 }
