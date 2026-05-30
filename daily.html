@@ -887,10 +887,12 @@ function updateStats(list) {
 }
 
 // Run immediately with static data
-updateStats(allVulns);
-renderKEV();
-renderIndScores();
-applyFilters();
+var _steps = ['updateStats','renderKEV','renderIndScores','applyFilters'];
+var _done  = [];
+try { updateStats(allVulns);   _done.push('updateStats');   } catch(e) { setStatus('ERR updateStats: '+e.message); throw e; }
+try { renderKEV();             _done.push('renderKEV');     } catch(e) { setStatus('ERR renderKEV: '+e.message); throw e; }
+try { renderIndScores();       _done.push('renderIndScores'); } catch(e) { setStatus('ERR renderIndScores: '+e.message); throw e; }
+try { applyFilters();          _done.push('applyFilters');  } catch(e) { setStatus('ERR applyFilters: '+e.message); throw e; }
 setStatus('✓ ' + allVulns.length + ' CVEs loaded · Connecting to live feeds...');
 
 // Try live fetch in background — skip on file:// (security restriction)
