@@ -12,52 +12,67 @@ export async function onRequest(context) {
     'CWE-427':'supply_chain','CWE-601':'phishing','CWE-918':'api_abuse',
   };
 
-  async function safeFetchJson(url) {
-    const res  = await fetch(url, { headers: { 'User-Agent': 'RiskSync/1.0 (security research)' } });
-    if (!res.ok) throw new Error(`HTTP ${res.status} from ${url}`);
+  // NVD API key from Cloudflare environment variable
+  // Set NVD_API_KEY in Cloudflare Pages → Settings → Environment variables
+  const NVD_KEY = context.env.NVD_API_KEY || '';
+  const nvdHeaders = {
+    'User-Agent': 'RiskSync/1.0',
+    ...(NVD_KEY ? { 'apiKey': NVD_KEY } : {}),
+  };
+
+  async function safeFetchJson(url, headers = {}) {
+    const res  = await fetch(url, { headers: { 'User-Agent': 'RiskSync/1.0', ...headers } });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const text = await res.text();
-    if (!text || text.trim() === '') throw new Error(`Empty response from ${url}`);
+    if (!text || text.trim() === '') throw new Error('Empty response');
     return JSON.parse(text);
   }
 
   try {
     const since = new Date(Date.now() - 30*86400000).toISOString().split('.')[0] + '.000';
 
-    // Fetch CISA KEV first
+    // CISA KEV
     let kevSet = new Set();
     try {
-      const kevData = await safeFetchJson('https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json');
+      const kevData = await safeFetchJson(
+        'https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json'
+      );
       kevSet = new Set((kevData.vulnerabilities || []).map(v => v.cveID));
-    } catch(e) {
-      // KEV unavailable — continue without it
-    }
+    } catch(e) { /* continue without KEV */ }
 
-    // Fetch NVD CRITICAL
+    // NVD CRITICAL — with API key = 50 req/30s vs 5 req/30s without
     let critVulns = [];
     try {
       const nvdCrit = await safeFetchJson(
-        `https://services.nvd.nist.gov/rest/json/cves/2.0?cvssV3Severity=CRITICAL&pubStartDate=${since}&resultsPerPage=100`
+        `https://services.nvd.nist.gov/rest/json/cves/2.0?cvssV3Severity=CRITICAL&pubStartDate=${since}&resultsPerPage=100`,
+        nvdHeaders
       );
       critVulns = nvdCrit.vulnerabilities || [];
     } catch(e) { /* continue */ }
 
-    // Fetch NVD HIGH
+    // NVD HIGH
     let highVulns = [];
     try {
       const nvdHigh = await safeFetchJson(
-        `https://services.nvd.nist.gov/rest/json/cves/2.0?cvssV3Severity=HIGH&pubStartDate=${since}&resultsPerPage=60`
+        `https://services.nvd.nist.gov/rest/json/cves/2.0?cvssV3Severity=HIGH&pubStartDate=${since}&resultsPerPage=60`,
+        nvdHeaders
       );
       highVulns = nvdHigh.vulnerabilities || [];
     } catch(e) { /* continue */ }
 
     const allNvd = [...critVulns, ...highVulns];
 
-    // If NVD returned nothing, return curated fallback signal
+    // If NVD still empty — return KEV-only dataset as fallback
     if (allNvd.length === 0) {
+      const kevFallback = kevData => [];
       return new Response(JSON.stringify({
         ok: false,
-        error: 'NVD returned no data — may be rate limited. Try again in 30 seconds.',
+        error: NVD_KEY
+          ? 'NVD rate limited even with API key — try again in 30s'
+          : 'NVD rate limited — add NVD_API_KEY environment variable for higher limits',
+        hint: 'Get free key at nvd.nist.gov/developers/request-an-api-key',
         kevCount: kevSet.size,
+        hasApiKey: !!NVD_KEY,
       }), { status: 503, headers: CORS });
     }
 
@@ -84,9 +99,9 @@ export async function onRequest(context) {
 
     // EPSS enrichment — optional
     try {
-      const ids     = mapped.slice(0, 80).map(v => v.id).join(',');
+      const ids      = mapped.slice(0, 80).map(v => v.id).join(',');
       const epssData = await safeFetchJson(`https://api.first.org/data/v1/epss?cve=${ids}`);
-      const epssMap = {};
+      const epssMap  = {};
       (epssData.data || []).forEach(e => { epssMap[e.cve] = parseFloat(e.epss); });
       mapped.forEach(v => { if (epssMap[v.id] !== undefined) v.epss = epssMap[v.id]; });
     } catch(e) { /* EPSS optional */ }
@@ -95,6 +110,7 @@ export async function onRequest(context) {
       ok: true,
       count: mapped.length,
       kevCount: kevSet.size,
+      hasApiKey: !!NVD_KEY,
       updatedAt: new Date().toISOString(),
       vulns: mapped,
     }), { status: 200, headers: CORS });
