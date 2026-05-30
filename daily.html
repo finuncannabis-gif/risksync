@@ -12,10 +12,10 @@
 <meta name="twitter:card" content="summary_large_image"/>
 <link rel="canonical" href="https://risksync.io/daily"/>
 
-<!-- Fonts -->
+<!-- Fonts (with system fallback for file:// loading) -->
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/tabler-icons.min.css"/>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" onerror="this.remove()"/>
+<!-- Tabler icons replaced with inline symbols -->
 
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
@@ -25,8 +25,8 @@
   --accent:#2d7ef7;--green:#0ed27a;--red:#f04060;--amber:#f5a623;
   --purple:#9b72f6;--cyan:#22d3ee;--pink:#f472b6;
 }
-body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-height:100vh}
-.mono{font-family:'IBM Plex Mono',monospace}
+body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-serif;min-height:100vh}
+.mono{font-family:'IBM Plex Mono',ui-monospace,monospace}
 
 /* NAV */
 nav{background:var(--surface);border-bottom:1px solid var(--border);padding:0 24px;display:flex;align-items:center;justify-content:space-between;height:52px;position:sticky;top:0;z-index:100}
@@ -53,17 +53,17 @@ nav{background:var(--surface);border-bottom:1px solid var(--border);padding:0 24
 .hero-sub{font-size:14px;color:var(--muted);line-height:1.7;max-width:560px;margin-bottom:20px}
 .hero-stats{display:flex;gap:24px;flex-wrap:wrap}
 .hero-stat{text-align:center}
-.hero-stat-val{font-size:28px;font-weight:900;font-family:'IBM Plex Mono',monospace}
+.hero-stat-val{font-size:28px;font-weight:900;font-family:'IBM Plex Mono',ui-monospace,monospace}
 .hero-stat-lbl{font-size:10px;color:var(--muted);margin-top:2px;letter-spacing:.5px}
 
 /* FILTERS */
 .filters{padding:14px 24px;border-bottom:1px solid var(--border);background:var(--surface);position:sticky;top:52px;z-index:90}
 .filters-inner{max-width:1100px;margin:0 auto;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
 .filter-label{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;flex-shrink:0}
-.filter-select{padding:6px 12px;border-radius:5px;border:1px solid var(--border);background:var(--card);color:var(--text);font-size:12px;cursor:pointer;font-family:'Inter',sans-serif}
+.filter-select{padding:6px 12px;border-radius:5px;border:1px solid var(--border);background:var(--card);color:var(--text);font-size:12px;cursor:pointer;font-family:'Inter',system-ui,sans-serif}
 .filter-chip{padding:5px 14px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:11px;cursor:pointer;transition:all .15s;white-space:nowrap}
 .filter-chip.active{border-color:var(--accent);background:rgba(45,126,247,.15);color:var(--accent);font-weight:600}
-.threat-count{margin-left:auto;font-size:11px;color:var(--muted);font-family:'IBM Plex Mono',monospace}
+.threat-count{margin-left:auto;font-size:11px;color:var(--muted);font-family:'IBM Plex Mono',ui-monospace,monospace}
 
 /* LAYOUT */
 .main{max-width:1100px;margin:0 auto;padding:24px;display:grid;grid-template-columns:1fr 300px;gap:20px;align-items:start}
@@ -78,14 +78,14 @@ nav{background:var(--surface);border-bottom:1px solid var(--border);padding:0 24
 .threat-row:last-child{border-bottom:none}
 .threat-row:hover{background:rgba(45,126,247,.04)}
 .threat-row.locked{filter:blur(3px);pointer-events:none;user-select:none}
-.threat-num{font-size:11px;color:var(--muted);font-family:'IBM Plex Mono',monospace;padding-top:2px}
+.threat-num{font-size:11px;color:var(--muted);font-family:'IBM Plex Mono',ui-monospace,monospace;padding-top:2px}
 .threat-desc{font-size:12px;color:var(--text);line-height:1.45;padding-right:12px}
 .threat-desc-sub{display:flex;gap:8px;align-items:center;margin-top:4px;flex-wrap:wrap}
-.cve-id{font-size:10px;color:var(--muted);font-family:'IBM Plex Mono',monospace}
+.cve-id{font-size:10px;color:var(--muted);font-family:'IBM Plex Mono',ui-monospace,monospace}
 .kev-badge{font-size:9px;font-weight:700;padding:1px 7px;border-radius:2px;background:rgba(240,64,96,.15);color:var(--red);border:1px solid rgba(240,64,96,.3)}
 .badge{font-size:9px;font-weight:700;padding:2px 8px;border-radius:2px;display:inline-block}
-.threat-score{font-size:16px;font-weight:900;font-family:'IBM Plex Mono',monospace}
-.threat-cvss{font-size:13px;color:var(--muted);font-family:'IBM Plex Mono',monospace}
+.threat-score{font-size:16px;font-weight:900;font-family:'IBM Plex Mono',ui-monospace,monospace}
+.threat-cvss{font-size:13px;color:var(--muted);font-family:'IBM Plex Mono',ui-monospace,monospace}
 
 /* PAYWALL */
 .paywall-overlay{position:absolute;left:0;right:0;top:0;bottom:0;background:linear-gradient(0deg,rgba(5,12,24,.98) 40%,rgba(5,12,24,.7) 100%);display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding:16px;z-index:10}
@@ -102,7 +102,7 @@ nav{background:var(--surface);border-bottom:1px solid var(--border);padding:0 24
 
 /* EMAIL CAPTURE */
 .email-form{display:flex;flex-direction:column;gap:8px}
-.email-input{padding:9px 12px;border-radius:5px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:12px;font-family:'Inter',sans-serif}
+.email-input{padding:9px 12px;border-radius:5px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:12px;font-family:'Inter',system-ui,sans-serif}
 .email-btn{padding:9px;border-radius:5px;background:var(--green);color:#000;font-size:12px;font-weight:700;border:none;cursor:pointer;transition:opacity .15s}
 .email-btn:hover{opacity:.85}
 .email-success{font-size:11px;color:var(--green);text-align:center;padding:8px}
@@ -119,7 +119,7 @@ nav{background:var(--surface);border-bottom:1px solid var(--border);padding:0 24
 
 /* SHARE */
 .share-btns{display:flex;gap:8px;flex-wrap:wrap}
-.share-btn{display:flex;align-items:center;gap:6px;padding:7px 12px;border-radius:5px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:11px;cursor:pointer;text-decoration:none;transition:all .15s;font-family:'Inter',sans-serif}
+.share-btn{display:flex;align-items:center;gap:6px;padding:7px 12px;border-radius:5px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:11px;cursor:pointer;text-decoration:none;transition:all .15s;font-family:'Inter',system-ui,sans-serif}
 .share-btn:hover{border-color:var(--accent);color:var(--accent)}
 
 /* INDUSTRY SCORES */
@@ -155,7 +155,7 @@ footer a{color:var(--accent);text-decoration:none}
 <!-- NAV -->
 <nav>
   <div class="nav-logo">
-    <div class="nav-logo-icon"><i class="ti ti-shield-lock" style="font-size:14px;color:#fff"></i></div>
+    <div class="nav-logo-icon">🛡</div>
     <span class="nav-logo-text">RiskSync</span>
     <span class="nav-badge">LIVE</span>
   </div>
@@ -170,7 +170,7 @@ footer a{color:var(--accent);text-decoration:none}
 
 <!-- STATUS BAR -->
 <div class="status-bar">
-  <span id="status-msg">Connecting to CISA KEV + NIST NVD + EPSS feeds...</span>
+  <span id="status-msg">Loading threat intelligence...</span>
 </div>
 
 <!-- HERO -->
@@ -212,7 +212,7 @@ footer a{color:var(--accent);text-decoration:none}
   <div>
     <!-- THREAT TABLE -->
     <div class="section-title">
-      <i class="ti ti-satellite" style="color:var(--accent)"></i>
+      📡
       TOP THREATS TODAY
     </div>
 
@@ -220,14 +220,6 @@ footer a{color:var(--accent);text-decoration:none}
       
     </div>
 
-    <!-- PAYWALL NOTE -->
-    <div style="margin-top:12px;padding:12px 16px;background:var(--card);border:1px solid var(--border);border-radius:8px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px" id="paywall-note" style="display:none">
-      <div>
-        <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:3px">See all threats with contextual scoring for your environment</div>
-        <div style="font-size:11px;color:var(--muted)">Free: top 3 · Pro: full 10 with remediation steps, EPSS trends, and API access</div>
-      </div>
-      <a href="index.html" class="paywall-btn">Start Free Trial →</a>
-    </div>
   </div>
 
   <!-- SIDEBAR -->
@@ -269,10 +261,10 @@ footer a{color:var(--accent);text-decoration:none}
     <div class="sidebar-card">
       <div class="sidebar-card-title">Share Today's Brief</div>
       <div class="share-btns">
-        <button class="share-btn" onclick="shareTwitter()"><i class="ti ti-brand-x"></i> Post</button>
-        <button class="share-btn" onclick="shareLinkedIn()"><i class="ti ti-brand-linkedin"></i> Share</button>
-        <button class="share-btn" onclick="copyLink()"><i class="ti ti-link"></i> Copy Link</button>
-        <button class="share-btn" onclick="shareSlack()"><i class="ti ti-brand-slack"></i> Slack</button>
+        <button class="share-btn" onclick="shareTwitter()">X Post</button>
+        <button class="share-btn" onclick="shareLinkedIn()">in Share</button>
+        <button class="share-btn" onclick="copyLink()">🔗 Copy Link</button>
+        <button class="share-btn" onclick="shareSlack()">Slack Slack</button>
       </div>
     </div>
 
@@ -650,64 +642,55 @@ var currentInd = 'all';
 var defaultProfile = {industry:'finance',scale:'mid',geo:'us',techPillars:['web','cloud'],sources:['cisa','nvd']};
 
 // ── INIT ──
-document.getElementById('hero-date').textContent = 
-  new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'}).toUpperCase();
-
-// Populate industry dropdowns
-INDUSTRIES.forEach(function(ind) {
-  ['ind-select','email-industry'].forEach(function(id) {
-    var opt = document.createElement('option');
-    opt.value = ind.id;
-    opt.textContent = ind.icon + ' ' + ind.label;
-    document.getElementById(id).appendChild(opt);
-  });
-});
-
-// ── FETCH LIVE DATA ──
+document.addEventListener('DOMContentLoaded', function() {
+// ── FUNCTIONS ──
 function setStatus(msg) {
   document.getElementById('status-msg').textContent = msg;
 }
 
-// Render immediately with static data
-allVulns = VULNS;
-var updateStats = function() {
-  var total = allVulns.length;
-  var kev   = allVulns.filter(function(v){return v.kev;}).length;
-  var crit  = allVulns.filter(function(v){return v.cvss>=9;}).length;
-  var newT  = allVulns.filter(function(v){
-    if(!v.publishedDate) return false;
-    return (new Date() - new Date(v.publishedDate)) < 86400000 * 2;
-  }).length;
-  document.getElementById('stat-total').textContent    = total.toLocaleString();
-  document.getElementById('stat-kev').textContent      = kev;
-  document.getElementById('stat-critical').textContent = crit;
-  document.getElementById('stat-new').textContent      = newT || Math.floor(total * 0.08);
-};
-
-updateStats();
-renderKEV();
-renderIndScores();
-applyFilters();
-setStatus('Showing ' + allVulns.length + ' curated CVEs · Attempting live feed connection...');
-
-// Try live fetch in background — update if it works
-fetchLiveVulns(function(){}).then(function(vulns) {
-  if (vulns && vulns.length > 0) {
-    allVulns = vulns;
-    updateStats();
-    renderKEV();
-    renderIndScores();
-    applyFilters();
-    setStatus('✓ Live data loaded — ' + vulns.length + ' CVEs from NIST NVD · CISA KEV · EPSS · Updated '
-      + new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) + ' UTC');
-  } else {
-    setStatus('✓ ' + allVulns.length + ' curated CVEs · CISA KEV + NVD + EPSS scored · Updated daily');
+function renderKEV() {
+  var kevHits = allVulns.filter(function(v){return v.kev;}).slice(0,5);
+  var titleEl = document.getElementById('kev-title');
+  var listEl  = document.getElementById('kev-list');
+  if (!titleEl || !listEl) return;
+  titleEl.textContent = '⚠ CISA KEV — ' + kevHits.length + ' ACTIVELY EXPLOITED';
+  if (!kevHits.length) {
+    listEl.innerHTML = '<div style="color:var(--muted);font-size:11px">No KEV entries in current dataset.</div>';
+    return;
   }
-}).catch(function() {
-  setStatus('✓ ' + allVulns.length + ' curated CVEs · CISA KEV + NVD + EPSS scored · Updated daily');
-});
+  listEl.innerHTML = kevHits.map(function(v) {
+    return '<div class="kev-item">'
+      + '<div style="flex:1"><div style="font-size:10px;font-family:monospace;color:var(--red);margin-bottom:2px">' + v.id + '</div>'
+      + '<div style="font-size:11px;color:var(--text);line-height:1.4">' + (v.desc.length>60?v.desc.slice(0,59)+'…':v.desc) + '</div></div>'
+      + '<div style="font-size:13px;font-weight:700;color:var(--red);margin-left:8px;flex-shrink:0">' + (v.cvss||0).toFixed(1) + '</div>'
+      + '</div>';
+  }).join('');
+}
 
-// ── RENDER ──
+function renderIndScores() {
+  var el = document.getElementById('ind-scores-list');
+  if (!el) return;
+  var sorted = INDUSTRIES.map(function(ind) {
+    var profile = {industry:ind.id, scale:'mid', geo:'us', techPillars:['web','cloud'], sources:['cisa','nvd']};
+    var scored  = allVulns.map(function(v){
+      return Object.assign({}, v, {contextScore: computeVulnScore(v, profile)});
+    });
+    var avg = scored.length ? scored.reduce(function(a,v){return a+(v.contextScore||v.cvss||5);},0)/scored.length : 0;
+    return {ind:ind, score:avg};
+  }).sort(function(a,b){return b.score-a.score;});
+  var max = sorted[0] ? sorted[0].score : 10;
+  el.innerHTML = sorted.map(function(item) {
+    var col = item.score>=8?'var(--red)':item.score>=6?'var(--amber)':'var(--green)';
+    var pct = max > 0 ? (item.score/max*100).toFixed(0) : 0;
+    return '<div class="ind-score-row">'
+      + '<span style="font-size:16px;width:24px;flex-shrink:0">' + item.ind.icon + '</span>'
+      + '<span style="font-size:11px;color:var(--text);flex:1;padding-right:8px">' + item.ind.label + '</span>'
+      + '<div class="ind-bar-bg"><div class="ind-bar-fill" style="width:' + pct + '%;background:' + col + '"></div></div>'
+      + '<span style="font-size:11px;font-weight:700;color:' + col + ';margin-left:8px;font-family:monospace;width:32px;text-align:right">' + item.score.toFixed(1) + '</span>'
+      + '</div>';
+  }).join('');
+}
+
 function applyFilters() {
   var ind = document.getElementById('ind-select').value;
   var sev = currentSev;
@@ -715,7 +698,9 @@ function applyFilters() {
 
   var profile = Object.assign({}, defaultProfile, ind !== 'all' ? {industry: ind} : {});
   var scored = allVulns.map(function(v) {
-    return Object.assign({}, v, {contextScore: computeVulnScore(v, profile)});
+    var cs = v.cvss || 5;
+    try { cs = computeVulnScore(v, profile) || cs; } catch(e) {}
+    return Object.assign({}, v, {contextScore: cs});
   }).sort(function(a,b){return b.contextScore - a.contextScore;});
 
   var filtered = scored.filter(function(v) {
@@ -725,18 +710,57 @@ function applyFilters() {
     return true;
   });
 
+  updateStats(filtered);
   document.getElementById('threat-count').textContent = filtered.length + ' threats';
-  renderTable(filtered.slice(0, 10));
-
-  var pn = document.getElementById('paywall-note');
-  if (pn) pn.style.display = filtered.length > 3 ? 'flex' : 'none';
+  renderTable(filtered.slice(0, 20));
 }
 
 function colFor(n) { return n>=8?'#f04060':n>=6?'#f5a623':n>=4?'#2d7ef7':'#0ed27a'; }
 function lblFor(n) { return n>=8?'Critical':n>=6?'High':n>=4?'Medium':'Low'; }
 
+function isUnlocked() {
+  return localStorage.getItem('rs_token') !== null;
+}
+
+function unlockWithEmail(email) {
+  if (!email || !email.includes('@')) return false;
+  // Store email + generate a simple session token
+  var token = btoa(email + ':' + Date.now());
+  localStorage.setItem('rs_token', token);
+  localStorage.setItem('rs_email', email);
+  return true;
+}
+
+function renderGate(afterIndex) {
+  return '<div id="email-gate" style="background:linear-gradient(0deg,#050c18 60%,rgba(5,12,24,.6) 100%);padding:32px 20px;text-align:center;border-top:1px solid #1a2540;margin-top:-2px">'
+    + '<div style="font-size:15px;font-weight:700;color:#dde4f0;margin-bottom:8px">See all ' + afterIndex + ' remaining threats</div>'
+    + '<div style="font-size:12px;color:#5a6f96;margin-bottom:20px">Enter your email to unlock the full list — free, no password needed</div>'
+    + '<div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:10px">'
+    + '<input id="gate-email" type="email" placeholder="you@company.com" '
+    + 'style="padding:10px 14px;border-radius:6px;border:1px solid #1a2540;background:#0c1220;color:#dde4f0;font-size:13px;font-family:inherit;outline:none;width:240px" '
+    + 'event.keyCode===13)submitGate()"/>'
+    + '<button onclick="submitGate()" '
+    + 'style="padding:10px 20px;border-radius:6px;border:none;background:#0ed27a;color:#000;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">Unlock Full List</button>'
+    + '</div>'
+    + '<div id="gate-err" style="color:#f04060;font-size:11px;display:none">Please enter a valid email address</div>'
+    + '<div style="font-size:11px;color:#2e3f62;margin-top:8px">No password. No spam. Unsubscribe anytime.</div>'
+    + '</div>';
+}
+
+function submitGate() {
+  var email = document.getElementById('gate-email') ? document.getElementById('gate-email').value.trim() : '';
+  if (!unlockWithEmail(email)) {
+    var err = document.getElementById('gate-err');
+    if (err) err.style.display = 'block';
+    return;
+  }
+  // Re-render with all rows visible
+  applyFilters();
+}
+
 function renderTable(threats) {
-  var FREE_LIMIT = 3;
+  var FREE_LIMIT = 5;
+  var unlocked   = isUnlocked();
   var el = document.getElementById('threat-table');
 
   var header = '<div class="threat-header">'
@@ -744,9 +768,11 @@ function renderTable(threats) {
     + '<span>Base</span><span>Score</span><span>Severity</span>'
     + '</div>';
 
-  var rows = threats.map(function(v, i) {
-    var c = colFor(v.contextScore);
-    var locked = i >= FREE_LIMIT;
+  // Only send free rows to HTML if locked — gated rows never reach the DOM
+  var visibleThreats = unlocked ? threats : threats.slice(0, FREE_LIMIT);
+
+  var rows = visibleThreats.map(function(v, i) {
+    var score = (v.contextScore && !isNaN(v.contextScore)) ? v.contextScore : (v.cvss || 5.0); var c = colFor(score);
     var content =
       '<div class="threat-num">' + (i+1) + '</div>'
       + '<div><div class="threat-desc">' + (v.desc.length>80?v.desc.slice(0,79)+'…':v.desc) + '</div>'
@@ -755,61 +781,28 @@ function renderTable(threats) {
       + '<span class="cve-id">' + v.id + '</span>'
       + '</div></div>'
       + '<div class="cve-id" style="padding-top:2px">' + v.id + '</div>'
-      + '<div class="threat-cvss">' + v.cvss.toFixed(1) + '</div>'
-      + '<div class="threat-score" style="color:' + c + '">' + v.contextScore.toFixed(1) + '</div>'
-      + '<div><span class="badge" style="background:' + c + '22;color:' + c + ';border:1px solid ' + c + '44">' + lblFor(v.contextScore) + '</span></div>';
-
-    if (locked) {
-      return '<div class="locked-wrapper">'
-        + '<div class="threat-row locked">' + content + '</div>'
-        + (i === FREE_LIMIT ? '<div class="paywall-overlay">'
-          + '<div class="paywall-text">See ' + (threats.length - FREE_LIMIT) + ' more threats with full scoring</div>'
-          + '<div class="paywall-sub">Free: top 3 · Pro: full list + remediation + API</div>'
-          + '<a href="index.html" class="paywall-btn">Get Full Access — Free Trial</a>'
-          + '</div>' : '')
-        + '</div>';
-    }
+      + '<div class="threat-cvss">' + (v.cvss||0).toFixed(1) + '</div>'
+      + '<div class="threat-score" style="color:' + c + '">' + score.toFixed(1) + '</div>'
+      + '<div><span class="badge" style="background:' + c + '22;color:' + c + ';border:1px solid ' + c + '44">' + lblFor(score) + '</span></div>';
     return '<div class="threat-row">' + content + '</div>';
   }).join('');
 
-  el.innerHTML = header + rows;
-}
+  // If locked and there are more threats, append the email gate (no blurred data)
+  var gate = (!unlocked && threats.length > FREE_LIMIT)
+    ? renderGate(threats.length - FREE_LIMIT)
+    : '';
 
-function renderKEV() {
-  var kevHits = allVulns.filter(function(v){return v.kev;}).slice(0,5);
-  document.getElementById('kev-title').textContent = '⚠ CISA KEV — ' + kevHits.length + ' ACTIVELY EXPLOITED';
-  if (!kevHits.length) {
-    document.getElementById('kev-list').innerHTML = '<div style="color:var(--muted);font-size:11px">No KEV matches in current dataset.</div>';
-    return;
+  // If unlocked show count
+  var unlockedNote = (unlocked && threats.length > FREE_LIMIT)
+    ? '<div style="padding:10px 16px;font-size:11px;color:#0ed27a;border-top:1px solid #1a2540;text-align:center">✓ Full list unlocked — ' + threats.length + ' threats shown</div>'
+    : '';
+
+  el.innerHTML = header + rows + gate + unlockedNote;
+
+  // Focus email input if gate shown
+  if (!unlocked && threats.length > FREE_LIMIT) {
+    setTimeout(function(){ var gi = document.getElementById('gate-email'); if(gi) gi.focus(); }, 100);
   }
-  document.getElementById('kev-list').innerHTML = kevHits.map(function(v) {
-    return '<div class="kev-item">'
-      + '<div style="flex:1"><div style="font-size:10px;font-family:monospace;color:var(--red);margin-bottom:2px">' + v.id + '</div>'
-      + '<div style="font-size:11px;color:var(--text);line-height:1.4">' + (v.desc.length>60?v.desc.slice(0,59)+'…':v.desc) + '</div></div>'
-      + '<div style="font-size:13px;font-weight:700;color:var(--red);margin-left:8px;flex-shrink:0">' + v.cvss.toFixed(1) + '</div>'
-      + '</div>';
-  }).join('');
-}
-
-function renderIndScores() {
-  var sorted = INDUSTRIES.map(function(ind) {
-    var profile = {industry:ind.id,scale:'mid',geo:'us',techPillars:['web','cloud'],sources:['cisa','nvd']};
-    var top = getTop10Vulns(profile, allVulns);
-    var avg = top.length ? top.reduce(function(a,v){return a+v.contextScore;},0)/top.length : 0;
-    return {ind:ind, score:avg};
-  }).sort(function(a,b){return b.score-a.score;});
-
-  var max = sorted[0] ? sorted[0].score : 10;
-  document.getElementById('ind-scores-list').innerHTML = sorted.map(function(item) {
-    var c = item.score>=8?'var(--red)':item.score>=6?'var(--amber)':'var(--green)';
-    var pct = (item.score/max*100).toFixed(0);
-    return '<div class="ind-score-row">'
-      + '<span style="font-size:16px;width:24px;flex-shrink:0">' + item.ind.icon + '</span>'
-      + '<span style="font-size:11px;color:var(--text);flex:1;padding-right:8px">' + item.ind.label + '</span>'
-      + '<div class="ind-bar-bg"><div class="ind-bar-fill" style="width:' + pct + '%;background:' + c + '"></div></div>'
-      + '<span style="font-size:11px;font-weight:700;color:' + c + ';margin-left:8px;font-family:monospace;width:32px;text-align:right">' + item.score.toFixed(1) + '</span>'
-      + '</div>';
-  }).join('');
 }
 
 // ── FILTER CONTROLS ──
@@ -849,6 +842,81 @@ sd.textContent = JSON.stringify({
   "publisher":{"@type":"Organization","name":"RiskSync","url":"https://risksync.io"}
 });
 document.head.appendChild(sd);
+
+// ── INIT ──
+document.getElementById('hero-date').textContent = 
+  new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'}).toUpperCase();
+
+// Populate industry dropdowns
+INDUSTRIES.forEach(function(ind) {
+  ['ind-select','email-industry'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    var opt = document.createElement('option');
+    opt.value = ind.id;
+    opt.textContent = ind.icon + ' ' + ind.label;
+    el.appendChild(opt);
+  });
+});
+
+// ── FETCH LIVE DATA ──
+
+// Load static data immediately - outside try/catch so always available
+allVulns = VULNS;
+
+function updateStats(list) {
+  var src = list || allVulns;
+  var total = src.length;
+  var kev   = src.filter(function(v){return v.kev;}).length;
+  var crit  = src.filter(function(v){return (v.contextScore||v.cvss||0)>=8;}).length;
+  var now48 = Date.now() - 86400000 * 2;
+  var newT  = src.filter(function(v){
+    var d = v.publishedDate || v.dateAdded || v.published_at || null;
+    if (!d) return false;
+    return new Date(d).getTime() > now48;
+  }).length;
+  var stEl = document.getElementById('stat-total');
+  if (!stEl) return;
+  stEl.textContent = total.toLocaleString();
+  var kevEl = document.getElementById('stat-kev');
+  if (kevEl) kevEl.textContent = kev;
+  var critEl = document.getElementById('stat-critical');
+  if (critEl) critEl.textContent = crit;
+  var newEl = document.getElementById('stat-new');
+  if (newEl) newEl.textContent = newT;
+}
+
+// Run immediately with static data
+updateStats(allVulns);
+renderKEV();
+renderIndScores();
+applyFilters();
+setStatus('✓ ' + allVulns.length + ' CVEs loaded · Connecting to live feeds...');
+
+// Try live fetch in background — skip on file:// (security restriction)
+if (window.location.protocol === 'file:') {
+  setStatus('✓ ' + allVulns.length + ' curated CVEs loaded · Deploy to Cloudflare for live data');
+} else {
+fetchLiveVulns(function(){}).then(function(vulns) {
+  if (vulns && vulns.length > 0) {
+    allVulns = vulns;
+    updateStats(vulns);
+    renderKEV();
+    renderIndScores();
+    applyFilters();
+    setStatus('✓ Live data loaded — ' + vulns.length + ' CVEs from NIST NVD · CISA KEV · EPSS · Updated '
+      + new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) + ' UTC');
+  } else {
+    setStatus('✓ ' + allVulns.length + ' curated CVEs · CISA KEV + NVD + EPSS scored · Updated daily');
+  }
+}).catch(function() {
+  setStatus('✓ ' + allVulns.length + ' curated CVEs · CISA KEV + NVD + EPSS scored · Updated daily');
+});
+} // end file:// protocol check
+
+// ── RENDER ──
+
+}); // end DOMContentLoaded
 </script>
 
 </body>
