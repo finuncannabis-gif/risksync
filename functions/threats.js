@@ -1,35 +1,42 @@
-// Cloudflare Pages Function — runs at the edge in 200+ cities
-// Free: 100,000 requests/day
-// Cache: 6 hours at edge = ~4 function executions/day regardless of traffic
-
 export async function onRequest(context) {
   const CORS = {
     'Access-Control-Allow-Origin': '*',
     'Content-Type': 'application/json',
-    // Cache 6 hours at Cloudflare edge — serves millions of visitors for free
     'Cache-Control': 'public, s-maxage=21600, stale-while-revalidate=86400',
   };
 
-  // Return cached response if available
-  const cache = caches.default;
-  const cacheKey = new Request('https://risksync-cache/threats', context.request);
-  const cached = await cache.match(cacheKey);
-  if (cached) return cached;
-
   try {
-    // Fetch all 3 sources in parallel
-    const [kevRes, nvdCritRes, nvdHighRes] = await Promise.all([
-      fetch('https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json'),
-      fetch('https://services.nvd.nist.gov/rest/json/cves/2.0?cvssV3Severity=CRITICAL&pubStartDate=' + new Date(Date.now()-30*86400000).toISOString().split('.')[0] + '.000&resultsPerPage=100'),
-      fetch('https://services.nvd.nist.gov/rest/json/cves/2.0?cvssV3Severity=HIGH&pubStartDate=' + new Date(Date.now()-30*86400000).toISOString().split('.')[0] + '.000&resultsPerPage=60'),
-    ]);
+    // ── CISA KEV ──
+    const kevRes  = await fetch('https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json', {
+      headers: { 'User-Agent': 'RiskSync/1.0' },
+      cf: { cacheTtl: 21600 }
+    });
+    const kevText = await kevRes.text();
+    const kevData = JSON.parse(kevText);
+    const kevSet  = new Set(kevData.vulnerabilities.map(v => v.cveID));
 
-    const [kevData, nvdCrit, nvdHigh] = await Promise.all([
-      kevRes.json(), nvdCritRes.json(), nvdHighRes.json()
-    ]);
+    // ── NVD — fetch with timeout ──
+    const since = new Date(Date.now() - 30*86400000).toISOString().split('.')[0] + '.000';
+    const nvdHeaders = { 'User-Agent': 'RiskSync/1.0' };
 
-    const kevSet = new Set(kevData.vulnerabilities.map(v => v.cveID));
-    const allNvd = [...(nvdCrit.vulnerabilities||[]), ...(nvdHigh.vulnerabilities||[])];
+    const nvdCritRes = await fetch(
+      `https://services.nvd.nist.gov/rest/json/cves/2.0?cvssV3Severity=CRITICAL&pubStartDate=${since}&resultsPerPage=100`,
+      { headers: nvdHeaders, cf: { cacheTtl: 21600 } }
+    );
+    const nvdCritText = await nvdCritRes.text();
+    const nvdCrit = JSON.parse(nvdCritText);
+
+    const nvdHighRes = await fetch(
+      `https://services.nvd.nist.gov/rest/json/cves/2.0?cvssV3Severity=HIGH&pubStartDate=${since}&resultsPerPage=60`,
+      { headers: nvdHeaders, cf: { cacheTtl: 21600 } }
+    );
+    const nvdHighText = await nvdHighRes.text();
+    const nvdHigh = JSON.parse(nvdHighText);
+
+    const allNvd = [
+      ...(nvdCrit.vulnerabilities || []),
+      ...(nvdHigh.vulnerabilities  || []),
+    ];
 
     const CWE_MAP = {
       'CWE-89':'injection','CWE-79':'injection','CWE-78':'injection',
@@ -41,7 +48,7 @@ export async function onRequest(context) {
     const mapped = allNvd.map(entry => {
       const cve     = entry.cve;
       const id      = cve.id;
-      const desc    = (cve.descriptions?.find(d=>d.lang==='en')?.value||'').slice(0,120);
+      const desc    = (cve.descriptions?.find(d => d.lang === 'en')?.value || '').slice(0, 120);
       const cwe     = cve.weaknesses?.[0]?.description?.[0]?.value || 'CWE-0';
       const metrics = cve.metrics?.cvssMetricV31?.[0] || cve.metrics?.cvssMetricV30?.[0];
       const cvss    = parseFloat(metrics?.cvssData?.baseScore || 5.0);
@@ -59,36 +66,35 @@ export async function onRequest(context) {
       };
     }).filter(v => v.cvss >= 5.0);
 
-    // EPSS enrichment
+    // ── EPSS — optional enrichment ──
     if (mapped.length > 0) {
       try {
-        const epssRes  = await fetch(`https://api.first.org/data/v1/epss?cve=${mapped.map(v=>v.id).join(',')}`);
-        const epssData = await epssRes.json();
+        const ids     = mapped.slice(0, 100).map(v => v.id).join(',');
+        const epssRes = await fetch(`https://api.first.org/data/v1/epss?cve=${ids}`, {
+          headers: nvdHeaders
+        });
+        const epssText = await epssRes.text();
+        const epssData = JSON.parse(epssText);
         const epssMap  = {};
-        (epssData.data||[]).forEach(e => { epssMap[e.cve] = parseFloat(e.epss); });
+        (epssData.data || []).forEach(e => { epssMap[e.cve] = parseFloat(e.epss); });
         mapped.forEach(v => { if (epssMap[v.id] !== undefined) v.epss = epssMap[v.id]; });
-      } catch(e) { /* EPSS optional */ }
+      } catch(e) { /* EPSS optional — skip if unavailable */ }
     }
 
-    const body = JSON.stringify({
+    return new Response(JSON.stringify({
       ok: true,
       count: mapped.length,
       kevCount: kevSet.size,
       updatedAt: new Date().toISOString(),
       vulns: mapped,
-    });
-
-    const response = new Response(body, { status: 200, headers: CORS });
-
-    // Store in Cloudflare cache
-    context.waitUntil(cache.put(cacheKey, response.clone()));
-
-    return response;
+    }), { status: 200, headers: CORS });
 
   } catch(err) {
-    return new Response(
-      JSON.stringify({ ok: false, error: err.message }),
-      { status: 500, headers: CORS }
-    );
+    // Return error with details for debugging
+    return new Response(JSON.stringify({
+      ok: false,
+      error: err.message,
+      stack: err.stack?.slice(0, 500),
+    }), { status: 500, headers: CORS });
   }
 }
