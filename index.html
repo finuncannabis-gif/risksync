@@ -10,6 +10,54 @@ body{margin:0;padding:16px;background:#080d18;color:#dde4f0;font-family:monospac
 </style>
 </head>
 <body>
+
+<div id="gate" style="position:fixed;top:0;left:0;right:0;bottom:0;background:#050c18;display:flex;align-items:center;justify-content:center;z-index:99999;font-family:'IBM Plex Mono',monospace">
+  <div style="background:#080d18;border:1px solid #1a2540;border-radius:12px;padding:40px;width:340px;text-align:center">
+    <div style="width:44px;height:44px;background:#2d7ef7;border-radius:11px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M12 2L3 7v10l9 5 9-5V7L12 2z" stroke="#fff" stroke-width="2" stroke-linejoin="round"/></svg>
+    </div>
+    <div style="font-size:18px;font-weight:800;color:#fff;margin-bottom:6px;letter-spacing:.3px">RiskSync</div>
+    <div style="font-size:11px;color:#5a6f96;margin-bottom:28px;letter-spacing:.5px">MICRO-GRC PLATFORM · PRIVATE BETA</div>
+    <input id="gate-input" type="password" placeholder="Enter access code"
+      style="width:100%;padding:11px 14px;border-radius:6px;border:1px solid #1a2540;background:#0c1220;color:#dde4f0;font-size:13px;font-family:inherit;margin-bottom:10px;box-sizing:border-box;outline:none"
+      onkeydown="if(event.key==='Enter')checkGate()"/>
+    <button onclick="checkGate()"
+      style="width:100%;padding:11px;border-radius:6px;border:none;background:#2d7ef7;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">
+      Access Platform
+    </button>
+    <div id="gate-err" style="color:#f04060;font-size:11px;margin-top:10px;display:none">Incorrect access code</div>
+    <div style="margin-top:20px;padding-top:20px;border-top:1px solid #1a2540">
+      <a href="/daily" style="font-size:11px;color:#5a6f96;text-decoration:none">View public Daily Threat Brief →</a>
+    </div>
+  </div>
+</div>
+
+<script>
+// Check if already authenticated this session
+if (sessionStorage.getItem('rs_auth') === 'ok') {
+  document.getElementById('gate').style.display = 'none';
+}
+// Focus input
+window.addEventListener('load', function() {
+  var g = document.getElementById('gate');
+  if (g && g.style.display !== 'none') {
+    document.getElementById('gate-input').focus();
+  }
+});
+function checkGate() {
+  // Change 'risksync2026' to whatever access code you want
+  var code = document.getElementById('gate-input').value.trim();
+  if (code === 'risksync2026') {
+    sessionStorage.setItem('rs_auth', 'ok');
+    document.getElementById('gate').style.display = 'none';
+  } else {
+    document.getElementById('gate-err').style.display = 'block';
+    document.getElementById('gate-input').value = '';
+    document.getElementById('gate-input').focus();
+  }
+}
+</script>
+
 <div id="root">
   <div style="position:fixed;top:0;left:0;right:0;bottom:0;background:#080d18;display:flex;align-items:center;justify-content:center;font-family:monospace;flex-direction:column;gap:16px">
     <div style="width:44px;height:44px;border-radius:11px;background:#2d7ef7;display:flex;align-items:center;justify-content:center">
