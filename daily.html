@@ -824,7 +824,7 @@ function subscribeEmail() {
 
 // ── SHARE ──
 var shareUrl = encodeURIComponent(window.location.href);
-var shareText = encodeURIComponent('Today's cybersecurity threat brief — live CVE data ranked by exploitability via @RiskSync');
+var shareText = encodeURIComponent("Today's cybersecurity threat brief — live CVE data ranked by exploitability via @RiskSync");
 function shareTwitter()  { window.open('https://twitter.com/intent/tweet?text='+shareText+'&url='+shareUrl,'_blank'); }
 function shareLinkedIn() { window.open('https://www.linkedin.com/sharing/share-offsite/?url='+shareUrl,'_blank'); }
 function copyLink()      { navigator.clipboard.writeText(window.location.href).then(function(){alert('Link copied!'); }); }
