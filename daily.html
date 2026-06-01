@@ -784,10 +784,7 @@ function renderTable(threats) {
   // Strip emoji from industry label
   indLabel = indLabel.replace(/^[^a-zA-Z]+/, '').trim() || 'your industry';
 
-  var header = '<div class="threat-header">'
-    + '<span>#</span><span>Threat</span><span>CVE ID</span>'
-    + '<span>CVSS</span><span>Your Score</span>'
-    + '</div>';
+  var header = ''; // header already in static HTML
 
   var rows = visible.map(function(v, i) {
     var score = (v.contextScore && !isNaN(v.contextScore)) ? v.contextScore : (v.cvss||5.0);
