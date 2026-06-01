@@ -154,33 +154,12 @@ footer a{color:var(--accent);text-decoration:none}
 <body>
 
 <!-- NAV -->
-<nav style="justify-content:space-between">
+<nav>
   <div class="nav-logo">
     <div class="nav-logo-icon"><span style="font-size:14px">🛡</span></div>
     <span class="nav-logo-text">RiskSync</span>
     <span class="nav-badge">LIVE</span>
     <span style="font-size:10px;color:var(--muted);margin-left:8px" id="hero-date"></span>
-  </div>
-  <div style="display:flex;align-items:center;gap:8px">
-    <select class="filter-select" id="ind-select" onchange="applyFilters()" style="min-width:160px">
-      <option value="all">All Industries</option>
-    </select>
-    <div class="filter-locked-group" onclick="showLockedGate('platform')">
-      <button class="filter-locked-pill" style="border-radius:5px;padding:5px 14px">Platform</button>
-      <div class="locked-tooltip" style="left:auto;right:0">
-        <div class="locked-tooltip-title">🔒 Platform Filter — Subscribers Only</div>
-        <div class="locked-tooltip-sub">Filter by tech stack: Web, Cloud, API, OT/ICS. Scores recalculate for your environment.</div>
-        <button class="locked-tooltip-btn" onclick="showLockedGate('platform');event.stopPropagation()">Unlock with Email →</button>
-      </div>
-    </div>
-    <div class="filter-locked-group" onclick="showLockedGate('scale')">
-      <button class="filter-locked-pill" style="border-radius:5px;padding:5px 14px">Scale</button>
-      <div class="locked-tooltip" style="left:auto;right:0">
-        <div class="locked-tooltip-title">🔒 Scale Filter — Subscribers Only</div>
-        <div class="locked-tooltip-sub">Adjust scores for your organisation size. Small teams and enterprises face different threat profiles.</div>
-        <button class="locked-tooltip-btn" onclick="showLockedGate('scale');event.stopPropagation()">Unlock with Email →</button>
-      </div>
-    </div>
   </div>
 </nav>
 
@@ -197,31 +176,45 @@ footer a{color:var(--accent);text-decoration:none}
   <div class="stat-card green"><div class="stat-val mono" id="stat-new" style="color:var(--green)">—</div><div class="stat-lbl">New Today</div></div>
 </div>
 
-<!-- SEVERITY FILTER -->
-<div style="padding:8px 24px;border-bottom:1px solid var(--border);background:var(--surface);display:flex;align-items:center;gap:8px">
-  <span style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px">Severity</span>
+<!-- FILTER BAR -->
+<div style="padding:10px 24px;border-bottom:1px solid var(--border);background:var(--surface);display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+
+  <span class="filter-label">Industry</span>
+  <select class="filter-select" id="ind-select" onchange="applyFilters()">
+    <option value="all">All Industries</option>
+  </select>
+
+  <div class="filter-locked-group" onclick="showLockedGate('platform')">
+    <span class="filter-label" style="margin-left:4px">Platform</span>
+    <button class="filter-locked-pill">Web Apps</button>
+    <button class="filter-locked-pill">Cloud</button>
+    <div class="locked-tooltip">
+      <div class="locked-tooltip-title">🔒 Platform Filter — Subscribers Only</div>
+      <div class="locked-tooltip-sub">Filter by tech stack: Web, Cloud, API, OT/ICS. Scores recalculate for your environment.</div>
+      <button class="locked-tooltip-btn" onclick="showLockedGate('platform');event.stopPropagation()">Unlock with Email →</button>
+    </div>
+  </div>
+
+  <div class="filter-locked-group" onclick="showLockedGate('scale')">
+    <span class="filter-label" style="margin-left:4px">Scale</span>
+    <button class="filter-locked-pill">Enterprise</button>
+    <div class="locked-tooltip">
+      <div class="locked-tooltip-title">🔒 Scale Filter — Subscribers Only</div>
+      <div class="locked-tooltip-sub">Adjust scores for your organisation size. Small teams and enterprises face different threat profiles.</div>
+      <button class="locked-tooltip-btn" onclick="showLockedGate('scale');event.stopPropagation()">Unlock with Email →</button>
+    </div>
+  </div>
+
+  <span class="filter-label" style="margin-left:8px">Severity</span>
   <button class="filter-chip active" onclick="setSev('all',this)">All</button>
   <button class="filter-chip" onclick="setSev('critical',this)">Critical</button>
   <button class="filter-chip" onclick="setSev('high',this)">High</button>
   <button class="filter-chip" onclick="setSev('kev',this)">KEV Only</button>
+
   <span class="threat-count mono" id="threat-count" style="margin-left:auto">— threats</span>
 </div>
 
-    <!-- LOCKED: Scale filter -->
-    <div class="filter-locked-group" onclick="showLockedGate('scale')">
-      <span class="filter-locked-label" style="margin-left:8px">Scale</span>
-      <button class="filter-locked-pill">Enterprise</button>
-      <div class="locked-tooltip">
-        <div class="locked-tooltip-title">🔒 Scale Filter — Subscribers Only</div>
-        <div class="locked-tooltip-sub">Adjust risk scores for your organisation size. Small teams and large enterprises face very different threat profiles.</div>
-        <button class="locked-tooltip-btn" onclick="showLockedGate('scale');event.stopPropagation()">Unlock with Email →</button>
-      </div>
-    </div>
 
-
-    <span class="threat-count mono" id="threat-count">— threats</span>
-  </div>
-</div>
 
 <!-- MAIN CONTENT -->
 <div style="max-width:1400px;margin:0 auto;padding:20px 24px;display:grid;grid-template-columns:1fr 260px 220px;gap:16px;align-items:start">
@@ -231,7 +224,6 @@ footer a{color:var(--accent);text-decoration:none}
     <div class="threat-card">
       <div class="threat-card-header">
         <span class="threat-card-title">Top Threats Today</span>
-        <span class="threat-count mono" id="threat-count">— threats</span>
       </div>
       <div class="threat-header">
         <span>#</span>
