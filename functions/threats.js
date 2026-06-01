@@ -49,10 +49,9 @@ export async function onRequest(context) {
     const epssMap = {};
     epssTop.forEach(e => { epssMap[e.cve] = parseFloat(e.epss); });
 
-    // Take most recent 60 KEV entries (sorted by dateAdded desc)
+    // Send ALL KEV entries — client scores and filters by tier
     const recentKev = [...kevVulns]
-      .sort((a,b) => new Date(b.dateAdded) - new Date(a.dateAdded))
-      .slice(0, 60);
+      .sort((a,b) => new Date(b.dateAdded) - new Date(a.dateAdded));
 
     const kevMapped = recentKev.map(v => {
       const epss  = epssMap[v.cveID] || 0.85; // KEV = known exploited, high EPSS
@@ -72,6 +71,7 @@ export async function onRequest(context) {
         industries:    ['all'],
         cwe,
         publishedDate: v.dateAdded,
+        dateAdded:     v.dateAdded,
         product:       v.vendorProject + ' ' + v.product,
         action:        v.requiredAction,
         dueDate:       v.dueDate,
