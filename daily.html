@@ -171,8 +171,8 @@ footer a{color:var(--accent);text-decoration:none}
 <!-- STAT CARDS -->
 <div class="stats-row">
   <div class="stat-card"><div class="stat-val mono" id="stat-total" style="color:var(--text)">—</div><div class="stat-lbl">KEV Catalogue</div></div>
-  <div class="stat-card red"><div class="stat-val mono" id="stat-kev" style="color:var(--red)">—</div><div class="stat-lbl">Actively Exploited</div></div>
-  <div class="stat-card amber"><div class="stat-val mono" id="stat-critical" style="color:var(--amber)">—</div><div class="stat-lbl">Critical Severity</div></div>
+  <div class="stat-card red"><div class="stat-val mono" id="stat-kev" style="color:var(--red)">—</div><div class="stat-lbl">Critical ≥9.0</div></div>
+  <div class="stat-card amber"><div class="stat-val mono" id="stat-critical" style="color:var(--amber)">—</div><div class="stat-lbl">High ≥7.0</div></div>
   <div class="stat-card green"><div class="stat-val mono" id="stat-new" style="color:var(--green)">—</div><div class="stat-lbl">New Today</div></div>
 </div>
 
@@ -760,57 +760,86 @@ function submitGate() {
     if (err) err.style.display = 'block';
     return;
   }
-  // Re-render with all rows visible
   applyFilters();
+  document.getElementById('locked-success-banner').style.display = 'flex';
+  setTimeout(function(){ document.getElementById('locked-success-banner').style.display = 'none'; }, 4000);
 }
 
 function renderTable(threats) {
-  var FREE_LIMIT = 5;
-  var unlocked   = isUnlocked();
-  var el = document.getElementById('threat-table');
+  var FREE_LIMIT  = 5;
+  var unlocked    = isUnlocked();
+  var el          = document.getElementById('threat-table');
+  if (!el) return;
 
-  var header = '';  // header in HTML
+  // Split into tiers by contextual score
+  var critical = threats.filter(function(v){ return (v.contextScore||v.cvss||0) >= 9.0; });
+  var high     = threats.filter(function(v){ var s=v.contextScore||v.cvss||0; return s>=7.0 && s<9.0; });
 
-  // Only send free rows to HTML if locked — gated rows never reach the DOM
-  var visibleThreats = unlocked ? threats : threats.slice(0, FREE_LIMIT);
+  // Free: top 5 across critical+high combined
+  // Subscriber: all critical + all high
+  var visible  = unlocked ? critical.concat(high) : critical.concat(high).slice(0, FREE_LIMIT);
+  var gatedCount = unlocked ? 0 : Math.max(0, critical.concat(high).length - FREE_LIMIT);
+  var ind      = document.getElementById('ind-select');
+  var indLabel = ind && ind.selectedOptions[0] ? ind.selectedOptions[0].textContent.trim() : 'your industry';
+  // Strip emoji from industry label
+  indLabel = indLabel.replace(/^[^a-zA-Z]+/, '').trim() || 'your industry';
 
-  var rows = visibleThreats.map(function(v, i) {
-    var score = (v.contextScore && !isNaN(v.contextScore)) ? v.contextScore : (v.cvss || 5.0); var c = colFor(score);
+  var header = '<div class="threat-header">'
+    + '<span>#</span><span>Threat</span><span>CVE ID</span>'
+    + '<span>CVSS</span><span>Your Score</span>'
+    + '</div>';
+
+  var rows = visible.map(function(v, i) {
+    var score = (v.contextScore && !isNaN(v.contextScore)) ? v.contextScore : (v.cvss||5.0);
+    var cl    = colFor(score);
     var delta = score - (v.cvss||0);
-    var deltaStr = delta > 0.05 ? '+'+delta.toFixed(1) : delta < -0.05 ? delta.toFixed(1) : '';
-    var content =
-      '<div class="threat-num">' + (i+1) + '</div>'
+    var deltaStr = delta > 0.05
+      ? '<span class="score-delta" style="color:var(--red)">↑'+delta.toFixed(1)+'</span>'
+      : delta < -0.05
+      ? '<span class="score-delta" style="color:var(--green)">↓'+Math.abs(delta).toFixed(1)+'</span>'
+      : '';
+    return '<div class="threat-row">'
+      + '<div class="threat-num">' + (i+1) + '</div>'
       + '<div><div class="threat-desc">' + (v.desc.length>75?v.desc.slice(0,74)+'…':v.desc) + '</div>'
       + '<div class="threat-desc-sub">'
       + (v.kev ? '<span class="kev-badge">EXPLOITED</span>' : '')
       + '</div></div>'
       + '<div class="cve-id cve-col">' + v.id + '</div>'
       + '<div class="threat-cvss">' + (v.cvss||0).toFixed(1) + '</div>'
-      + '<div class="threat-score" style="color:' + c + '">' + score.toFixed(1)
-      + (deltaStr ? '<span class="score-delta" style="color:'+(delta>0?'var(--red)':(delta<0?'var(--green)':' var(--muted)'))+'">'+(delta>0?'↑':'↓')+Math.abs(delta).toFixed(1)+'</span>' : '')
+      + '<div class="threat-score" style="color:' + cl + '">' + score.toFixed(1) + deltaStr + '</div>'
       + '</div>';
-    return '<div class="threat-row">' + content + '</div>';
   }).join('');
 
-  // If locked and there are more threats, append the email gate (no blurred data)
-  var gate = (!unlocked && threats.length > FREE_LIMIT)
-    ? renderGate(threats.length - FREE_LIMIT)
-    : '';
+  // Dynamic gate — specific count for selected industry
+  var gate = '';
+  if (!unlocked && gatedCount > 0) {
+    gate = '<div id="email-gate" style="background:linear-gradient(0deg,var(--bg) 55%,transparent);padding:32px 20px;text-align:center">'
+      + '<div style="font-size:22px;font-weight:900;color:var(--red);font-family:monospace;margin-bottom:6px">+' + gatedCount + '</div>'
+      + '<div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:6px">more Critical &amp; High threats for ' + indLabel + '</div>'
+      + '<div style="font-size:11px;color:var(--muted);margin-bottom:20px">Scores recalculate as you change industry — free, no password needed</div>'
+      + '<div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:8px">'
+      + '<input id="gate-email" type="email" placeholder="you@company.com" '
+      + 'style="padding:10px 14px;border-radius:6px;border:1px solid var(--border);background:var(--card);color:var(--text);font-size:13px;font-family:inherit;outline:none;width:240px" '
+      + 'onkeydown="if(event.keyCode===13)submitGate()"/>'
+      + '<button onclick="submitGate()" '
+      + 'style="padding:10px 20px;border-radius:6px;border:none;background:var(--green);color:#000;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">Unlock Free</button>'
+      + '</div>'
+      + '<div id="gate-err" style="color:var(--red);font-size:11px;display:none;margin-bottom:6px">Please enter a valid email address</div>'
+      + '<div style="font-size:11px;color:var(--dim)">No password · No spam · Unsubscribe anytime</div>'
+      + '</div>';
+  }
 
-  // If unlocked show count
-  var unlockedNote = (unlocked && threats.length > FREE_LIMIT)
-    ? '<div style="padding:10px 16px;font-size:11px;color:#0ed27a;border-top:1px solid #1a2540;text-align:center">✓ Full list unlocked — ' + threats.length + ' threats shown</div>'
+  var unlockedNote = (unlocked && gatedCount === 0 && threats.length > 0)
+    ? '<div style="padding:10px 16px;font-size:11px;color:var(--green);border-top:1px solid var(--border);text-align:center">✓ Full list unlocked — ' + visible.length + ' threats shown</div>'
     : '';
 
   el.innerHTML = header + rows + gate + unlockedNote;
 
-  // Focus email input if gate shown
-  if (!unlocked && threats.length > FREE_LIMIT) {
-    setTimeout(function(){ var gi = document.getElementById('gate-email'); if(gi) gi.focus(); }, 100);
+  if (!unlocked && gatedCount > 0) {
+    setTimeout(function(){ var gi=document.getElementById('gate-email'); if(gi) gi.focus(); }, 100);
   }
 }
 
-// ── FILTER CONTROLS ──
 
 function setSev(sev, btn) {
   currentSev = sev;
@@ -883,10 +912,11 @@ function shareSlack()    { window.open('slack://open','_blank'); }
 function updateStats(list, kevTotal) {
   var src   = list || allVulns;
   var total = kevTotal || liveKevCount || src.length;
-  var kev   = src.filter(function(v){return v.kev;}).length;
-  var crit  = src.filter(function(v){return (v.contextScore||v.cvss||0)>=8;}).length;
-  var now48 = Date.now() - 86400000 * 2;
-  var newT  = src.filter(function(v){
+  // Tier counts using contextual score
+  var critical = src.filter(function(v){ return (v.contextScore||v.cvss||0)>=9.0; }).length;
+  var high     = src.filter(function(v){ var s=v.contextScore||v.cvss||0; return s>=7.0&&s<9.0; }).length;
+  var now48    = Date.now() - 86400000 * 2;
+  var newT     = src.filter(function(v){
     var d = v.publishedDate || v.dateAdded || v.published_at || null;
     if (!d) return false;
     return new Date(d).getTime() > now48;
@@ -895,9 +925,9 @@ function updateStats(list, kevTotal) {
   if (!stEl) return;
   stEl.textContent = total.toLocaleString();
   var kevEl = document.getElementById('stat-kev');
-  if (kevEl) kevEl.textContent = kev;
+  if (kevEl) kevEl.textContent = critical;
   var critEl = document.getElementById('stat-critical');
-  if (critEl) critEl.textContent = crit;
+  if (critEl) critEl.textContent = high;
   var newEl = document.getElementById('stat-new');
   if (newEl) newEl.textContent = newT;
 }
@@ -948,7 +978,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (vulns && vulns.length > 0) {
       allVulns = vulns;
       console.log('Live data loaded:', vulns.length, 'vulns, liveKevCount:', liveKevCount);
-      setStatus('LIVE: ' + vulns.length + ' vulns received, rendering...');
+      setStatus('Scoring ' + vulns.length + ' threats for your industry...');
       updateStats(vulns, liveKevCount);
       renderKEV();
       renderIndScores();
