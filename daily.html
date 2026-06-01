@@ -218,19 +218,15 @@ footer a{color:var(--accent);text-decoration:none}
       </div>
     </div>
 
-    <span class="filter-label" style="margin-left:8px">Severity</span>
-    <button class="filter-chip active" onclick="setSev('all',this)">All</button>
-    <button class="filter-chip" onclick="setSev('critical',this)">Critical</button>
-    <button class="filter-chip" onclick="setSev('high',this)">High</button>
-    <button class="filter-chip" onclick="setSev('kev',this)">KEV Only</button>
+
     <span class="threat-count mono" id="threat-count">— threats</span>
   </div>
 </div>
 
 <!-- MAIN CONTENT -->
-<div class="main">
+<div style="max-width:1400px;margin:0 auto;padding:20px 24px;display:grid;grid-template-columns:1fr 260px 220px;gap:16px;align-items:start">
 
-  <!-- THREAT CARD -->
+  <!-- COL 1: THREAT TABLE -->
   <div>
     <div class="threat-card">
       <div class="threat-card-header">
@@ -250,20 +246,17 @@ footer a{color:var(--accent);text-decoration:none}
         <span class="legend-item"><span class="legend-dot" style="background:var(--amber)"></span>High ≥6</span>
         <span class="legend-item"><span class="legend-dot" style="background:var(--accent)"></span>Medium ≥4</span>
         <span class="legend-item"><span class="legend-dot" style="background:var(--green)"></span>Low</span>
-        <span style="margin-left:auto;font-size:9px;color:var(--muted)">Your Score = CVSS × industry × scale × platform multipliers</span>
+        <span style="margin-left:auto;font-size:9px;color:var(--muted)">Your Score = CVSS × industry × scale × platform</span>
       </div>
     </div>
   </div>
 
-  <!-- SIDEBAR -->
-  <div class="sidebar">
-
-    <!-- KEV ALERTS -->
+  <!-- COL 2: CISA KEV ALERTS -->
+  <div style="display:flex;flex-direction:column;gap:14px">
     <div class="kev-card">
       <div class="kev-card-header">⚠ CISA KEV Alerts</div>
       <div id="kev-list"><div style="padding:12px 14px;font-size:11px;color:var(--muted)">Loading...</div></div>
     </div>
-
     <!-- EMAIL CAPTURE -->
     <div class="sidebar-card">
       <div class="sidebar-card-header">Get This Daily</div>
@@ -277,13 +270,6 @@ footer a{color:var(--accent);text-decoration:none}
         <div id="email-success">✓ Subscribed — first brief tomorrow at 07:00 UTC</div>
       </div>
     </div>
-
-    <!-- INDUSTRY RISK INDEX -->
-    <div class="sidebar-card">
-      <div class="sidebar-card-header">Industry Risk Index</div>
-      <div id="ind-scores-list"><div style="padding:12px 14px;font-size:11px;color:var(--muted)">Loading...</div></div>
-    </div>
-
     <!-- SHARE -->
     <div class="sidebar-card">
       <div class="sidebar-card-header">Share</div>
@@ -293,11 +279,19 @@ footer a{color:var(--accent);text-decoration:none}
         <button class="share-btn" onclick="copyLink()">Copy Link</button>
       </div>
     </div>
-
   </div>
+
+  <!-- COL 3: INDUSTRY RISK INDEX -->
+  <div>
+    <div class="sidebar-card" style="height:100%">
+      <div class="sidebar-card-header">Industry Risk Index</div>
+      <div id="ind-scores-list"><div style="padding:12px 14px;font-size:11px;color:var(--muted)">Loading...</div></div>
+    </div>
+  </div>
+
 </div>
 
-<!-- FOOTER --><!-- FOOTER --><!-- FOOTER -->
+<!-- FOOTER --><!-- FOOTER --><!-- FOOTER --><!-- FOOTER -->
 <footer>
   <strong style="color:var(--text)">RiskSync Daily Threat Brief</strong><br/>
   Data sourced from <a href="https://nvd.nist.gov">NIST NVD</a> · <a href="https://www.cisa.gov/known-exploited-vulnerabilities-catalog">CISA KEV</a> · <a href="https://www.first.org/epss">FIRST EPSS</a><br/>
