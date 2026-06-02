@@ -75,29 +75,45 @@ async function enrichWithNvd(cveIds, apiKey) {
 
 // ── OSV.dev — paginate all critical vulns per ecosystem ──
 async function fetchOsv() {
-  const ecosystems = ['npm','PyPI','Go','Maven','RubyGems','crates.io','Packagist'];
+  const ecosystems = ['npm','PyPI','Go','Maven','RubyGems','crates.io'];
   const vulns = [];
 
   await Promise.allSettled(ecosystems.map(async (eco) => {
     try {
-      // Query recent modified vulns per ecosystem
+      // OSV queryBatch — query by ecosystem using the correct endpoint
       const data = await safeFetch(
-        `https://api.osv.dev/v1/query`,
+        'https://api.osv.dev/v1/query',
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'User-Agent': 'RiskSync/1.0' },
           body: JSON.stringify({
-            query: { ecosystem: eco },
-            page_size: 100,
+            query: {
+              package: { ecosystem: eco, name: '' }
+            }
           }),
         },
         15000
       );
-      if (data.vulns) {
+      if (data.vulns && Array.isArray(data.vulns)) {
         data.vulns.forEach(v => vulns.push({ ...v, _eco: eco }));
       }
     } catch(e) {
-      console.error(`OSV ${eco} failed:`, e.message);
+      // OSV batch query by severity — alternative approach
+      try {
+        // Query recent high-severity vulns using the OSV API v1
+        const batch = await safeFetch(
+          'https://api.osv.dev/v1/vulns?page_token=&page_size=100',
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'User-Agent': 'RiskSync/1.0' },
+            body: JSON.stringify({ ecosystem: eco }),
+          },
+          15000
+        );
+        if (batch.vulns) batch.vulns.forEach(v => vulns.push({ ...v, _eco: eco }));
+      } catch(e2) {
+        console.error(`OSV ${eco} failed:`, e2.message);
+      }
     }
   }));
 
@@ -137,7 +153,8 @@ async function fetchGitHubAdvisories(token='') {
 }
 
 // ── MAIN ENRICHMENT FUNCTION ──
-export async function runEnrichment(env) {
+async function runEnrichment(env, opts={}) {
+  const skipNvd = opts.skipNvd || false;
   console.log('Starting enrichment run at', new Date().toISOString());
   const NVD_KEY    = env?.NVD_API_KEY || '';
   const GH_TOKEN   = env?.GITHUB_TOKEN || '';
@@ -204,10 +221,10 @@ export async function runEnrichment(env) {
     };
   });
 
-  // 7. NVD enrichment — ALL KEV entries, no limit
-  console.log(`Enriching ${kevMapped.length} CVEs with NVD...`);
+  // 7. NVD enrichment — ALL KEV entries, no limit (skipped on live fetch)
   const kevIds = kevMapped.map(v => v.id);
-  const nvdMap = await enrichWithNvd(kevIds, NVD_KEY);
+  const nvdMap = skipNvd ? {} : await enrichWithNvd(kevIds, NVD_KEY);
+  if (!skipNvd) console.log(`Enriching ${kevMapped.length} CVEs with NVD...`);
   console.log(`NVD: enriched ${Object.keys(nvdMap).length}/${kevMapped.length} CVEs`);
 
   // Apply real CVSS, use NVD description if better
@@ -307,58 +324,44 @@ export async function runEnrichment(env) {
   return payload;
 }
 
-// ── SCHEDULED TRIGGER (Cron) ──
-export async function scheduled(event, env, ctx) {
-  ctx.waitUntil((async () => {
+// ── DEFAULT EXPORT — required for standalone Worker ──
+export default {
+
+  // HTTP fetch handler
+  async fetch(request, env, ctx) {
+    const CORS = {
+      'Access-Control-Allow-Origin': '*',
+      'Content-Type': 'application/json',
+      'Cache-Control': 'public, s-maxage=21600, stale-while-revalidate=86400',
+    };
     try {
-      const payload = await runEnrichment(env);
+      // Always try KV first — pre-enriched by cron
+      const cached = await env.RISKSYNC_KV?.get(env.CACHE_KEY || 'threats_v1');
+      if (cached) {
+        return new Response(cached, { status:200, headers:CORS });
+      }
+      // KV empty — run fast enrichment (no NVD to avoid timeout)
+      const payload = await runEnrichment(env, { skipNvd: true });
       const json    = JSON.stringify(payload);
-      await env.RISKSYNC_KV.put(env.CACHE_KEY || 'threats_v1', json, {
-        expirationTtl: 86400, // 24hr max TTL in KV
-      });
-      console.log(`KV updated: ${json.length} bytes, ${payload.count} vulns`);
-    } catch(e) {
-      console.error('Scheduled enrichment failed:', e.message);
+      await env.RISKSYNC_KV?.put(env.CACHE_KEY || 'threats_v1', json, { expirationTtl: 3600 });
+      return new Response(json, { status:200, headers:CORS });
+    } catch(err) {
+      return new Response(JSON.stringify({ ok:false, error:err.message }),
+        { status:500, headers:CORS });
     }
-  })());
-}
+  },
 
-// ── HTTP REQUEST (page hits /threats) ──
-export async function onRequest(context) {
-  const CORS = {
-    'Access-Control-Allow-Origin': '*',
-    'Content-Type': 'application/json',
-    'Cache-Control': 'public, s-maxage=21600, stale-while-revalidate=86400',
-  };
-
-  try {
-    // Try KV first — pre-enriched, instant
-    const cached = await context.env.RISKSYNC_KV?.get(
-      context.env.CACHE_KEY || 'threats_v1'
-    );
-
-    if (cached) {
-      console.log('Serving from KV cache');
-      return new Response(cached, { status:200, headers:CORS });
-    }
-
-    // KV empty (first run) — enrich live, store in KV, return
-    console.log('KV empty — running live enrichment (first run)');
-    const payload = await runEnrichment(context.env);
-    const json    = JSON.stringify(payload);
-
-    // Store for next request
-    await context.env.RISKSYNC_KV?.put(
-      context.env.CACHE_KEY || 'threats_v1',
-      json,
-      { expirationTtl: 86400 }
-    );
-
-    return new Response(json, { status:200, headers:CORS });
-
-  } catch(err) {
-    return new Response(JSON.stringify({
-      ok: false, error: err.message,
-    }), { status:500, headers: CORS });
-  }
-}
+  // Cron trigger handler — runs every 6 hours
+  async scheduled(event, env, ctx) {
+    ctx.waitUntil((async () => {
+      try {
+        const payload = await runEnrichment(env);
+        const json    = JSON.stringify(payload);
+        await env.RISKSYNC_KV.put(env.CACHE_KEY || 'threats_v1', json, { expirationTtl: 86400 });
+        console.log(`KV updated: ${json.length} bytes, ${payload.count} vulns`);
+      } catch(e) {
+        console.error('Scheduled enrichment failed:', e.message);
+      }
+    })());
+  },
+};
