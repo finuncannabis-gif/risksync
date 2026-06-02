@@ -25,7 +25,7 @@
   --accent:#2d7ef7;--green:#0ed27a;--red:#f04060;--amber:#f5a623;
   --cyan:#22d3ee;--purple:#9b72f6;
 }
-body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-serif;min-height:100vh}
+body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-serif;min-height:100vh;-webkit-tap-highlight-color:transparent}
 .mono{font-family:'IBM Plex Mono',ui-monospace,monospace}
 
 /* NAV */
@@ -169,11 +169,171 @@ nav{background:var(--surface);border-bottom:1px solid var(--border);padding:0 24
 footer{border-top:1px solid var(--border);padding:20px 24px;font-size:11px;color:var(--muted);line-height:1.8;margin-top:20px}
 footer a{color:var(--accent);text-decoration:none}
 
+/* ── TABLET (900px) ── */
 @media(max-width:900px){
-  .main{grid-template-columns:1fr}
-  .stats-row{grid-template-columns:repeat(2,1fr)}
+  .main{grid-template-columns:1fr;padding:14px 16px;gap:14px}
+  .stats-row{grid-template-columns:repeat(2,1fr);padding:12px 16px;gap:10px}
   .threat-header,.threat-row{grid-template-columns:24px 1fr 64px 70px}
   .threat-header span:nth-child(3),.cve-col{display:none}
+  .filters{padding:8px 16px;gap:6px}
+}
+
+/* ── MOBILE (600px) — full redesign ── */
+@media(max-width:600px){
+  /* Nav */
+  nav{padding:0 14px;height:48px}
+  .nav-logo-text{font-size:14px}
+  #hero-date{display:none}
+
+  /* Status bar */
+  .status-bar{font-size:9px;padding:4px 14px;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+  /* Stat cards — 2x2 grid, compact */
+  .stats-row{
+    grid-template-columns:1fr 1fr;
+    gap:8px;padding:10px 14px;
+    border-bottom:1px solid var(--border)
+  }
+  .stat-card{padding:10px 12px;border-radius:6px}
+  .stat-val{font-size:22px}
+  .stat-lbl{font-size:9px}
+
+  /* Filter bar — scrollable horizontal strip */
+  .filters{
+    padding:8px 14px;
+    gap:6px;
+    overflow-x:auto;
+    flex-wrap:nowrap;
+    -webkit-overflow-scrolling:touch;
+    scrollbar-width:none;
+  }
+  .filters::-webkit-scrollbar{display:none}
+  .filter-label{white-space:nowrap;font-size:9px}
+  .filter-select{font-size:11px;padding:4px 8px;min-width:120px}
+  .filter-chip{padding:4px 10px;font-size:10px;white-space:nowrap;flex-shrink:0}
+  .filter-locked-group{flex-shrink:0}
+  .filter-locked-pill{padding:4px 10px;font-size:10px}
+  .threat-count{display:none}
+
+  /* Main — single column, no padding */
+  .main{
+    grid-template-columns:1fr;
+    padding:10px 14px;
+    gap:12px;
+    max-width:100%
+  }
+
+  /* Threat card — simplified columns for mobile */
+  .threat-card{border-radius:8px}
+  .threat-card-header{padding:10px 12px}
+  .threat-card-title{font-size:10px}
+
+  /* Hide header row — use cards instead */
+  .threat-header{display:none}
+
+  /* Threat rows — card style on mobile */
+  .threat-row{
+    display:block;
+    padding:12px 14px;
+    border-bottom:1px solid var(--border);
+    position:relative;
+    cursor:pointer;
+  }
+  .threat-row:active{background:rgba(45,126,247,.06)}
+
+  /* Mobile card layout inside each row */
+  .threat-num{
+    position:absolute;top:12px;left:14px;
+    font-size:10px;color:var(--muted)
+  }
+  .threat-desc{
+    font-size:12px;padding-left:20px;padding-right:60px;
+    line-height:1.5;margin-bottom:5px
+  }
+  .threat-desc-sub{padding-left:20px;gap:5px;margin-top:3px}
+  .cve-col{
+    display:block;
+    font-size:10px;color:var(--muted);
+    padding-left:20px;margin-top:3px
+  }
+  .threat-cvss{display:none} /* hide CVSS on mobile — show only Your Score */
+  .threat-score{
+    position:absolute;top:12px;right:14px;
+    font-size:16px;font-weight:900
+  }
+  .score-delta{font-size:9px}
+
+  /* Score legend — hide on mobile */
+  .score-legend{display:none}
+
+  /* Email gate on mobile */
+  #email-gate{padding:20px 14px}
+  #email-gate input{width:100%;margin-bottom:8px}
+  #email-gate button{width:100%}
+  #gate-email{width:100% !important}
+
+  /* Sidebar — stacked, compact */
+  .sidebar{gap:10px}
+  .kev-card,.sidebar-card{border-radius:8px}
+  .kev-card-header,.sidebar-card-header{padding:8px 12px;font-size:9px}
+  .kev-item{padding:8px 12px}
+  .email-section{padding:12px}
+  .email-input{font-size:12px}
+  .email-btn{font-size:12px;padding:10px}
+  .ind-score-row{padding:6px 12px}
+  .share-row{padding:10px 12px;gap:6px}
+  .share-btn{font-size:10px;padding:4px 10px}
+
+  /* Popup — full bottom sheet on mobile */
+  #cve-popup{
+    position:fixed;
+    bottom:0;left:0;right:0;
+    width:100%;max-width:100%;
+    border-radius:16px 16px 0 0;
+    border-left:none;border-right:none;border-bottom:none;
+    border-top:2px solid var(--accent);
+    padding:20px 18px 32px;
+    max-height:75vh;
+    overflow-y:auto;
+    transform:translateY(100%);
+    transition:transform .25s ease;
+    pointer-events:none;
+    display:block !important; /* always in DOM, hidden via transform */
+  }
+  #cve-popup.visible{
+    transform:translateY(0);
+    pointer-events:auto;
+  }
+  #cve-popup::before{
+    content:'';display:block;
+    width:40px;height:4px;
+    background:var(--border);
+    border-radius:2px;
+    margin:0 auto 16px;
+  }
+
+  /* Locked tooltip — full width on mobile */
+  .locked-tooltip{
+    left:0;right:0;width:auto;
+    position:fixed;
+    bottom:0;top:auto;
+    border-radius:16px 16px 0 0;
+    transform:none;
+    border-left:none;border-right:none;border-bottom:none;
+    padding:20px 18px 32px;
+  }
+
+  /* Locked modal — full screen bottom sheet */
+  .modal-box{
+    position:fixed;
+    bottom:0;left:0;right:0;
+    width:100%;max-width:100%;
+    border-radius:16px 16px 0 0;
+    padding:24px 18px 36px;
+  }
+
+  /* Footer */
+  footer{padding:16px 14px;font-size:10px}
 }
 </style>
 </head>
@@ -992,6 +1152,7 @@ function showPopup(vuln, rowEl) {
   // Position popup near the row
   positionPopup(popup, rowEl);
   popup.classList.add('visible');
+  if (window.innerWidth <= 600) document.body.style.overflow = 'hidden';
 }
 
 function positionPopup(popup, rowEl) {
@@ -1014,11 +1175,7 @@ function positionPopup(popup, rowEl) {
   popup.style.top  = top  + 'px';
 }
 
-function hidePopup() {
-  var popup = document.getElementById('cve-popup');
-  if (popup) popup.classList.remove('visible');
-  _popupVuln = null;
-}
+// hidePopup defined below with mobile support
 
 // Close popup on outside click
 document.addEventListener('click', function(e) {
@@ -1029,6 +1186,29 @@ document.addEventListener('click', function(e) {
     }
   }
 });
+
+// Mobile swipe down to close popup (bottom sheet)
+(function() {
+  var startY = 0;
+  var popup  = null;
+  document.addEventListener('touchstart', function(e) {
+    popup  = document.getElementById('cve-popup');
+    startY = e.touches[0].clientY;
+  }, { passive:true });
+  document.addEventListener('touchend', function(e) {
+    if (!popup || !popup.classList.contains('visible')) return;
+    var endY = e.changedTouches[0].clientY;
+    if (endY - startY > 60) hidePopup(); // swipe down 60px = close
+  }, { passive:true });
+})();
+
+// Mobile: prevent body scroll when popup is open
+function hidePopup() {
+  var popup = document.getElementById('cve-popup');
+  if (popup) popup.classList.remove('visible');
+  document.body.style.overflow = '';
+  _popupVuln = null;
+}
 
 function showPopupEl(rowEl) {
   var d = rowEl.dataset;
