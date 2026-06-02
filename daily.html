@@ -135,6 +135,33 @@ nav{background:var(--surface);border-bottom:1px solid var(--border);padding:0 24
 
 /* SCORE LEGEND */
 .score-legend{display:flex;gap:10px;align-items:center;padding:8px 16px;border-top:1px solid var(--border);background:rgba(255,255,255,.01)}
+
+/* CVE DETAIL POPUP */
+.threat-row{position:relative}
+#cve-popup{
+  display:none;position:fixed;z-index:500;
+  width:380px;max-width:92vw;
+  background:var(--card);border:1px solid var(--accent);
+  border-radius:10px;padding:20px;
+  box-shadow:0 12px 40px rgba(0,0,0,.6);
+  pointer-events:none;
+}
+#cve-popup.visible{display:block;pointer-events:auto}
+.popup-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px;gap:10px}
+.popup-cve{font-size:11px;font-weight:700;color:var(--accent);font-family:'IBM Plex Mono',monospace}
+.popup-score{font-size:20px;font-weight:900;font-family:'IBM Plex Mono',monospace;flex-shrink:0}
+.popup-product{font-size:11px;color:var(--muted);margin-bottom:10px}
+.popup-desc{font-size:12px;color:var(--text);line-height:1.7;margin-bottom:14px;border-left:2px solid var(--accent);padding-left:10px}
+.popup-section{margin-bottom:10px}
+.popup-section-label{font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px}
+.popup-section-val{font-size:11px;color:var(--text);line-height:1.6}
+.popup-action{background:rgba(14,210,122,.08);border:1px solid rgba(14,210,122,.2);border-radius:6px;padding:10px 12px;margin-bottom:12px}
+.popup-action-label{font-size:9px;font-weight:700;color:var(--green);letter-spacing:.8px;margin-bottom:4px}
+.popup-action-text{font-size:11px;color:var(--text);line-height:1.6}
+.popup-footer{display:flex;gap:8px;align-items:center;flex-wrap:wrap;border-top:1px solid var(--border);padding-top:12px;margin-top:4px}
+.popup-link{font-size:11px;font-weight:600;color:var(--accent);text-decoration:none;padding:5px 10px;border:1px solid var(--accent);border-radius:4px;transition:all .15s}
+.popup-link:hover{background:var(--accent);color:#fff}
+.popup-badge{font-size:9px;padding:2px 7px;border-radius:2px;font-weight:700}
 .legend-item{display:flex;align-items:center;gap:4px;font-size:9px;color:var(--muted)}
 .legend-dot{width:6px;height:6px;border-radius:50%}
 
@@ -795,7 +822,14 @@ function renderTable(threats) {
       : delta < -0.05
       ? '<span class="score-delta" style="color:var(--green)">↓'+Math.abs(delta).toFixed(1)+'</span>'
       : '';
-    return '<div class="threat-row">'
+    var safeDesc = (v.desc||'').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+    var safeAct  = (v.action||'').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+    var safeProd = (v.product||'').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+    var popData  = 'data-id="'+v.id+'" data-cvss="'+(v.cvss||0)+'" data-score="'+score+'" '
+      + 'data-epss="'+(v.epss||0)+'" data-kev="'+(v.kev?1:0)+'" data-cwe="'+(v.cwe||'')+'" '
+      + 'data-due="'+(v.dueDate||'')+'" data-cvssvv="'+(v.cvssV||'')+'" data-src="'+(v.src||'')+'" '
+      + 'data-desc="'+safeDesc+'" data-action="'+safeAct+'" data-product="'+safeProd+'"';
+    return '<div class="threat-row" '+popData+' onmouseenter="showPopupEl(this)" onclick="showPopupEl(this)">'
       + '<div class="threat-num">' + (i+1) + '</div>'
       + '<div><div class="threat-desc">' + (v.desc.length>75?v.desc.slice(0,74)+'…':v.desc) + '</div>'
       + '<div class="threat-desc-sub">'
@@ -906,6 +940,114 @@ function shareLinkedIn() { window.open('https://www.linkedin.com/sharing/share-o
 function copyLink()      { navigator.clipboard.writeText(window.location.href).then(function(){alert('Link copied!'); }); }
 
 function shareSlack()    { window.open('slack://open','_blank'); }
+
+// ── CVE DETAIL POPUP ──
+var _popupVuln = null;
+
+function showPopup(vuln, rowEl) {
+  _popupVuln = vuln;
+  var popup = document.getElementById('cve-popup');
+  if (!popup) return;
+
+  var score = (vuln.contextScore && !isNaN(vuln.contextScore)) ? vuln.contextScore : (vuln.cvss||5);
+  var cl    = colFor(score);
+
+  document.getElementById('popup-cve-id').textContent  = vuln.id;
+  document.getElementById('popup-product').textContent  = vuln.product || vuln.src || '';
+  document.getElementById('popup-score').textContent    = score.toFixed(1);
+  document.getElementById('popup-score').style.color    = cl;
+  document.getElementById('popup-desc').textContent     = vuln.desc || 'No description available.';
+  document.getElementById('popup-cvss').textContent     = (vuln.cvss||0).toFixed(1) + (vuln.cvssV ? ' (v'+vuln.cvssV+')' : '');
+  document.getElementById('popup-epss').textContent     = vuln.epss ? (vuln.epss*100).toFixed(1)+'% exploit probability' : '—';
+  document.getElementById('popup-cwe').textContent      = vuln.cwe || '—';
+  document.getElementById('popup-due').textContent      = vuln.dueDate ? new Date(vuln.dueDate).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) : '—';
+
+  var actionWrap = document.getElementById('popup-action-wrap');
+  var actionEl   = document.getElementById('popup-action');
+  if (vuln.action) {
+    actionEl.textContent    = vuln.action;
+    actionWrap.style.display = 'block';
+  } else {
+    actionWrap.style.display = 'none';
+  }
+
+  // Links
+  var cveId = vuln.id && vuln.id.startsWith('CVE-') ? vuln.id : null;
+  var nvdLink  = document.getElementById('popup-nvd-link');
+  var cisaLink = document.getElementById('popup-cisa-link');
+  var mitreLink= document.getElementById('popup-mitre-link');
+  if (cveId) {
+    nvdLink.href   = 'https://nvd.nist.gov/vuln/detail/' + cveId;
+    mitreLink.href = 'https://cve.mitre.org/cgi-bin/cvename.cgi?name=' + cveId;
+    nvdLink.style.display   = '';
+    mitreLink.style.display = '';
+  } else {
+    nvdLink.style.display   = 'none';
+    mitreLink.style.display = 'none';
+  }
+  cisaLink.href = vuln.kev
+    ? 'https://www.cisa.gov/known-exploited-vulnerabilities-catalog'
+    : 'https://www.cisa.gov/news-events/cybersecurity-advisories';
+
+  // Position popup near the row
+  positionPopup(popup, rowEl);
+  popup.classList.add('visible');
+}
+
+function positionPopup(popup, rowEl) {
+  popup.style.display = 'block';
+  var rect    = rowEl.getBoundingClientRect();
+  var popW    = 380;
+  var popH    = popup.offsetHeight || 400;
+  var vw      = window.innerWidth;
+  var vh      = window.innerHeight;
+
+  var left = rect.right + 12;
+  if (left + popW > vw - 12) left = rect.left - popW - 12;
+  if (left < 12) left = 12;
+
+  var top = rect.top;
+  if (top + popH > vh - 12) top = vh - popH - 12;
+  if (top < 12) top = 12;
+
+  popup.style.left = left + 'px';
+  popup.style.top  = top  + 'px';
+}
+
+function hidePopup() {
+  var popup = document.getElementById('cve-popup');
+  if (popup) popup.classList.remove('visible');
+  _popupVuln = null;
+}
+
+// Close popup on outside click
+document.addEventListener('click', function(e) {
+  var popup = document.getElementById('cve-popup');
+  if (popup && popup.classList.contains('visible')) {
+    if (!popup.contains(e.target) && !e.target.closest('.threat-row')) {
+      hidePopup();
+    }
+  }
+});
+
+function showPopupEl(rowEl) {
+  var d = rowEl.dataset;
+  var vuln = {
+    id:          d.id || '',
+    cvss:        parseFloat(d.cvss) || 0,
+    contextScore:parseFloat(d.score) || 0,
+    epss:        parseFloat(d.epss) || 0,
+    kev:         d.kev === '1',
+    cwe:         d.cwe || '',
+    dueDate:     d.due || '',
+    cvssV:       d.cvssvv || '',
+    src:         d.src || '',
+    desc:        d.desc || '',
+    action:      d.action || '',
+    product:     d.product || '',
+  };
+  showPopup(vuln, rowEl);
+}
 function updateStats(list, kevTotal) {
   var src   = list || allVulns;
   var total = kevTotal || liveKevCount || src.length;
@@ -1013,6 +1155,46 @@ document.addEventListener('DOMContentLoaded', function() {
 <!-- SUCCESS BANNER -->
 <div id="locked-success-banner" style="display:none;position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--green);color:#000;padding:12px 24px;border-radius:8px;font-size:13px;font-weight:700;z-index:1000;gap:8px;align-items:center">
   ✓ Subscribed! Platform &amp; Scale filters unlocked.
+</div>
+
+
+<!-- CVE DETAIL POPUP -->
+<div id="cve-popup">
+  <div class="popup-header">
+    <div>
+      <div class="popup-cve" id="popup-cve-id"></div>
+      <div class="popup-product" id="popup-product"></div>
+    </div>
+    <div class="popup-score" id="popup-score"></div>
+  </div>
+  <div class="popup-desc" id="popup-desc"></div>
+  <div class="popup-action" id="popup-action-wrap">
+    <div class="popup-action-label">Required Action</div>
+    <div class="popup-action-text" id="popup-action"></div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+    <div class="popup-section">
+      <div class="popup-section-label">CVSS Base Score</div>
+      <div class="popup-section-val" id="popup-cvss"></div>
+    </div>
+    <div class="popup-section">
+      <div class="popup-section-label">EPSS Probability</div>
+      <div class="popup-section-val" id="popup-epss"></div>
+    </div>
+    <div class="popup-section">
+      <div class="popup-section-label">Weakness</div>
+      <div class="popup-section-val" id="popup-cwe"></div>
+    </div>
+    <div class="popup-section">
+      <div class="popup-section-label">Due Date</div>
+      <div class="popup-section-val" id="popup-due"></div>
+    </div>
+  </div>
+  <div class="popup-footer">
+    <a id="popup-nvd-link" class="popup-link" target="_blank" rel="noopener">NVD Details ↗</a>
+    <a id="popup-cisa-link" class="popup-link" target="_blank" rel="noopener">CISA KEV ↗</a>
+    <a id="popup-mitre-link" class="popup-link" target="_blank" rel="noopener">MITRE ↗</a>
+  </div>
 </div>
 
 </body>
