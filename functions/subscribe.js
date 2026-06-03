@@ -85,15 +85,22 @@ export async function onRequestPost(context) {
     });
 
     const welcomeData = await welcomeRes.json();
+    console.log('Resend response status:', welcomeRes.status);
+    console.log('Resend response body:', JSON.stringify(welcomeData));
 
     if (!welcomeRes.ok) {
-      console.error('Resend welcome email failed:', JSON.stringify(welcomeData));
-      // Don't fail the subscription — contact was added to audience
+      // Return the actual Resend error so we can debug
+      return new Response(JSON.stringify({
+        ok: false,
+        error: 'Resend error: ' + JSON.stringify(welcomeData),
+        status: welcomeRes.status,
+      }), { status:200, headers:CORS });
     }
 
     return new Response(JSON.stringify({
       ok: true,
       message: 'Subscribed successfully',
+      emailId: welcomeData.id,
     }), { status:200, headers:CORS });
 
   } catch(err) {
