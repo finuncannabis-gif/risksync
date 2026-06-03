@@ -941,15 +941,30 @@ function renderGate(afterIndex) {
 }
 
 function submitGate() {
-  var email = document.getElementById('gate-email') ? document.getElementById('gate-email').value.trim() : '';
-  if (!unlockWithEmail(email)) {
+  var email = document.getElementById('gate-email')
+    ? (document.getElementById('gate-email').value || '').trim() : '';
+
+  if (!email || !email.includes('@') || !email.includes('.')) {
     var err = document.getElementById('gate-err');
     if (err) err.style.display = 'block';
     return;
   }
+
+  var ind = document.getElementById('ind-select')
+    ? document.getElementById('ind-select').value : 'all';
+
+  // Unlock immediately for good UX
+  unlockWithEmail(email);
   applyFilters();
   document.getElementById('locked-success-banner').style.display = 'flex';
   setTimeout(function(){ document.getElementById('locked-success-banner').style.display = 'none'; }, 4000);
+
+  // POST to Resend in background
+  fetch('/subscribe', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, industry: ind, source: 'threat-table-gate' }),
+  }).catch(function(){});
 }
 
 function renderTable(threats) {
@@ -1069,24 +1084,70 @@ function closeLockedGate() {
 }
 
 function submitLockedGate() {
-  var email = document.getElementById('locked-modal-email').value.trim();
-  if (!unlockWithEmail(email)) {
+  var email = (document.getElementById('locked-modal-email').value || '').trim();
+  if (!email || !email.includes('@') || !email.includes('.')) {
     document.getElementById('locked-modal-err').style.display = 'block';
     return;
   }
+
+  var ind = document.getElementById('ind-select')
+    ? document.getElementById('ind-select').value : 'all';
+
+  unlockWithEmail(email);
   closeLockedGate();
-  // Show success + unlock all rows
   applyFilters();
   document.getElementById('locked-success-banner').style.display = 'flex';
   setTimeout(function(){ document.getElementById('locked-success-banner').style.display = 'none'; }, 4000);
+
+  fetch('/subscribe', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, industry: ind, source: 'platform-scale-gate' }),
+  }).catch(function(){});
 }
 
 function subscribeEmail() {
-  var email = document.getElementById('email-input').value;
-  if (!email || !email.includes('@')) { alert('Please enter a valid email address'); return; }
-  document.getElementById('email-form').style.display = 'none';
-  document.getElementById('email-success').style.display = 'block';
-  // TODO: POST to Supabase/Resend
+  var email    = (document.getElementById('email-input').value || '').trim();
+  var industry = document.getElementById('email-industry')
+    ? document.getElementById('email-industry').value : 'all';
+
+  if (!email || !email.includes('@') || !email.includes('.')) {
+    var inp = document.getElementById('email-input');
+    if (inp) { inp.style.borderColor = 'var(--red)'; inp.placeholder = 'Please enter a valid email'; }
+    return;
+  }
+
+  // Disable button while submitting
+  var btn = document.querySelector('#email-form button');
+  if (btn) { btn.textContent = 'Subscribing...'; btn.disabled = true; }
+
+  fetch('/subscribe', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, industry, source: 'daily-brief-sidebar' }),
+  })
+  .then(function(res) { return res.json(); })
+  .then(function(data) {
+    if (data.ok) {
+      // Unlock gate + show success
+      unlockWithEmail(email);
+      document.getElementById('email-form').style.display    = 'none';
+      document.getElementById('email-success').style.display = 'block';
+      document.getElementById('email-success').textContent   =
+        '✓ Subscribed — brief arrives tomorrow at 07:00 UTC';
+      applyFilters(); // re-render with full list
+    } else {
+      if (btn) { btn.textContent = 'Subscribe — Free'; btn.disabled = false; }
+      alert(data.error || 'Subscription failed — please try again');
+    }
+  })
+  .catch(function() {
+    // Fallback: still unlock locally even if API fails
+    unlockWithEmail(email);
+    document.getElementById('email-form').style.display    = 'none';
+    document.getElementById('email-success').style.display = 'block';
+    applyFilters();
+  });
 }
 
 // ── SHARE ──
