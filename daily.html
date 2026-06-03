@@ -150,7 +150,6 @@ nav{background:var(--surface);border-bottom:1px solid var(--border);padding:0 24
   display:block;
   pointer-events:auto;
 }
-#cve-popup.visible{display:block;pointer-events:auto}
 .popup-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px;gap:10px}
 .popup-cve{font-size:11px;font-weight:700;color:var(--accent);font-family:'IBM Plex Mono',monospace}
 .popup-score{font-size:20px;font-weight:900;font-family:'IBM Plex Mono',monospace;flex-shrink:0}
@@ -302,7 +301,7 @@ footer a{color:var(--accent);text-decoration:none}
     transform:translateY(100%);
     transition:transform .25s ease;
     pointer-events:none;
-    display:block !important; /* always in DOM, hidden via transform */
+    display:none;
   }
   #cve-popup.visible{
     transform:translateY(0);
@@ -1216,6 +1215,7 @@ function showPopup(vuln, rowEl) {
 
   // Position popup near the row
   positionPopup(popup, rowEl);
+  popup.style.display = 'block';
   popup.classList.add('visible');
   if (window.innerWidth <= 600) document.body.style.overflow = 'hidden';
 }
@@ -1274,7 +1274,11 @@ document.addEventListener('keydown', function(e) {
 // Mobile: prevent body scroll when popup is open
 function hidePopup() {
   var popup = document.getElementById('cve-popup');
-  if (popup) popup.classList.remove('visible');
+  if (popup) {
+    popup.classList.remove('visible');
+    popup.style.display = 'none';
+    popup.style.transform = '';
+  }
   document.body.style.overflow = '';
   _popupVuln = null;
 }
@@ -1289,7 +1293,7 @@ document.addEventListener('mousemove', function(e) {
   var pr = popup.getBoundingClientRect();
   var inPopup = e.clientX >= pr.left && e.clientX <= pr.right
              && e.clientY >= pr.top  && e.clientY <= pr.bottom;
-  if (inPopup) { console.log('in popup'); return; }
+  if (inPopup) return;
 
   var rows = document.querySelectorAll('.threat-row');
   var inRow = false;
@@ -1300,7 +1304,7 @@ document.addEventListener('mousemove', function(e) {
       inRow = true; break;
     }
   }
-  console.log('inRow:', inRow, 'rows found:', rows.length, 'x:', Math.round(e.clientX), 'y:', Math.round(e.clientY));
+
   if (!inRow) hidePopup();
 });
 
