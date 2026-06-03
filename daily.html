@@ -146,6 +146,10 @@ nav{background:var(--surface);border-bottom:1px solid var(--border);padding:0 24
   box-shadow:0 12px 40px rgba(0,0,0,.6);
   pointer-events:none;
 }
+#cve-popup.visible{
+  display:block;
+  pointer-events:auto;
+}
 #cve-popup.visible{display:block;pointer-events:auto}
 .popup-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px;gap:10px}
 .popup-cve{font-size:11px;font-weight:700;color:var(--accent);font-family:'IBM Plex Mono',monospace}
@@ -1281,11 +1285,23 @@ function cancelHide() {}
 document.addEventListener('mousemove', function(e) {
   var popup = document.getElementById('cve-popup');
   if (!popup || !popup.classList.contains('visible')) return;
-  var overPopup = popup.contains(e.target) || popup === e.target;
-  var overRow   = !!e.target.closest('.threat-row');
-  if (!overPopup && !overRow) {
-    hidePopup();
+
+  var pr = popup.getBoundingClientRect();
+  var inPopup = e.clientX >= pr.left && e.clientX <= pr.right
+             && e.clientY >= pr.top  && e.clientY <= pr.bottom;
+  if (inPopup) { console.log('in popup'); return; }
+
+  var rows = document.querySelectorAll('.threat-row');
+  var inRow = false;
+  for (var i = 0; i < rows.length; i++) {
+    var rr = rows[i].getBoundingClientRect();
+    if (e.clientX >= rr.left && e.clientX <= rr.right
+     && e.clientY >= rr.top  && e.clientY <= rr.bottom) {
+      inRow = true; break;
+    }
   }
+  console.log('inRow:', inRow, 'rows found:', rows.length, 'x:', Math.round(e.clientX), 'y:', Math.round(e.clientY));
+  if (!inRow) hidePopup();
 });
 
 function showPopupEl(rowEl) {
