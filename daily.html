@@ -1275,6 +1275,19 @@ function hidePopup() {
   _popupVuln = null;
 }
 
+function cancelHide() {}
+
+// Global mousemove — close popup when cursor leaves both row and popup
+document.addEventListener('mousemove', function(e) {
+  var popup = document.getElementById('cve-popup');
+  if (!popup || !popup.classList.contains('visible')) return;
+  var overPopup = popup.contains(e.target) || popup === e.target;
+  var overRow   = !!e.target.closest('.threat-row');
+  if (!overPopup && !overRow) {
+    hidePopup();
+  }
+});
+
 function showPopupEl(rowEl) {
   var d = rowEl.dataset;
   var vuln = {
