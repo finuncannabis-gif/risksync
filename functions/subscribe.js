@@ -30,7 +30,7 @@ export async function onRequestPost(context) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: 'RiskSync <onboarding@resend.dev>',
+        from: 'RiskSync <hello@syncrisk.co.uk>',
         to:   [email],
         subject: '✓ You\'re subscribed to RiskSync Daily',
         html: `
