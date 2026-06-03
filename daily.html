@@ -1238,14 +1238,18 @@ function positionPopup(popup, rowEl) {
 
 // hidePopup defined below with mobile support
 
-// Close popup on outside click
+// Close popup on outside click or Escape key
 document.addEventListener('click', function(e) {
   var popup = document.getElementById('cve-popup');
-  if (popup && popup.classList.contains('visible')) {
-    if (!popup.contains(e.target) && !e.target.closest('.threat-row')) {
-      hidePopup();
-    }
+  if (!popup || !popup.classList.contains('visible')) return;
+  // Close if click is outside popup AND outside a threat row
+  if (!popup.contains(e.target) && !e.target.closest('.threat-row')) {
+    hidePopup();
   }
+});
+
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') hidePopup();
 });
 
 // Mobile swipe down to close popup (bottom sheet)
@@ -1400,7 +1404,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 <!-- CVE DETAIL POPUP -->
-<div id="cve-popup">
+<div id="cve-popup" onclick="event.stopPropagation()">
   <div class="popup-header">
     <div>
       <div class="popup-cve" id="popup-cve-id"></div>
