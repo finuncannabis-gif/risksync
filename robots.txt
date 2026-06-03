@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://syncrisk.co.uk/sitemap.xml
