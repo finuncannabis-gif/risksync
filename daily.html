@@ -41,8 +41,8 @@ nav{background:var(--surface);border-bottom:1px solid var(--border);padding:0 24
 #status-msg{color:var(--green)}
 
 /* STAT CARDS */
-.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;padding:16px 24px;border-bottom:1px solid var(--border)}
-.stat-card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:14px 16px}
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;padding:16px 24px;border-bottom:1px solid var(--border);min-height:90px}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:14px 16px;min-height:80px}
 .stat-card.red{border-color:rgba(240,64,96,.3)}
 .stat-card.amber{border-color:rgba(245,166,35,.3)}
 .stat-card.green{border-color:rgba(14,210,122,.3)}
@@ -99,7 +99,7 @@ nav{background:var(--surface);border-bottom:1px solid var(--border);padding:0 24
 
 /* SIDEBAR */
 .sidebar{display:flex;flex-direction:column;gap:14px}
-.sidebar-card{background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.sidebar-card{background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden;min-height:60px}
 .sidebar-card-header{padding:10px 14px;border-bottom:1px solid var(--border);font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;background:var(--surface)}
 
 /* KEV */
@@ -169,7 +169,7 @@ nav{background:var(--surface);border-bottom:1px solid var(--border);padding:0 24
 .legend-dot{width:6px;height:6px;border-radius:50%}
 
 /* FOOTER */
-footer{border-top:1px solid var(--border);padding:20px 24px;font-size:11px;color:var(--muted);line-height:1.8;margin-top:20px}
+footer{border-top:1px solid var(--border);padding:20px 24px;font-size:11px;color:var(--muted);line-height:1.8;margin-top:20px;min-height:60px}
 footer a{color:var(--accent);text-decoration:none}
 
 /* ── TABLET (900px) ── */
@@ -975,6 +975,7 @@ function renderTable(threats) {
   var unlocked    = isUnlocked();
   var el          = document.getElementById('threat-table');
   if (!el) return;
+  el.style.minHeight = el.style.minHeight || '400px';
 
   // Split into tiers by contextual score
   var critical = threats.filter(function(v){ return (v.contextScore||v.cvss||0) >= 9.0; });
