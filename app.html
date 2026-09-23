@@ -601,8 +601,7 @@ function VulnFunnel({profile,liveVulns}){
 
   const handleMouseEnter=(v,e)=>{
     const rect=containerRef.current?.getBoundingClientRect();
-    const svgRect=e.currentTarget.close
-    if(!rect||!svgRect)return;
+    if(!rect)return;
     const relY=(e.clientY-rect.top);
     const relX=(e.clientX-rect.left);
     const side=relX>rect.width*0.5?"left":"right";
@@ -1680,6 +1679,7 @@ function BulletinPage({profile, liveVulns, controls, activeCategory}) {
   const vc      = n => n >= 8 ? '#f04060' : n >= 6 ? '#f5a623' : n >= 4 ? '#2d7ef7' : '#0ed27a';
   const vl      = n => n >= 8 ? 'Critical' : n >= 6 ? 'High' : n >= 4 ? 'Medium' : 'Low';
   const weekStr = new Date().toLocaleDateString('en-GB', {weekday:'long', day:'numeric', month:'long', year:'numeric'});
+  const weekNum = (() => { const d = new Date(); const onejan = new Date(d.getFullYear(),0,1); return Math.ceil((((d - onejan) / 86400000) + onejan.getDay() + 1) / 7); })();
   
 
   /* ── Generate HTML email ── */
@@ -2689,6 +2689,8 @@ function ScorecardPage({profile, liveVulns, controls, setControls, activeCategor
   const ind = INDUSTRIES.find(i => i.id === profile.industry);
   const sc  = SCALES.find(s => s.id === profile.scale);
   const geo = GEOS.find(g => g.id === profile.geo) || GEOS.find(g=>g.id==='other');
+  const liveList = (liveVulns && liveVulns.length > 0) ? liveVulns : VULNS;
+  const filteredList = filterByCategory(liveList, activeCategory);
   const top10 = getTop10Vulns(profile, filteredList);
   const gScore = globalRisk(profile, controls);
   const pulse = Math.round(gScore * 7);
