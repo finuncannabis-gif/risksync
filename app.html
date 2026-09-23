@@ -1741,26 +1741,26 @@ function BulletinPage({profile, liveVulns, controls, activeCategory}) {
     </tr></table>
   </td></tr>
 
-  ${sections.execSummary ? `
-  <!-- EXEC SUMMARY -->
-  <tr><td style="background:#080d18;border-left:1px solid #1a2540;border-right:1px solid #1a2540;padding:24px 28px;border-top:1px solid #1a2540">
-    <div style="font-size:9px;font-weight:700;color:#5a6f96;letter-spacing:1px;margin-bottom:10px">DAILY RISK SUMMARY</div>
-    <div style="font-size:15px;font-weight:700;color:#fff;margin-bottom:10px;line-height:1.4">
-      Your ${ind?.label} organisation faces <span style="color:${col}">${lbl.toLowerCase()}</span> cybersecurity exposure today.
-    </div>
-    <div style="font-size:12px;color:#8a9bc0;line-height:1.8">
-      Based on ${(profile.sources||[]).length} active intelligence sources, <strong style="color:#dde4f0">${kevHits.length} of your top 10 threats are actively exploited</strong> in the wild (CISA KEV confirmed). 
-      Your contextual risk score of <strong style="color:${col}">${gScore.toFixed(1)}</strong> reflects your industry multiplier of ×${ind?.multiplier}, 
-      scale factor ×${sc?.s_multiplier}, and regional weight ×${geo?.regMultiplier}.
-    </div>
-    <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:16px">
-      <tr>
-        ${[
-          {label:'Risk Score', val:gScore.toFixed(1), col},
-          {label:'KEV Confirmed', val:String(kevHits.length), col:'#f04060'},
-          {label:'Avg EPSS', val:Math.round(top5.reduce((a,v)=>a+v.epss,0)/5*100)+'%', col:'#f5a623'},
-          {label:'Critical Threats', val:String(top10.filter(v=>v.contextScore>=8).length), col:'#f04060'},
-        ].map(k=>`<td align="center" style="background:#0c1220;border:1px solid #1a2540;border-radius:6px;padding:12px 8px;width:25%">
+  ${sections.execSummary ? ['',
+'  <!-- EXEC SUMMARY -->',
+'  <tr><td style="background:#080d18;border-left:1px solid #1a2540;border-right:1px solid #1a2540;padding:24px 28px;border-top:1px solid #1a2540">',
+'    <div style="font-size:9px;font-weight:700;color:#5a6f96;letter-spacing:1px;margin-bottom:10px">DAILY RISK SUMMARY</div>',
+'    <div style="font-size:15px;font-weight:700;color:#fff;margin-bottom:10px;line-height:1.4">',
+'      Your ${ind?.label} organisation faces <span style="color:${col}">${lbl.toLowerCase()}</span> cybersecurity exposure today.',
+'    </div>',
+'    <div style="font-size:12px;color:#8a9bc0;line-height:1.8">',
+'      Based on ${(profile.sources||[]).length} active intelligence sources, <strong style="color:#dde4f0">${kevHits.length} of your top 10 threats are actively exploited</strong> in the wild (CISA KEV confirmed). ',
+'      Your contextual risk score of <strong style="color:${col}">${gScore.toFixed(1)}</strong> reflects your industry multiplier of ×${ind?.multiplier}, ',
+'      scale factor ×${sc?.s_multiplier}, and regional weight ×${geo?.regMultiplier}.',
+'    </div>',
+'    <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:16px">',
+'      <tr>',
+'        ${[',
+'          {label:\'Risk Score\', val:gScore.toFixed(1), col},',
+'          {label:\'KEV Confirmed\', val:String(kevHits.length), col:\'#f04060\'},',
+'          {label:\'Avg EPSS\', val:Math.round(top5.reduce((a,v)=>a+v.epss,0)/5*100)+\'%\', col:\'#f5a623\'},',
+'          {label:\'Critical Threats\', val:String(top10.filter(v=>v.contextScore>=8).length), col:\'#f04060\'},',
+'        ].map(k=>'].join("\n")<td align="center" style="background:#0c1220;border:1px solid #1a2540;border-radius:6px;padding:12px 8px;width:25%">
           <div style="font-size:20px;font-weight:700;color:${k.col}">${k.val}</div>
           <div style="font-size:9px;color:#5a6f96;margin-top:3px">${k.label}</div>
         </td>`).join('<td width="8"></td>')}
@@ -1768,46 +1768,46 @@ function BulletinPage({profile, liveVulns, controls, activeCategory}) {
     </table>
   </td></tr>` : ''}
 
-  ${sections.kevAlert && kevHits.length > 0 ? `
-  <!-- KEV ALERT -->
-  <tr><td style="background:#1e0810;border:1px solid #f0406030;border-left:4px solid #f04060;padding:16px 28px;margin-top:0">
-    <div style="font-size:9px;font-weight:700;color:#f04060;letter-spacing:1px;margin-bottom:10px">⚠ CISA KEV ALERT — ${kevHits.length} ACTIVELY EXPLOITED</div>
-    <table width="100%" cellpadding="0" cellspacing="0">
-      ${kevRows}
-    </table>
-    <div style="font-size:10px;color:#f04060;margin-top:10px">These vulnerabilities have confirmed real-world exploitation. Immediate patching required.</div>
-  </td></tr>` : ''}
+  ${sections.kevAlert && kevHits.length > 0 ? ['',
+'  <!-- KEV ALERT -->',
+'  <tr><td style="background:#1e0810;border:1px solid #f0406030;border-left:4px solid #f04060;padding:16px 28px;margin-top:0">',
+'    <div style="font-size:9px;font-weight:700;color:#f04060;letter-spacing:1px;margin-bottom:10px">⚠ CISA KEV ALERT — ${kevHits.length} ACTIVELY EXPLOITED</div>',
+'    <table width="100%" cellpadding="0" cellspacing="0">',
+'      ${kevRows}',
+'    </table>',
+'    <div style="font-size:10px;color:#f04060;margin-top:10px">These vulnerabilities have confirmed real-world exploitation. Immediate patching required.</div>',
+'  </td></tr>'].join("\n") : ''}
 
-  ${sections.top5Threats ? `
-  <!-- TOP 5 THREATS -->
-  <tr><td style="background:#080d18;border-left:1px solid #1a2540;border-right:1px solid #1a2540;border-top:1px solid #1a2540;padding:24px 28px">
-    <div style="font-size:9px;font-weight:700;color:#5a6f96;letter-spacing:1px;margin-bottom:14px">TOP 5 CONTEXTUAL THREATS — ${ind?.label?.toUpperCase()}</div>
-    <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #1a2540;border-radius:6px;overflow:hidden">
-      <tr style="background:#0c1220">
-        <td style="padding:8px 12px;font-size:9px;color:#5a6f96;font-weight:700">#</td>
-        <td style="padding:8px 12px;font-size:9px;color:#5a6f96;font-weight:700">DESCRIPTION</td>
-        <td style="padding:8px 12px;font-size:9px;color:#5a6f96;font-weight:700">CVE</td>
-        <td style="padding:8px 12px;font-size:9px;color:#5a6f96;font-weight:700;text-align:center">SEVERITY</td>
-        <td style="padding:8px 12px;font-size:9px;color:#5a6f96;font-weight:700;text-align:right">SCORE</td>
-      </tr>
-      ${threatRows}
-    </table>
-  </td></tr>` : ''}
+  ${sections.top5Threats ? ['',
+'  <!-- TOP 5 THREATS -->',
+'  <tr><td style="background:#080d18;border-left:1px solid #1a2540;border-right:1px solid #1a2540;border-top:1px solid #1a2540;padding:24px 28px">',
+'    <div style="font-size:9px;font-weight:700;color:#5a6f96;letter-spacing:1px;margin-bottom:14px">TOP 5 CONTEXTUAL THREATS — ${ind?.label?.toUpperCase()}</div>',
+'    <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #1a2540;border-radius:6px;overflow:hidden">',
+'      <tr style="background:#0c1220">',
+'        <td style="padding:8px 12px;font-size:9px;color:#5a6f96;font-weight:700">#</td>',
+'        <td style="padding:8px 12px;font-size:9px;color:#5a6f96;font-weight:700">DESCRIPTION</td>',
+'        <td style="padding:8px 12px;font-size:9px;color:#5a6f96;font-weight:700">CVE</td>',
+'        <td style="padding:8px 12px;font-size:9px;color:#5a6f96;font-weight:700;text-align:center">SEVERITY</td>',
+'        <td style="padding:8px 12px;font-size:9px;color:#5a6f96;font-weight:700;text-align:right">SCORE</td>',
+'      </tr>',
+'      ${threatRows}',
+'    </table>',
+'  </td></tr>'].join("\n") : ''}
 
-  ${sections.controlRec ? `
-  <!-- CONTROL RECOMMENDATION -->
-  <tr><td style="background:#0d1f3c;border-left:1px solid #2d7ef740;border-right:1px solid #2d7ef740;border-top:1px solid #2d7ef730;padding:20px 28px">
-    <div style="font-size:9px;font-weight:700;color:#2d7ef7;letter-spacing:1px;margin-bottom:10px">TODAY'S PRIORITY ACTION</div>
-    <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:6px">${VULN_REMEDIATION[top5[0]?.id]?.steps[0] || 'Review and patch all KEV-listed vulnerabilities within 14 days per CISA BOD 22-01.'}</div>
-    <div style="font-size:11px;color:#8a9bc0;line-height:1.7">${VULN_REMEDIATION[top5[0]?.id]?.urgency || 'Prioritise your top CISA KEV entries immediately.'}</div>
-  </td></tr>` : ''}
+  ${sections.controlRec ? ['',
+'  <!-- CONTROL RECOMMENDATION -->',
+'  <tr><td style="background:#0d1f3c;border-left:1px solid #2d7ef740;border-right:1px solid #2d7ef740;border-top:1px solid #2d7ef730;padding:20px 28px">',
+'    <div style="font-size:9px;font-weight:700;color:#2d7ef7;letter-spacing:1px;margin-bottom:10px">TODAY\'S PRIORITY ACTION</div>',
+'    <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:6px">${VULN_REMEDIATION[top5[0]?.id]?.steps[0] || \'Review and patch all KEV-listed vulnerabilities within 14 days per CISA BOD 22-01.\'}</div>',
+'    <div style="font-size:11px;color:#8a9bc0;line-height:1.7">${VULN_REMEDIATION[top5[0]?.id]?.urgency || \'Prioritise your top CISA KEV entries immediately.\'}</div>',
+'  </td></tr>'].join("\n") : ''}
 
-  ${sections.regulatoryNote ? `
-  <!-- REGULATORY NOTE -->
-  <tr><td style="background:#080d18;border-left:1px solid #1a2540;border-right:1px solid #1a2540;border-top:1px solid #1a2540;padding:16px 28px">
-    <div style="font-size:9px;font-weight:700;color:#5a6f96;letter-spacing:1px;margin-bottom:8px">REGULATORY CONTEXT · ${geo?.label?.toUpperCase()}</div>
-    <div style="font-size:11px;color:#8a9bc0;line-height:1.7">${geo?.reg} — Organisations operating in ${geo?.label} must maintain compliance. ${kevHits.length > 0 ? (kevHits.length + " of today's threats directly trigger mandatory notification obligations if exploited.") : 'No immediate notification triggers today.'}</div>
-  </td></tr>` : ''}
+  ${sections.regulatoryNote ? ['',
+'  <!-- REGULATORY NOTE -->',
+'  <tr><td style="background:#080d18;border-left:1px solid #1a2540;border-right:1px solid #1a2540;border-top:1px solid #1a2540;padding:16px 28px">',
+'    <div style="font-size:9px;font-weight:700;color:#5a6f96;letter-spacing:1px;margin-bottom:8px">REGULATORY CONTEXT · ${geo?.label?.toUpperCase()}</div>',
+'    <div style="font-size:11px;color:#8a9bc0;line-height:1.7">${geo?.reg} — Organisations operating in ${geo?.label} must maintain compliance. ${kevHits.length > 0 ? (kevHits.length + " of today\'s threats directly trigger mandatory notification obligations if exploited.") : \'No immediate notification triggers today.\'}</div>',
+'  </td></tr>'].join("\n") : ''}
 
   <!-- FOOTER -->
   <tr><td style="background:#050c18;border:1px solid #1a2540;border-radius:0 0 10px 10px;border-top:none;padding:20px 28px">
@@ -2153,7 +2153,7 @@ function rsUnlock(){
               <div style={{background:'#080d18', borderLeft:'1px solid #1a2540', borderRight:'1px solid #1a2540', borderTop:'1px solid #1a2540', padding:'16px 28px'}}>
                 <div style={{fontSize:9, fontWeight:700, color:C.muted, letterSpacing:1, marginBottom:8}}>REGULATORY CONTEXT · {geo?.label?.toUpperCase()}</div>
                 <div style={{fontSize:11, color:'#8a9bc0', lineHeight:1.7}}>
-                  {geo?.reg} — Organisations operating in {geo?.label} must maintain compliance. {kevHits.length > 0 ? `${kevHits.length} of today's threats directly trigger mandatory notification obligations if exploited.` : 'No immediate notification triggers today.'}
+                  {geo?.reg} — Organisations operating in {geo?.label} must maintain compliance. {kevHits.length > 0 ? (kevHits.length + " of today's threats directly trigger mandatory notification obligations if exploited.") : 'No immediate notification triggers today.'}
                 </div>
               </div>
             )}
