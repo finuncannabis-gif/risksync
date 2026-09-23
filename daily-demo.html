@@ -1,0 +1,1531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Daily Threat Brief — RiskSync | Today's Top Cybersecurity Threats</title>
+<meta name="description" content="Free daily cybersecurity threat intelligence. Top CVEs ranked by real-world exploitability, CISA KEV alerts, and contextual risk scores for your industry. Updated every morning."/>
+<meta name="keywords" content="cybersecurity threats, daily CVE briefing, CISA KEV, NVD vulnerabilities, threat intelligence, cybersecurity news"/>
+<meta property="og:title" content="RiskSync Daily Threat Brief — Today's Top Cybersecurity Threats"/>
+<meta property="og:description" content="Free daily threat intelligence ranked by exploitability. CISA KEV confirmed threats, CVSS scores, and industry-specific risk context."/>
+<meta property="og:type" content="website"/>
+<meta name="twitter:card" content="summary_large_image"/>
+<link rel="canonical" href="https://risksync.io/daily"/>
+
+<!-- Fonts (with system fallback for file:// loading) -->
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" onerror="this.remove()"/>
+<!-- Tabler icons replaced with inline symbols -->
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#050c18;--surface:#080d18;--card:#0c1220;--border:#1a2540;
+  --text:#dde4f0;--muted:#5a6f96;--dim:#2e3f62;
+  --accent:#2d7ef7;--green:#0ed27a;--red:#f04060;--amber:#f5a623;
+  --cyan:#22d3ee;--purple:#9b72f6;
+}
+body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-serif;min-height:100vh;-webkit-tap-highlight-color:transparent}
+.mono{font-family:'IBM Plex Mono',ui-monospace,monospace}
+
+/* NAV */
+nav{background:var(--surface);border-bottom:1px solid var(--border);padding:0 24px;display:flex;align-items:center;height:52px}
+.nav-logo{display:flex;align-items:center;gap:10px}
+.nav-logo-icon{width:28px;height:28px;background:var(--accent);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:13px}
+.nav-logo-text{font-size:15px;font-weight:800;letter-spacing:-.3px}
+.nav-badge{font-size:9px;font-weight:700;padding:2px 8px;border-radius:3px;background:var(--green);color:#000;letter-spacing:.5px;animation:pulse-badge 2s infinite}
+@keyframes pulse-badge{0%,100%{opacity:1}50%{opacity:.6}}
+
+/* STATUS BAR */
+.status-bar{padding:5px 24px;background:rgba(14,210,122,.05);border-bottom:1px solid rgba(14,210,122,.12);font-size:10px;text-align:center}
+#status-msg{color:var(--green)}
+
+/* STAT CARDS */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;padding:16px 24px;border-bottom:1px solid var(--border);min-height:90px}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:14px 16px;min-height:80px}
+.stat-card.red{border-color:rgba(240,64,96,.3)}
+.stat-card.amber{border-color:rgba(245,166,35,.3)}
+.stat-card.green{border-color:rgba(14,210,122,.3)}
+.stat-val{font-size:26px;font-weight:900;font-family:'IBM Plex Mono',ui-monospace,monospace;line-height:1;margin-bottom:5px}
+.stat-lbl{font-size:10px;color:var(--muted);letter-spacing:.3px}
+
+/* FILTER BAR */
+.filters{padding:10px 24px;border-bottom:1px solid var(--border);background:var(--surface);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.filter-label{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px}
+.filter-select{padding:5px 12px;border-radius:5px;border:1px solid var(--border);background:var(--card);color:var(--text);font-size:11px;cursor:pointer;font-family:inherit}
+.filter-chip{padding:5px 14px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:11px;cursor:pointer;font-family:inherit;transition:all .15s}
+.filter-chip.active{border-color:var(--accent);background:rgba(45,126,247,.12);color:var(--accent);font-weight:600}
+.threat-count{margin-left:auto;font-size:11px;color:var(--muted);font-family:'IBM Plex Mono',monospace}
+
+/* LOCKED FILTER */
+.filter-locked-group{display:flex;align-items:center;gap:6px;position:relative;margin-left:6px}
+.filter-locked-label{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px}
+.filter-locked-pill{padding:5px 14px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--dim);font-size:11px;cursor:pointer;filter:blur(1.5px);user-select:none;position:relative}
+.filter-locked-pill::after{content:'🔒';position:absolute;right:-4px;top:-6px;font-size:9px;filter:none}
+.filter-locked-group:hover .filter-locked-pill{filter:blur(0);color:var(--muted);border-color:var(--accent)}
+.locked-tooltip{display:none;position:absolute;top:calc(100% + 8px);left:0;background:var(--card);border:1px solid var(--accent);border-radius:8px;padding:14px 16px;width:260px;z-index:200;box-shadow:0 8px 32px rgba(0,0,0,.5)}
+.filter-locked-group:hover .locked-tooltip{display:block}
+.locked-tooltip-title{font-size:12px;font-weight:700;color:var(--text);margin-bottom:6px}
+.locked-tooltip-sub{font-size:11px;color:var(--muted);line-height:1.6;margin-bottom:12px}
+.locked-tooltip-btn{width:100%;padding:8px;border-radius:5px;border:none;background:var(--accent);color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit}
+
+/* MAIN TWO-COLUMN */
+.main{max-width:1200px;margin:0 auto;padding:20px 24px;display:grid;grid-template-columns:1fr 280px;gap:20px;align-items:start}
+
+/* THREAT CARD */
+.threat-card{background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.threat-card-header{padding:12px 16px;border-bottom:1px solid var(--border);background:var(--surface);display:flex;align-items:center;justify-content:space-between}
+.threat-card-title{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px}
+
+/* THREAT TABLE — Layout C with CVE · CVSS · Score */
+.threat-header{display:grid;grid-template-columns:28px 1fr 130px 60px 80px;padding:8px 16px;border-bottom:1px solid var(--border);background:rgba(255,255,255,.02)}
+.threat-header span{font-size:9px;font-weight:700;color:var(--muted);letter-spacing:.6px;text-transform:uppercase}
+.threat-row{display:grid;grid-template-columns:28px 1fr 130px 60px 80px;padding:12px 16px;border-bottom:1px solid var(--border);align-items:center;transition:background .1s}
+.threat-row:last-child{border-bottom:none}
+.threat-row:hover{background:rgba(45,126,247,.03)}
+.threat-num{font-size:11px;color:var(--muted);font-family:'IBM Plex Mono',monospace}
+.threat-desc{font-size:12px;color:var(--text);line-height:1.4;padding-right:10px}
+.threat-desc-sub{display:flex;gap:6px;margin-top:3px;align-items:center;flex-wrap:wrap}
+.cve-id{font-size:10px;color:var(--muted);font-family:'IBM Plex Mono',monospace}
+.kev-badge{font-size:8px;font-weight:700;padding:1px 6px;border-radius:2px;background:rgba(240,64,96,.12);color:var(--red);border:1px solid rgba(240,64,96,.25)}
+/* CVSS column */
+.threat-cvss{font-size:12px;color:var(--muted);font-family:'IBM Plex Mono',monospace}
+/* Contextual score column */
+.threat-score{font-size:14px;font-weight:900;font-family:'IBM Plex Mono',monospace}
+.score-delta{font-size:9px;font-weight:400;margin-left:3px;opacity:.7}
+
+/* EMAIL GATE */
+#email-gate{padding:28px 20px;text-align:center;background:linear-gradient(0deg,var(--bg) 55%,transparent)}
+
+/* SIDEBAR */
+.sidebar{display:flex;flex-direction:column;gap:14px}
+.sidebar-card{background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden;min-height:120px;contain:layout}
+.sidebar-card-header{padding:10px 14px;border-bottom:1px solid var(--border);font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;background:var(--surface)}
+
+/* KEV */
+.kev-card{background:rgba(240,64,96,.06);border:1px solid rgba(240,64,96,.2);border-radius:10px;overflow:hidden;min-height:120px;contain:layout}
+.kev-card-header{padding:10px 14px;border-bottom:1px solid rgba(240,64,96,.15);font-size:10px;font-weight:700;color:var(--red);letter-spacing:.8px}
+.kev-item{display:flex;align-items:flex-start;gap:8px;padding:10px 14px;border-bottom:1px solid rgba(240,64,96,.08)}
+.kev-item:last-child{border-bottom:none;padding-bottom:12px}
+
+/* EMAIL */
+.email-section{padding:14px}
+.email-input{width:100%;padding:9px 12px;border-radius:5px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:12px;font-family:inherit;outline:none;margin-bottom:8px}
+.email-input:focus{border-color:var(--accent)}
+.email-btn{width:100%;padding:9px;border-radius:5px;border:none;background:var(--green);color:#000;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit}
+#email-success{display:none;color:var(--green);font-size:11px;text-align:center;padding:6px}
+
+/* INDUSTRY SCORES */
+.ind-score-row{display:flex;align-items:center;gap:8px;padding:8px 14px;border-bottom:1px solid var(--border)}
+.ind-score-row:last-child{border-bottom:none}
+.ind-bar-bg{flex:1;height:4px;background:var(--border);border-radius:2px;overflow:hidden}
+.ind-bar-fill{height:100%;border-radius:2px;transition:width .5s ease}
+
+/* SHARE */
+.share-row{display:flex;gap:6px;padding:12px 14px;flex-wrap:wrap}
+.share-btn{padding:6px 12px;border-radius:5px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:11px;cursor:pointer;font-family:inherit;transition:all .15s}
+.share-btn:hover{border-color:var(--accent);color:var(--accent)}
+
+/* MODAL */
+#locked-filter-modal{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(5,12,24,.88);z-index:1000;align-items:center;justify-content:center}
+.modal-box{background:var(--card);border:1px solid var(--accent);border-radius:10px;padding:24px;width:320px;max-width:90vw;position:relative}
+
+/* SUCCESS BANNER */
+#locked-success-banner{display:none;position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--green);color:#000;padding:10px 20px;border-radius:6px;font-size:12px;font-weight:700;z-index:1000}
+
+/* SCORE LEGEND */
+.score-legend{display:flex;gap:10px;align-items:center;padding:8px 16px;border-top:1px solid var(--border);background:rgba(255,255,255,.01)}
+
+/* CVE DETAIL POPUP */
+.threat-row{position:relative}
+#cve-popup{
+  display:none;position:fixed;z-index:500;
+  width:380px;max-width:92vw;
+  background:var(--card);border:1px solid var(--accent);
+  border-radius:10px;padding:20px;
+  box-shadow:0 12px 40px rgba(0,0,0,.6);
+  pointer-events:none;
+}
+#cve-popup.visible{
+  display:block;
+  pointer-events:auto;
+}
+.popup-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px;gap:10px}
+.popup-cve{font-size:11px;font-weight:700;color:var(--accent);font-family:'IBM Plex Mono',monospace}
+.popup-score{font-size:20px;font-weight:900;font-family:'IBM Plex Mono',monospace;flex-shrink:0}
+.popup-product{font-size:11px;color:var(--muted);margin-bottom:10px}
+.popup-desc{font-size:12px;color:var(--text);line-height:1.7;margin-bottom:14px;border-left:2px solid var(--accent);padding-left:10px}
+.popup-section{margin-bottom:10px}
+.popup-section-label{font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px}
+.popup-section-val{font-size:11px;color:var(--text);line-height:1.6}
+.popup-action{background:rgba(14,210,122,.08);border:1px solid rgba(14,210,122,.2);border-radius:6px;padding:10px 12px;margin-bottom:12px}
+.popup-action-label{font-size:9px;font-weight:700;color:var(--green);letter-spacing:.8px;margin-bottom:4px}
+.popup-action-text{font-size:11px;color:var(--text);line-height:1.6}
+.popup-footer{display:flex;gap:8px;align-items:center;flex-wrap:wrap;border-top:1px solid var(--border);padding-top:12px;margin-top:4px}
+.popup-link{font-size:11px;font-weight:600;color:var(--accent);text-decoration:none;padding:5px 10px;border:1px solid var(--accent);border-radius:4px;transition:all .15s}
+.popup-link:hover{background:var(--accent);color:#fff}
+.popup-badge{font-size:9px;padding:2px 7px;border-radius:2px;font-weight:700}
+.legend-item{display:flex;align-items:center;gap:4px;font-size:9px;color:var(--muted)}
+.legend-dot{width:6px;height:6px;border-radius:50%}
+
+/* FOOTER */
+footer{border-top:1px solid var(--border);padding:20px 24px;font-size:11px;color:var(--muted);line-height:1.8;margin-top:20px;min-height:60px}
+footer a{color:var(--accent);text-decoration:none}
+
+/* PASSWORD GATE (demo) */
+#rs-gate{position:fixed;top:0;left:0;right:0;bottom:0;background:#07090f;z-index:99999;display:flex;align-items:center;justify-content:center}
+.rs-gate-box{background:var(--card);border:1px solid var(--accent);border-radius:12px;padding:40px;width:360px;max-width:90vw;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.6)}
+.rs-gate-logo{width:40px;height:40px;background:var(--accent);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;margin:0 auto 16px}
+.rs-gate-title{font-size:20px;font-weight:800;color:#fff;margin-bottom:6px}
+.rs-gate-sub{font-size:12px;color:var(--muted);margin-bottom:28px}
+.rs-gate-input{width:100%;padding:12px 14px;border-radius:6px;border:1px solid var(--border);background:#07090f;color:var(--text);font-size:14px;font-family:'IBM Plex Mono',monospace;outline:none;margin-bottom:10px;box-sizing:border-box;text-align:center;letter-spacing:2px}
+.rs-gate-input:focus{border-color:var(--accent)}
+.rs-gate-btn{width:100%;padding:12px;border-radius:6px;border:none;background:var(--accent);color:#fff;font-size:14px;font-weight:700;cursor:pointer;transition:opacity .15s}
+.rs-gate-btn:hover{opacity:.85}
+.rs-gate-err{color:var(--red);font-size:12px;margin-top:8px;display:none}
+.rs-gate-footer{font-size:10px;color:var(--dim);margin-top:20px}
+
+/* ── TABLET (900px) ── */
+@media(max-width:900px){
+  .main{grid-template-columns:1fr;padding:14px 16px;gap:14px}
+  .stats-row{grid-template-columns:repeat(2,1fr);padding:12px 16px;gap:10px}
+  .threat-header,.threat-row{grid-template-columns:24px 1fr 64px 70px}
+  .threat-header span:nth-child(3),.cve-col{display:none}
+  .filters{padding:8px 16px;gap:6px}
+}
+
+/* ── MOBILE (600px) — full redesign ── */
+@media(max-width:600px){
+  /* Nav */
+  nav{padding:0 14px;height:48px}
+  .nav-logo-text{font-size:14px}
+  #hero-date{display:none}
+
+  /* Status bar */
+  .status-bar{font-size:9px;padding:4px 14px;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+  /* Stat cards — 2x2 grid, compact */
+  .stats-row{
+    grid-template-columns:1fr 1fr;
+    gap:8px;padding:10px 14px;
+    border-bottom:1px solid var(--border)
+  }
+  .stat-card{padding:10px 12px;border-radius:6px}
+  .stat-val{font-size:22px}
+  .stat-lbl{font-size:9px}
+
+  /* Filter bar — scrollable horizontal strip */
+  .filters{
+    padding:8px 14px;
+    gap:6px;
+    overflow-x:auto;
+    flex-wrap:nowrap;
+    -webkit-overflow-scrolling:touch;
+    scrollbar-width:none;
+  }
+  .filters::-webkit-scrollbar{display:none}
+  .filter-label{white-space:nowrap;font-size:9px}
+  .filter-select{font-size:11px;padding:4px 8px;min-width:120px}
+  .filter-chip{padding:4px 10px;font-size:10px;white-space:nowrap;flex-shrink:0}
+  .filter-locked-group{flex-shrink:0}
+  .filter-locked-pill{padding:4px 10px;font-size:10px}
+  .threat-count{display:none}
+
+  /* Main — single column, no padding */
+  .main{
+    grid-template-columns:1fr;
+    padding:10px 14px;
+    gap:12px;
+    max-width:100%
+  }
+
+  /* Threat card — simplified columns for mobile */
+  .threat-card{border-radius:8px}
+  .threat-card-header{padding:10px 12px}
+  .threat-card-title{font-size:10px}
+
+  /* Hide header row — use cards instead */
+  .threat-header{display:none}
+
+  /* Threat rows — card style on mobile */
+  .threat-row{
+    display:block;
+    padding:12px 14px;
+    border-bottom:1px solid var(--border);
+    position:relative;
+    cursor:pointer;
+  }
+  .threat-row:active{background:rgba(45,126,247,.06)}
+
+  /* Mobile card layout inside each row */
+  .threat-num{
+    position:absolute;top:12px;left:14px;
+    font-size:10px;color:var(--muted)
+  }
+  .threat-desc{
+    font-size:12px;padding-left:20px;padding-right:60px;
+    line-height:1.5;margin-bottom:5px
+  }
+  .threat-desc-sub{padding-left:20px;gap:5px;margin-top:3px}
+  .cve-col{
+    display:block;
+    font-size:10px;color:var(--muted);
+    padding-left:20px;margin-top:3px
+  }
+  .threat-cvss{display:none} /* hide CVSS on mobile — show only Your Score */
+  .threat-score{
+    position:absolute;top:12px;right:14px;
+    font-size:16px;font-weight:900
+  }
+  .score-delta{font-size:9px}
+
+  /* Score legend — hide on mobile */
+  .score-legend{display:none}
+
+  /* Email gate on mobile */
+  #email-gate{padding:20px 14px}
+  #email-gate input{width:100%;margin-bottom:8px}
+  #email-gate button{width:100%}
+  #gate-email{width:100% !important}
+
+  /* Sidebar — stacked, compact */
+  .sidebar{gap:10px}
+  .kev-card,.sidebar-card{border-radius:8px}
+  .kev-card-header,.sidebar-card-header{padding:8px 12px;font-size:9px}
+  .kev-item{padding:8px 12px}
+  .email-section{padding:12px}
+  .email-input{font-size:12px}
+  .email-btn{font-size:12px;padding:10px}
+  .ind-score-row{padding:6px 12px}
+  .share-row{padding:10px 12px;gap:6px}
+  .share-btn{font-size:10px;padding:4px 10px}
+
+  /* Popup — full bottom sheet on mobile */
+  #cve-popup{
+    position:fixed;
+    bottom:0;left:0;right:0;
+    width:100%;max-width:100%;
+    border-radius:16px 16px 0 0;
+    border-left:none;border-right:none;border-bottom:none;
+    border-top:2px solid var(--accent);
+    padding:20px 18px 32px;
+    max-height:75vh;
+    overflow-y:auto;
+    transform:translateY(100%);
+    transition:transform .25s ease;
+    pointer-events:none;
+    display:none;
+  }
+  #cve-popup.visible{
+    transform:translateY(0);
+    pointer-events:auto;
+  }
+  #cve-popup::before{
+    content:'';display:block;
+    width:40px;height:4px;
+    background:var(--border);
+    border-radius:2px;
+    margin:0 auto 16px;
+  }
+
+  /* Locked tooltip — full width on mobile */
+  .locked-tooltip{
+    left:0;right:0;width:auto;
+    position:fixed;
+    bottom:0;top:auto;
+    border-radius:16px 16px 0 0;
+    transform:none;
+    border-left:none;border-right:none;border-bottom:none;
+    padding:20px 18px 32px;
+  }
+
+  /* Locked modal — full screen bottom sheet */
+  .modal-box{
+    position:fixed;
+    bottom:0;left:0;right:0;
+    width:100%;max-width:100%;
+    border-radius:16px 16px 0 0;
+    padding:24px 18px 36px;
+  }
+
+  /* Footer */
+  footer{padding:16px 14px;font-size:10px}
+}
+</style>
+</head>
+
+<body>
+
+<div id="rs-gate">
+  <div class="rs-gate-box">
+    <div class="rs-gate-logo">🛡</div>
+    <div class="rs-gate-title">RiskSync Daily — Demo</div>
+    <div class="rs-gate-sub">Private demo — enter access code to continue</div>
+    <input class="rs-gate-input" id="rs-pwd" type="password" placeholder="Access code" onkeydown="if(event.keyCode===13)rsUnlock()"/>
+    <button class="rs-gate-btn" onclick="rsUnlock()">Enter Demo →</button>
+    <div class="rs-gate-err" id="rs-err">Incorrect access code</div>
+    <div class="rs-gate-footer">Authorised demo access only · RiskSync © 2026</div>
+  </div>
+</div>
+<script>
+(function(){
+  if(sessionStorage.getItem('rs_daily_demo')==='Umlza1N5bmMyMDI2'){document.getElementById('rs-gate').style.display='none';return;}
+  document.body.style.overflow='hidden';
+})();
+function rsUnlock(){
+  if(btoa(document.getElementById('rs-pwd').value)==='Umlza1N5bmMyMDI2'){
+    sessionStorage.setItem('rs_daily_demo','Umlza1N5bmMyMDI2');
+    document.getElementById('rs-gate').style.display='none';
+    document.body.style.overflow='';
+  }else{
+    document.getElementById('rs-err').style.display='block';
+    document.getElementById('rs-pwd').value='';
+  }
+}
+</script>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">
+    <div class="nav-logo-icon"><span style="font-size:14px">🛡</span></div>
+    <span class="nav-logo-text">RiskSync</span>
+    <span class="nav-badge">LIVE</span>
+    <span style="font-size:10px;color:var(--muted);margin-left:8px" id="hero-date"></span>
+  </div>
+</nav>
+
+<!-- STATUS BAR -->
+<div class="status-bar mono">
+  <span id="hero-date" style="color:var(--muted)"></span> &nbsp;·&nbsp; <span id="status-msg">Loading threat intelligence...</span>
+</div>
+
+<!-- STAT CARDS -->
+<div class="stats-row">
+  <div class="stat-card"><div class="stat-val mono" id="stat-total" style="color:var(--text)">—</div><div class="stat-lbl">KEV Catalogue</div></div>
+  <div class="stat-card red"><div class="stat-val mono" id="stat-kev" style="color:var(--red)">—</div><div class="stat-lbl">Critical ≥9.0</div></div>
+  <div class="stat-card amber"><div class="stat-val mono" id="stat-critical" style="color:var(--amber)">—</div><div class="stat-lbl">High ≥7.0</div></div>
+  <div class="stat-card green"><div class="stat-val mono" id="stat-new" style="color:var(--green)">—</div><div class="stat-lbl">New Today</div></div>
+</div>
+
+<!-- FILTER BAR -->
+<div style="padding:10px 24px;border-bottom:1px solid var(--border);background:var(--surface);display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+
+  <span class="filter-label">Industry</span>
+  <select class="filter-select" id="ind-select" onchange="applyFilters()">
+    <option value="all">All Industries</option>
+  </select>
+
+  <span class="filter-label" style="margin-left:4px">Platform</span>
+  <button class="filter-chip active" data-plat="web" onclick="togglePlatform('web',this)">Web</button>
+  <button class="filter-chip active" data-plat="cloud" onclick="togglePlatform('cloud',this)">Cloud</button>
+  <button class="filter-chip" data-plat="api" onclick="togglePlatform('api',this)">API</button>
+  <button class="filter-chip" data-plat="ot_ics" onclick="togglePlatform('ot_ics',this)">OT/ICS</button>
+
+  <span class="filter-label" style="margin-left:4px">Scale</span>
+  <select class="filter-select" id="scale-select" onchange="applyFilters()">
+    <option value="micro">Micro (1–49)</option>
+    <option value="small">Small (50–249)</option>
+    <option value="mid" selected>Mid-Market (250–999)</option>
+    <option value="large">Large Enterprise (1k–10k)</option>
+    <option value="global">Global (10,000+)</option>
+  </select>
+
+  <span class="filter-label" style="margin-left:8px">Severity</span>
+  <button class="filter-chip active" onclick="setSev('all',this)">All</button>
+  <button class="filter-chip" onclick="setSev('critical',this)">Critical</button>
+  <button class="filter-chip" onclick="setSev('high',this)">High</button>
+  <button class="filter-chip" onclick="setSev('kev',this)">KEV Only</button>
+
+  <span class="threat-count mono" id="threat-count" style="margin-left:auto">— threats</span>
+</div>
+
+
+
+<!-- MAIN CONTENT -->
+<div style="max-width:1400px;margin:0 auto;padding:20px 24px;display:grid;grid-template-columns:1fr 260px 220px;gap:16px;align-items:start">
+
+  <!-- COL 1: THREAT TABLE -->
+  <div>
+    <div class="threat-card">
+      <div class="threat-card-header">
+        <span class="threat-card-title">Top Threats Today</span>
+      </div>
+      <div class="threat-header">
+        <span>#</span>
+        <span>Threat</span>
+        <span>CVE ID</span>
+        <span>CVSS</span>
+        <span>Your Score</span>
+      </div>
+      <div id="threat-table"></div>
+      <div class="score-legend">
+        <span class="legend-item"><span class="legend-dot" style="background:var(--red)"></span>Critical ≥8</span>
+        <span class="legend-item"><span class="legend-dot" style="background:var(--amber)"></span>High ≥6</span>
+        <span class="legend-item"><span class="legend-dot" style="background:var(--accent)"></span>Medium ≥4</span>
+        <span class="legend-item"><span class="legend-dot" style="background:var(--green)"></span>Low</span>
+        <span style="margin-left:auto;font-size:9px;color:var(--muted)">Your Score = CVSS × industry × scale × platform</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- COL 2: CISA KEV ALERTS -->
+  <div style="display:flex;flex-direction:column;gap:14px">
+    <div class="kev-card">
+      <div class="kev-card-header">⚠ CISA KEV Alerts</div>
+      <div id="kev-list" style="min-height:150px"><div style="padding:12px 14px;font-size:11px;color:var(--muted)">Loading...</div></div>
+    </div>
+    <!-- EMAIL CAPTURE -->
+    <div class="sidebar-card">
+      <div class="sidebar-card-header">Get This Daily</div>
+      <div class="email-section">
+        <div style="font-size:11px;color:var(--muted);line-height:1.7;margin-bottom:12px">Delivered every morning at 07:00 UTC. Scored for your industry.</div>
+        <div id="email-form">
+          <input type="email" class="email-input" id="email-input" placeholder="you@company.com" onkeydown="if(event.keyCode===13)subscribeEmail()"/>
+          <select class="email-input" id="email-industry" style="margin-bottom:8px"></select>
+          <button class="email-btn" onclick="subscribeEmail()">Subscribe — Free</button>
+        </div>
+        <div id="email-success">✓ Subscribed — first brief tomorrow at 07:00 UTC</div>
+      </div>
+    </div>
+    <!-- SHARE -->
+    <div class="sidebar-card">
+      <div class="sidebar-card-header">Share</div>
+      <div class="share-row">
+        <button class="share-btn" onclick="shareTwitter()">X / Twitter</button>
+        <button class="share-btn" onclick="shareLinkedIn()">LinkedIn</button>
+        <button class="share-btn" onclick="copyLink()">Copy Link</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- COL 3: INDUSTRY RISK INDEX -->
+  <div>
+    <div class="sidebar-card" style="height:100%">
+      <div class="sidebar-card-header">Industry Risk Index</div>
+      <div id="ind-scores-list" style="min-height:200px"><div style="padding:12px 14px;font-size:11px;color:var(--muted)">Loading...</div></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- FOOTER --><!-- FOOTER --><!-- FOOTER --><!-- FOOTER -->
+<footer>
+  <strong style="color:var(--text)">RiskSync Daily Threat Brief</strong><br/>
+  Data sourced from <a href="https://nvd.nist.gov">NIST NVD</a> · <a href="https://www.cisa.gov/known-exploited-vulnerabilities-catalog">CISA KEV</a> · <a href="https://www.first.org/epss">FIRST EPSS</a><br/>
+  Scores: CVSS × Industry Multiplier × Scale × Regional Weight × Exploit Probability<br/>
+  <div style="margin-top:12px;display:flex;gap:16px;justify-content:center;flex-wrap:wrap">
+    <a href="index.html">Full Platform</a>
+    <a href="mailto:hello@risksync.io">Contact</a>
+    <a href="#">Privacy Policy</a>
+    <a href="#">API Access</a>
+    <a href="#">Advertise</a>
+  </div>
+  <div style="margin-top:12px;font-size:10px;color:var(--dim)">
+    © 2026 RiskSync · Not financial or legal advice · Threat data updated daily
+  </div>
+</footer>
+
+<!-- DATA ENGINE -->
+<script>
+/* ── TOKENS ── */
+const C={
+  bg:"#080d18",surface:"#0c1220",card:"#101828",border:"#1a2540",borderHi:"#243358",
+  text:"#dde4f0",muted:"#5a6f96",dim:"#2e3f62",
+  accent:"#2d7ef7",accentBg:"#0d1f3c",
+  green:"#0ed27a",greenBg:"#051a10",
+  amber:"#f5a623",amberBg:"#1e1200",
+  red:"#f04060",redBg:"#1e0810",
+  purple:"#9b72f6",purpleBg:"#150d2a",
+  cyan:"#22d3ee",cyanBg:"#031419",
+  pink:"#f472b6",
+};
+
+/* ── DATA ── */
+const INDUSTRIES=[
+  {id:"healthcare",label:"Healthcare",icon:"⊕",multiplier:1.5,primaryRisk:"Privacy & Human Factor",topThreat:"AI-Powered Patient Impersonation",riskFocus:["synthetic_id","ot_legacy","ai_agent"],regulatoryBodies:["HIPAA","GDPR","NIS2"],color:"#f04060"},
+  {id:"manufacturing",label:"Manufacturing",icon:"⬡",multiplier:1.4,primaryRisk:"Operational Technology (OT)",topThreat:"Kill-Switch Ransomware on Legacy OT",riskFocus:["ot_legacy","supply_chain","ai_agent"],regulatoryBodies:["NERC CIP","NIS2","ISO 27001"],color:"#f5a623"},
+  {id:"software",label:"Software / SaaS / Dev",icon:"◈",multiplier:1.3,primaryRisk:"IP & AI Governance",topThreat:"AI-Agent Code Injection / Supply Chain",riskFocus:["ai_agent","supply_chain","compliance"],regulatoryBodies:["SOC 2","ISO 27001","GDPR"],color:"#9b72f6"},
+  {id:"fintech",label:"FinTech / Banking",icon:"◆",multiplier:1.5,primaryRisk:"Fraud & Trust",topThreat:"Deepfake CFO Vishing / BEC 2.0",riskFocus:["synthetic_id","compliance","supply_chain"],regulatoryBodies:["PCI-DSS","DORA","FCA"],color:"#2d7ef7"},
+  {id:"energy",label:"Energy / Utilities",icon:"⚡",multiplier:1.6,primaryRisk:"Geopolitical Sabotage",topThreat:"State-Sponsored ICS / SCADA Attack",riskFocus:["ot_legacy","supply_chain","compliance"],regulatoryBodies:["NERC CIP","NIS2","IEC 62443"],color:"#f5a623"},
+  {id:"government",label:"Government / Defence",icon:"⊞",multiplier:1.6,primaryRisk:"Espionage & Continuity",topThreat:"APT Supply Chain & Credential Theft",riskFocus:["supply_chain","synthetic_id","ai_agent"],regulatoryBodies:["FISMA","NIST CSF","IL2/IL4"],color:"#22d3ee"},
+  {id:"retail",label:"Retail / E-Commerce",icon:"◉",multiplier:1.2,primaryRisk:"PCI & Brand Reputation",topThreat:"Seasonal Magecart / API Skimming",riskFocus:["supply_chain","compliance","synthetic_id"],regulatoryBodies:["PCI-DSS","GDPR","CCPA"],color:"#f472b6"},
+  {id:"telecom",label:"Telecommunications",icon:"◎",multiplier:1.4,primaryRisk:"Network Infrastructure",topThreat:"SS7 Exploitation / VoIP Hijack",riskFocus:["supply_chain","ot_legacy","compliance"],regulatoryBodies:["FCC","NIS2","ETSI"],color:"#0ed27a"},
+  {id:"education",label:"Education",icon:"◫",multiplier:1.1,primaryRisk:"Identity & Network Scale",topThreat:"Large-Scale Phishing / Ransomware",riskFocus:["synthetic_id","supply_chain","compliance"],regulatoryBodies:["FERPA","GDPR","COPPA"],color:"#22d3ee"},
+  {id:"legal",label:"Legal / Professional Svcs",icon:"▣",multiplier:1.3,primaryRisk:"Client Data & Confidentiality",topThreat:"Spear-phishing for M&A Intelligence",riskFocus:["synthetic_id","supply_chain","ai_agent"],regulatoryBodies:["SRA","GDPR","ABA"],color:"#9b72f6"},
+  {id:"logistics",label:"Logistics / Transport",icon:"◧",multiplier:1.3,primaryRisk:"Supply Chain & Fleet OT",topThreat:"GPS Spoofing / Vendor API Compromise",riskFocus:["supply_chain","ot_legacy","compliance"],regulatoryBodies:["TSA","NIS2","ISO 28000"],color:"#f5a623"},
+  {id:"media",label:"Media / Entertainment",icon:"◨",multiplier:1.1,primaryRisk:"IP & Content Piracy",topThreat:"Deepfake Content & DDoS Extortion",riskFocus:["synthetic_id","supply_chain","ai_agent"],regulatoryBodies:["DMCA","GDPR","FCC"],color:"#f472b6"},
+  {id:"realestate",label:"Real Estate / PropTech",icon:"◱",multiplier:1.2,primaryRisk:"BEC & Wire Fraud",topThreat:"Deepfake Buyer / Wire Transfer Fraud",riskFocus:["synthetic_id","compliance","supply_chain"],regulatoryBodies:["FinCEN","GDPR","RERA"],color:"#2d7ef7"},
+  {id:"pharma",label:"Pharma / Life Sciences",icon:"⊗",multiplier:1.4,primaryRisk:"IP & Regulatory Integrity",topThreat:"Clinical Trial Data Exfiltration",riskFocus:["ai_agent","supply_chain","compliance"],regulatoryBodies:["FDA 21 CFR","GxP","EMA"],color:"#0ed27a"},
+];
+
+const SCALES=[
+  {id:"micro",label:"Micro / Startup",range:"1–49",s_multiplier:1.6,note:"Highest per-incident fatality risk. 88% of ransomware targets this band."},
+  {id:"small",label:"Small",range:"50–249",s_multiplier:1.4,note:"Unlikely to have a dedicated SOC. Low control effectiveness baseline."},
+  {id:"mid",label:"Mid-Market",range:"250–999",s_multiplier:1.2,note:"Growing complexity. Security investment begins but gaps remain large."},
+  {id:"large",label:"Large Enterprise",range:"1,000–9,999",s_multiplier:1.1,note:"High blast radius but more redundant controls. Compliance risk elevated."},
+  {id:"global",label:"Global / Tier-1",range:"10,000+",s_multiplier:1.0,note:"Nation-state interest. Regulation & legal exposure dominate risk posture."},
+];
+
+const SUB_TAGS=[
+  {id:"public_sector",label:"Public / Gov Clients",delta:.2,category:"espionage"},
+  {id:"critical_infra",label:"Critical Infrastructure",delta:.3,category:"downtime"},
+  {id:"remote_first",label:"Remote-First Workforce",delta:.2,category:"identity"},
+  {id:"ai_heavy",label:"AI / LLM Heavy Use",delta:.25,category:"ai_agent"},
+  {id:"regulated_data",label:"Stores Regulated Data",delta:.2,category:"compliance"},
+  {id:"ot_environment",label:"OT / ICS Environment",delta:.3,category:"ot_legacy"},
+  {id:"global_supply",label:"Global Supply Chain",delta:.2,category:"supply_chain"},
+  {id:"payment_processing",label:"Payment Processing",delta:.2,category:"compliance"},
+];
+
+const GEOS=[
+  {id:"eu",label:"European Union",reg:"GDPR · NIS2 · EU AI Act · EU CSF 2026",regMultiplier:1.2},
+  {id:"us",label:"United States",reg:"HIPAA · FISMA · CCPA · CIRCIA · FTC",regMultiplier:1.1},
+  {id:"uk",label:"United Kingdom",reg:"UK GDPR · FCA SYSC · NIS Regs",regMultiplier:1.15},
+  {id:"apac",label:"Asia-Pacific",reg:"PDPA · PIPL (CN) · PIPA (KR) · MAS TRM",regMultiplier:1.1},
+  {id:"me_af",label:"Middle East / Africa",reg:"NCA (SA) · NESA (UAE) · POPIA (ZA)",regMultiplier:1.0},
+  {id:"latam",label:"Latin America",reg:"LGPD (BR) · PDPA (CL) · Ley 1581 (CO)",regMultiplier:1.0},
+  {id:"other",label:"Other / Global",reg:"ISO 27001 · NIST CSF 2.0 · CIS Controls",regMultiplier:1.0},
+];
+
+const TECH_PILLARS=[
+  {id:"cloud",label:"Cloud (AWS / Azure / GCP)",icon:"☁",threatTags:["supply_chain","ai_agent","compliance"]},
+  {id:"saas",label:"SaaS Tools (CRM, ERP, Collab)",icon:"⬡",threatTags:["supply_chain","synthetic_id","compliance"]},
+  {id:"onprem",label:"On-Premise / Legacy Systems",icon:"▣",threatTags:["ot_legacy","supply_chain"]},
+  {id:"ot_ics",label:"OT / ICS / SCADA",icon:"⚙",threatTags:["ot_legacy","supply_chain"]},
+  {id:"ai_llm",label:"AI / LLM / Agents",icon:"◈",threatTags:["ai_agent","supply_chain","compliance"]},
+  {id:"remote",label:"Remote / VPN / BYOD",icon:"◉",threatTags:["synthetic_id","supply_chain"]},
+  {id:"iot",label:"IoT / Connected Devices",icon:"◎",threatTags:["ot_legacy","supply_chain"]},
+  {id:"payment",label:"Payment / POS Systems",icon:"◆",threatTags:["compliance","synthetic_id"]},
+];
+
+const RISK_CATS=[
+  {id:"ai_agent",label:"AI & Agent Governance",short:"Agentic AI",color:"#9b72f6",baseScore:8.9,trend:.4},
+  {id:"supply_chain",label:"Supply Chain & 3rd Party",short:"Supply Chain",color:"#f5a623",baseScore:8.4,trend:.2},
+  {id:"synthetic_id",label:"Deepfake & Synthetic ID",short:"Synthetic ID",color:"#f472b6",baseScore:7.9,trend:.6},
+  {id:"compliance",label:"Regulatory Compliance",short:"Compliance",color:"#2d7ef7",baseScore:7.2,trend:-.1},
+  {id:"ot_legacy",label:"OT & Legacy Resilience",short:"OT / Legacy",color:"#f5a623",baseScore:8.6,trend:.3},
+];
+
+const SOURCES=[
+  {id:"cisa",name:"CISA KEV",tier:"I",trust:1.00,color:"#f04060",tier_label:"Verified Gov",status:"live",desc:"Confirmed active exploits. Triggers auto-Critical override."},
+  {id:"nvd",name:"NIST NVD",tier:"I",trust:1.00,color:"#2d7ef7",tier_label:"Verified Gov",status:"live",desc:"CVSS base scores. Foundation of all B values."},
+  {id:"msrc",name:"Microsoft MSRC",tier:"I",trust:.97,color:"#0078d4",tier_label:"Verified Vendor",status:"live",desc:"Patch Tuesday + zero-day advisories."},
+  {id:"misp",name:"MISP / CIRCL",tier:"II",trust:.85,color:"#0ed27a",tier_label:"Community",status:"live",desc:"1,100+ orgs sharing IoCs. Peer signal for sector-specific attacks."},
+  {id:"otx",name:"AlienVault OTX",tier:"II",trust:.82,color:"#22d3ee",tier_label:"Community",status:"live",desc:"19M+ IoC records/day. STIX/TAXII machine-readable."},
+  {id:"sans",name:"SANS ISC",tier:"II",trust:.75,color:"#9b72f6",tier_label:"Community",status:"live",desc:"500k+ sensor global network. Early scanning/exploit activity."},
+  {id:"epss",name:"EPSS (FIRST.org)",tier:"II",trust:.90,color:"#f472b6",tier_label:"ML Scoring",status:"live",desc:"ML probability score: how likely is this CVE to be exploited?"},
+  {id:"falcon",name:"FalconFeeds.io",tier:"III",trust:.95,color:"#f5a623",tier_label:"Dark Web",status:"pro",desc:"Real-time ransomware victim logs. Tracks SME-targeting groups."},
+  {id:"flare",name:"Flare.io",tier:"III",trust:.88,color:"#f04060",tier_label:"Dark Web",status:"pro",desc:"Dark web leak monitoring. Breach detection before disclosure."},
+  {id:"openphish",name:"OpenPhish",tier:"III",trust:.80,color:"#22d3ee",tier_label:"Specialized",status:"pro",desc:"Real-time phishing URL feeds. Critical for Healthcare / FinTech."},
+  {id:"vaikora",name:"Vaikora AI Signals",tier:"IV",trust:.78,color:"#9b72f6",tier_label:"AI/Agent Intel",status:"enterprise",desc:"2026 specialist: AI agent exploits, LLM prompt injection, API abuse."},
+  {id:"aikido",name:"Aikido / OSV.dev",tier:"IV",trust:.83,color:"#0ed27a",tier_label:"Supply Chain",status:"enterprise",desc:"Open-source SCA + dependency vulnerability tracking."},
+  {id:"isac",name:"Sector ISACs",tier:"IV",trust:.92,color:"#f472b6",tier_label:"Sector Intel",status:"enterprise",desc:"FS-ISAC / H-ISAC / E-ISAC — sector-specific sharing communities."},
+  {id:"vulncheck",name:"VulnCheck",tier:"IV",trust:.88,color:"#f5a623",tier_label:"Exploit Intel",status:"enterprise",desc:"500+ sources. Threat actor attribution. Botnet telemetry."},
+];
+
+const CONTROLS=[
+  {id:"mfa",label:"Phishing-Resistant MFA (FIDO2)",mitigation:.85,costK:12,type:"Technical",bestFor:"All — Identity protection",riskCat:"synthetic_id"},
+  {id:"backups",label:"Air-Gapped Immutable Backups",mitigation:.90,costK:18,type:"Structural",bestFor:"Healthcare · Manufacturing · OT",riskCat:"ot_legacy"},
+  {id:"prompt_fw",label:"AI Prompt Injection Firewall",mitigation:.60,costK:24,type:"Technical",bestFor:"Software / SaaS · FinTech",riskCat:"ai_agent"},
+  {id:"oob_auth",label:"Out-of-Band Transfer Authorization",mitigation:.95,costK:8,type:"Process",bestFor:"All small-scale · Financial",riskCat:"synthetic_id"},
+  {id:"ztna",label:"Zero-Trust Network Micro-segmentation",mitigation:.70,costK:45,type:"Network",bestFor:"Large-scale · Manufacturing · OT",riskCat:"supply_chain"},
+  {id:"ot_monitor",label:"OT/ICS Real-Time Monitoring",mitigation:.75,costK:38,type:"Technical",bestFor:"Manufacturing · Energy · Logistics",riskCat:"ot_legacy"},
+  {id:"sca",label:"Software Composition Analysis",mitigation:.55,costK:14,type:"Technical",bestFor:"Software · SaaS · FinTech",riskCat:"supply_chain"},
+  {id:"cspm",label:"Cloud Security Posture Mgmt",mitigation:.65,costK:28,type:"Technical",bestFor:"Cloud-first · SaaS · Multi-cloud",riskCat:"compliance"},
+  {id:"dlp",label:"Data Loss Prevention (AI-aware)",mitigation:.60,costK:22,type:"Technical",bestFor:"Healthcare · Legal · Pharma",riskCat:"compliance"},
+  {id:"vishing",label:"Vishing / Deepfake Awareness Training",mitigation:.45,costK:6,type:"Process",bestFor:"All — especially Finance teams",riskCat:"synthetic_id"},
+  {id:"patch_auto",label:"Auto-Patch Management",mitigation:.60,costK:10,type:"Technical",bestFor:"All — baseline hygiene",riskCat:"ot_legacy"},
+  {id:"ai_gov",label:"AI Agent Governance Platform",mitigation:.80,costK:55,type:"Governance",bestFor:"Software · FinTech · Pharma",riskCat:"ai_agent"},
+];
+
+/* ── VULNERABILITY DATABASE ── */
+const VULNS=[
+  {id:"CVE-2024-3400",cvss:10.0,desc:"PAN-OS GlobalProtect RCE via command injection",type:"injection",src:"NVD+KEV",kev:true,epss:.97,affects:["onprem","vpn"],industries:["all"],cwe:"CWE-77",vector:"Network",exploit:"Active"},
+  {id:"CVE-2024-21762",cvss:9.6,desc:"Fortinet SSL-VPN out-of-bounds write RCE",type:"ransomware",src:"NVD+KEV",kev:true,epss:.94,affects:["onprem"],industries:["all"],cwe:"CWE-787",vector:"Network",exploit:"Active"},
+  {id:"CVE-2024-1709",cvss:10.0,desc:"ConnectWise ScreenConnect authentication bypass",type:"auth",src:"CISA KEV",kev:true,epss:.99,affects:["saas","onprem"],industries:["all"],cwe:"CWE-288",vector:"Network",exploit:"Active"},
+  {id:"CVE-2024-27198",cvss:9.8,desc:"JetBrains TeamCity auth bypass → RCE",type:"auth",src:"NVD+VCK",kev:true,epss:.96,affects:["cicd","web"],industries:["software","fintech","pharma"],cwe:"CWE-306",vector:"Network",exploit:"Active"},
+  {id:"CVE-2024-4577",cvss:9.8,desc:"PHP CGI argument injection / RCE",type:"injection",src:"NVD+OTX",kev:true,epss:.92,affects:["web","onprem"],industries:["software","retail","education"],cwe:"CWE-88",vector:"Network",exploit:"Active"},
+  {id:"CVE-2024-23897",cvss:9.8,desc:"Jenkins CLI arbitrary file read / RCE",type:"injection",src:"NVD+GHSA",kev:true,epss:.88,affects:["cicd","web"],industries:["software","pharma"],cwe:"CWE-88",vector:"Network",exploit:"Active"},
+  {id:"CVE-2024-38094",cvss:7.2,desc:"Microsoft SharePoint deserialization RCE",type:"deserialization",src:"MSRC+KEV",kev:true,epss:.71,affects:["saas","onprem","email"],industries:["all"],cwe:"CWE-502",vector:"Network",exploit:"Active"},
+  {id:"CVE-2024-40766",cvss:9.3,desc:"SonicWall SonicOS SSLVPN access control failure",type:"auth",src:"NVD+KEV",kev:true,epss:.93,affects:["onprem"],industries:["all"],cwe:"CWE-284",vector:"Network",exploit:"Active"},
+  {id:"CVE-2024-22024",cvss:8.3,desc:"Ivanti ICS SAML XML external entity injection",type:"xxe",src:"NVD+KEV",kev:true,epss:.78,affects:["saas","onprem"],industries:["government","fintech","healthcare"],cwe:"CWE-611",vector:"Network",exploit:"Active"},
+  {id:"CVE-2024-30051",cvss:7.8,desc:"Windows DWM privilege escalation — Lazarus 0-day",type:"privesc",src:"MSRC+KEV",kev:true,epss:.82,affects:["onprem","cloud"],industries:["government","fintech"],cwe:"CWE-122",vector:"Local",exploit:"Active"},
+  {id:"CVE-2025-0282",cvss:9.0,desc:"Ivanti Connect Secure stack overflow pre-auth RCE",type:"injection",src:"NVD+KEV",kev:true,epss:.91,affects:["onprem"],industries:["all"],cwe:"CWE-121",vector:"Network",exploit:"Active"},
+  {id:"CVE-2025-21418",cvss:7.8,desc:"Windows AFD.sys privilege escalation",type:"privesc",src:"MSRC+KEV",kev:true,epss:.75,affects:["onprem","cloud"],industries:["all"],cwe:"CWE-416",vector:"Local",exploit:"Active"},
+  {id:"CVE-2024-28986",cvss:9.8,desc:"SolarWinds Web Help Desk Java deserialization RCE",type:"deserialization",src:"NVD+KEV",kev:true,epss:.87,affects:["onprem","saas"],industries:["all"],cwe:"CWE-502",vector:"Network",exploit:"Active"},
+  {id:"GHSA-xz7w-supply",cvss:8.8,desc:"XZ Utils backdoor — supply chain liblzma injection",type:"supply_chain",src:"GHSA+OSV",kev:false,epss:.62,affects:["onprem","cicd","cloud"],industries:["software","government","pharma"],cwe:"CWE-506",vector:"Network",exploit:"Targeted"},
+  {id:"CVE-2025-32975",cvss:9.1,desc:"Quest KACE SMA open directory / mass credential leak",type:"auth",src:"NVD+KEV",kev:true,epss:.83,affects:["saas","onprem"],industries:["all"],cwe:"CWE-552",vector:"Network",exploit:"Active"},
+  {id:"CVE-2024-AI-PIv1",cvss:8.5,desc:"LLM prompt injection via poisoned tool response",type:"prompt_injection",src:"Vaikora+OTX",kev:false,epss:.68,affects:["ai_llm","api","web"],industries:["software","fintech","healthcare","retail"],cwe:"CWE-77",vector:"Network",exploit:"Emerging"},
+  {id:"CVE-2024-OT-PLC1",cvss:9.2,desc:"Siemens S7 PLC remote code execution via PROFINET",type:"ot",src:"ICS-CERT+NVD",kev:true,epss:.78,affects:["ot_ics"],industries:["manufacturing","energy","logistics"],cwe:"CWE-20",vector:"Network",exploit:"Active"},
+  {id:"CVE-2024-OAUTH-1",cvss:8.1,desc:"OAuth token scope escalation via SaaS pivot chain",type:"oauth",src:"GHSA+OTX",kev:false,epss:.65,affects:["saas","api","cloud"],industries:["software","fintech","retail","legal"],cwe:"CWE-284",vector:"Network",exploit:"Active"},
+  {id:"CVE-2024-RANSOM1",cvss:8.7,desc:"Ransomware via legacy Windows SMB lateral movement",type:"ransomware",src:"CISA+MISP",kev:true,epss:.89,affects:["onprem"],industries:["healthcare","manufacturing","logistics","education"],cwe:"CWE-306",vector:"Network",exploit:"Active"},
+  {id:"CVE-2024-PHISH-1",cvss:7.5,desc:"Adversarial phishing kit targeting SSO credentials",type:"phishing",src:"OpenPhish+MISP",kev:false,epss:.72,affects:["email","web","saas"],industries:["all"],cwe:"CWE-359",vector:"Social",exploit:"Active"},
+];
+
+const IND_PROFILE_VULN={
+  healthcare:    {boost:["ransomware","auth","phishing","ot"],      suppress:["prompt_injection","injection"]},
+  manufacturing: {boost:["ot","ransomware","supply_chain"],          suppress:["prompt_injection","oauth"]},
+  software:      {boost:["injection","supply_chain","prompt_injection","oauth"], suppress:["ot","ransomware"]},
+  fintech:       {boost:["auth","oauth","phishing","supply_chain"],  suppress:["ot"]},
+  energy:        {boost:["ot","ransomware","supply_chain"],          suppress:["prompt_injection","injection"]},
+  government:    {boost:["supply_chain","auth","privesc","phishing"],suppress:["prompt_injection"]},
+  retail:        {boost:["phishing","oauth","injection"],            suppress:["ot"]},
+  telecom:       {boost:["auth","supply_chain","privesc"],           suppress:["prompt_injection","ot"]},
+  education:     {boost:["phishing","ransomware","auth"],            suppress:["ot","prompt_injection"]},
+  legal:         {boost:["phishing","supply_chain","oauth"],         suppress:["ot"]},
+  logistics:     {boost:["ot","supply_chain","ransomware"],          suppress:["prompt_injection"]},
+  media:         {boost:["phishing","auth","supply_chain"],          suppress:["ot","prompt_injection"]},
+  realestate:    {boost:["phishing","oauth","auth"],                 suppress:["ot","prompt_injection"]},
+  pharma:        {boost:["supply_chain","auth","injection"],         suppress:["ot"]},
+};
+
+function computeVulnScore(v,profile){
+  const ind=INDUSTRIES.find(i=>i.id===profile.industry);
+  const sc=SCALES.find(s=>s.id===profile.scale);
+  const geo=GEOS.find(g=>g.id===profile.geo)||GEOS.find(g=>g.id==="other");
+  if(!ind||!sc)return v.cvss;
+  const indM=ind.multiplier;
+  const scaleM=sc.s_multiplier;
+  const geoM=geo.regMultiplier;
+  const platMatch=(profile.techPillars||[]).some(pid=>{
+    const pillar=TECH_PILLARS.find(t=>t.id===pid);
+    return v.affects.includes(pid)||(pillar&&v.affects.some(a=>a===pid));
+  });
+  const platM=platMatch?1.18:0.55;
+  const indMatch=v.industries.includes("all")||v.industries.includes(profile.industry);
+  const indRelevance=indMatch?1.0:0.5;
+  const prof=IND_PROFILE_VULN[profile.industry]||{boost:[],suppress:[]};
+  const typeBoost=prof.boost.includes(v.type)?1.28:prof.suppress.includes(v.type)?0.38:1.0;
+  const kevBonus=v.kev?1.1:1.0;
+  const raw=v.cvss*indM*scaleM*geoM*platM*indRelevance*typeBoost*kevBonus;
+  return parseFloat(Math.min(10,raw).toFixed(1));
+}
+
+function getTop10Vulns(profile, vulnList){
+  const list = vulnList && vulnList.length > 0 ? vulnList : VULNS;
+  return list
+    .map(v=>({...v,contextScore:computeVulnScore(v,profile)}))
+    .sort((a,b)=>b.contextScore-a.contextScore)
+    .slice(0,10);
+}
+
+/* ── SCORING ENGINE ── */
+const sevOf=n=>n>=8?"CRITICAL":n>=6?"HIGH":n>=4?"MEDIUM":"LOW";
+const sevColor=n=>n>=8?C.red:n>=6?C.amber:n>=4?C.accent:C.green;
+const sevBg=n=>n>=8?C.redBg:n>=6?C.amberBg:n>=4?C.accentBg:C.greenBg;
+
+function computeRisk(profile,controls_enabled,cat){
+  if(!profile.industry||!profile.scale)return null;
+  const ind=INDUSTRIES.find(i=>i.id===profile.industry);
+  const sc=SCALES.find(s=>s.id===profile.scale);
+  const geo=GEOS.find(g=>g.id===profile.geo)||GEOS.find(g=>g.id==="other");
+  if(!ind||!sc)return null;
+  const catRelevant=ind.riskFocus.includes(cat.id);
+  const industryM=catRelevant?ind.multiplier:ind.multiplier*.6;
+  const scaleM=sc.s_multiplier;
+  const regM=geo.regMultiplier;
+  const tagDelta=(profile.subTags||[]).reduce((a,tid)=>{const tag=SUB_TAGS.find(t=>t.id===tid);return tag&&tag.category===cat.id?a+tag.delta:a;},0);
+  const activeSrcs=SOURCES.filter(s=>profile.sources?.includes(s.id));
+  const sourceConf=activeSrcs.length>0?activeSrcs.reduce((a,s)=>a+s.trust,0)/activeSrcs.length:.7;
+  const pillarMatch=(profile.techPillars||[]).some(pid=>{const p=TECH_PILLARS.find(t=>t.id===pid);return p?.threatTags.includes(cat.id);});
+  const pillarM=pillarMatch?1.1:.85;
+  const B=cat.baseScore;
+  const inherent=Math.min(10,B*industryM*scaleM*regM*pillarM+tagDelta);
+  const trendFactor=1+(cat.trend*.05);
+  const catControls=CONTROLS.filter(ctrl=>controls_enabled.includes(ctrl.id)&&ctrl.riskCat===cat.id);
+  const ctrlEff=catControls.length>0?Math.min(.95,catControls.reduce((a,c)=>a+c.mitigation,0)*.7):0;
+  const residual=Math.max(.5,inherent*(1-ctrlEff)*trendFactor*sourceConf);
+  return{
+    inherent:parseFloat(Math.min(10,inherent).toFixed(1)),
+    residual:parseFloat(Math.min(10,residual).toFixed(1)),
+    ctrlEff:parseFloat((ctrlEff*100).toFixed(0)),
+    sourceConf:parseFloat((sourceConf*100).toFixed(0)),
+    catRelevant,pillarMatch,
+  };
+}
+
+function globalRisk(profile,controls){
+  const scores=RISK_CATS.map(cat=>computeRisk(profile,controls,cat));
+  const valid=scores.filter(Boolean);
+  return valid.length>0?parseFloat((valid.reduce((a,s)=>a+s.residual,0)/valid.length).toFixed(1)):0;
+}
+
+/* ── UI PRIMITIVES ── */
+
+const VULN_REMEDIATION={
+  "CVE-2024-3400":    {steps:["Apply PAN-OS patch immediately (hotfixes available for 10.2, 11.0, 11.1)","Disable GlobalProtect telemetry if patch cannot be applied immediately","Review firewall logs for /var/appweb/sslvpndocs/global-protect/ path traversal indicators","Rotate all VPN credentials and session tokens post-patch","Enable Threat Prevention license and apply Threat ID 95187"],urgency:"Patch within 24h — active nation-state exploitation confirmed"},
+  "CVE-2024-21762":   {steps:["Apply Fortinet firmware update 7.4.3+ or 7.2.7+ immediately","If patching delayed, disable SSL-VPN interface as temporary mitigation","Hunt for indicators: unusual admin account creation, config changes post-exploitation","Audit all SSL-VPN user sessions for anomalous source IPs","Enable FortiGuard IPS signature 53023"],urgency:"Patch within 24h — ransomware groups actively exploiting"},
+  "CVE-2024-1709":    {steps:["Apply ConnectWise patch to version 23.9.8 or later immediately","Block external access to ConnectWise ports (443, 8040, 8041) until patched","Audit all remote sessions in the past 30 days for unauthorized access","Reset all local accounts and API keys on ConnectWise instances","Enable MFA on all ConnectWise administrator accounts"],urgency:"Emergency — EPSS 99%, ransomware delivery confirmed"},
+  "CVE-2024-27198":   {steps:["Upgrade JetBrains TeamCity to 2023.11.4 or 2023.05.4+","If upgrade not possible, apply the security patch plugin from JetBrains","Audit build agent access and review recent pipeline executions","Rotate all TeamCity tokens, OAuth keys and service account credentials","Enable TeamCity audit logging and ship to SIEM immediately"],urgency:"Patch within 48h — SVR (APT29) exploitation documented"},
+  "CVE-2024-4577":    {steps:["Update PHP to 8.3.8, 8.2.20, or 8.1.29 on all Windows servers","Disable CGI mode or migrate to PHP-FPM","Apply mod_rewrite rules to block malformed charset parameters","Audit web server logs for %ADsystemroot%AD pattern in requests","Review all XAMPP / WAMP installations — default installs are vulnerable"],urgency:"Patch within 48h — active scanning and exploitation observed"},
+  "CVE-2024-23897":   {steps:["Upgrade Jenkins to 2.442+ or LTS 2.426.3+","Disable Jenkins CLI entirely via -Djenkins.CLI.disabled=true if upgrade delayed","Audit /var/jenkins_home for unexpected file reads in logs","Rotate all Jenkins credentials, secrets, and API tokens","Block TCP port 50000 (agent communications) from external access"],urgency:"Patch within 48h — CI/CD supply chain attack vector confirmed"},
+  "CVE-2024-38094":   {steps:["Apply Microsoft July 2024 Patch Tuesday update immediately","Enable SharePoint access logging and review for ToolShell indicators","Hunt for web shells in SharePoint layout directories","Audit SharePoint farm admin accounts for unauthorized additions","Isolate SharePoint servers from lateral movement paths until patched"],urgency:"Patch within 72h — APT exploitation confirmed (ToolShell web shell)"},
+  "CVE-2024-40766":   {steps:["Apply SonicWall firmware update for SonicOS 7.x immediately","Restrict SSLVPN access to known IP ranges as temporary control","Enable SonicWall NSM logging and alert on anomalous auth events","Audit all SSLVPN session logs for the past 90 days","Rotate all admin credentials on affected SonicWall appliances"],urgency:"Patch within 24h — ransomware delivery confirmed"},
+  "CVE-2024-22024":   {steps:["Apply Ivanti ICS patch 22.3R2.1 or 22.4R1+ immediately","Run Ivanti Integrity Checker Tool to detect prior compromise","Perform factory reset if compromise indicators found","Rotate SAML signing certificates and SP metadata","Implement network segmentation to limit ICS management plane exposure"],urgency:"Patch within 48h — espionage-grade exploitation confirmed"},
+  "CVE-2024-30051":   {steps:["Apply Microsoft June 2024 Patch Tuesday immediately","Enable kernel-level exploit protection (Windows Defender Exploit Guard)","Hunt for DWM process anomalies and unusual child process spawning","Audit privileged account usage for lateral movement indicators","Deploy Sysmon with DWM process creation rules to SIEM"],urgency:"Patch within 72h — Lazarus Group (DPRK) exploitation confirmed"},
+  "CVE-2025-0282":    {steps:["Apply Ivanti Connect Secure patch 22.7R2.4+ immediately","If patching delayed, run the Ivanti ICT tool and perform factory reset","Block management interface (port 8443) from external access","Rotate all certificates, secrets, and credentials on the device","Alert on any new admin account creation or config exports post-incident"],urgency:"Emergency — pre-auth RCE, nation-state actors confirmed"},
+  "CVE-2025-21418":   {steps:["Apply Microsoft January 2025 Patch Tuesday update","Enforce Credential Guard on all domain-joined endpoints","Monitor for suspicious afd.sys driver interactions via ETW tracing","Audit admin account elevation events in Windows Security logs","Deploy ASR rules: Block credential stealing from LSASS"],urgency:"Patch within 72h — used in active exploitation chains"},
+  "CVE-2024-28986":   {steps:["Apply SolarWinds Web Help Desk patch 12.8.3 HF2+","Disable the Java deserialization endpoint if patch delayed","Audit WHD logs for suspicious serialized object submissions","Isolate WHD server from sensitive internal networks","Rotate all WHD admin credentials and API integration keys"],urgency:"Patch within 72h — active exploitation confirmed"},
+  "GHSA-xz7w-supply": {steps:["Audit all Linux systems for liblzma version 5.6.0 or 5.6.1 (backdoored)","Downgrade to liblzma 5.4.x on affected systems immediately","Review systemd configurations that link against liblzma","Audit SSH daemon configurations for anomalous RSA key acceptance","Conduct full supply chain audit of build pipelines using affected OS images"],urgency:"Immediate audit required — sophisticated supply chain backdoor"},
+  "CVE-2025-32975":   {steps:["Apply Quest KACE SMA patch immediately","Disable unauthenticated directory browsing on KACE web interface","Rotate all KACE admin credentials and API tokens","Audit exposed credential stores for downstream system access","Restrict KAMA management interface to internal network only"],urgency:"Patch within 48h — mass credential exposure risk"},
+  "CVE-2024-AI-PIv1": {steps:["Implement output validation layer on all LLM agent responses","Apply tool-use allow-listing — agents should only call approved tool IDs","Audit all third-party knowledge bases and RAG corpora for adversarial content","Enable prompt injection detection middleware (LLM Guard, Rebuff)","Apply least-privilege to all agent tool permissions — no financial write access via API"],urgency:"Implement controls within 2 weeks — active exploitation emerging"},
+  "CVE-2024-OT-PLC1": {steps:["Apply Siemens security advisory SSA-412672 patch immediately","Isolate S7 PLCs from IT network — implement unidirectional security gateways","Disable PROFINET discovery on exposed interfaces","Implement application whitelisting on engineering workstations","Deploy Claroty or Dragos OT monitoring for anomaly detection"],urgency:"Patch within 72h — critical infrastructure risk"},
+  "CVE-2024-OAUTH-1": {steps:["Audit all OAuth integrations — revoke any with full_access or admin scopes","Implement OAuth scope minimization — request only required permissions","Enable OAuth token rotation and short-lived access tokens (15-min TTL)","Log all OAuth token issuance and cross-service API calls to SIEM","Add API gateway rate limiting to detect abnormal inter-service call patterns"],urgency:"Audit within 1 week — active SaaS pivot attacks observed"},
+  "CVE-2024-RANSOM1": {steps:["Block SMBv1 across all segments (Group Policy: disable LanmanServer SMBv1)","Apply MS17-010 patch on any remaining unpatched legacy Windows systems","Enable Windows Defender Network Protection and Attack Surface Reduction","Implement SMB signing enforcement on all domain controllers","Test backup restoration procedures — verify air-gapped copies are intact"],urgency:"Implement controls within 48h — active ransomware campaigns"},
+  "CVE-2024-PHISH-1": {steps:["Deploy FIDO2/WebAuthn MFA — SMS and TOTP are bypassable by these kits","Enable anti-phishing policies in M365/Google Workspace with ATP","Implement DMARC p=reject + DKIM + SPF on all sending domains","Train finance and HR teams on out-of-band callback verification","Deploy DNS-layer filtering (Cisco Umbrella / Cloudflare Gateway) for phishing domains"],urgency:"Implement MFA upgrade within 2 weeks — kits actively harvesting SSO"},
+};
+/* ── CATEGORY → THREAT TYPE MAPPING ── */
+const CAT_TYPE_MAP = {
+  ai_agent:    ["api_abuse","injection","auth","deserialization"],
+  supply_chain:["supply_chain","xxe","deserialization","injection"],
+  synthetic_id:["phishing","auth","injection","api_abuse"],
+  compliance:  ["auth","privesc","memory_corruption","xxe"],
+  ot_legacy:   ["memory_corruption","privesc","injection","auth"],
+};
+
+function filterByCategory(vulnList, catId) {
+  if (!catId || catId === "all") return vulnList;
+  const types = CAT_TYPE_MAP[catId] || [];
+  return vulnList.filter(v => types.includes(v.type));
+}
+
+const CWE_TYPE_MAP = {
+  "CWE-77":"injection","CWE-78":"injection","CWE-88":"injection","CWE-89":"injection",
+  "CWE-79":"injection","CWE-94":"injection","CWE-611":"xxe","CWE-918":"api_abuse",
+  "CWE-502":"deserialization","CWE-20":"injection","CWE-284":"auth","CWE-285":"auth",
+  "CWE-287":"auth","CWE-288":"auth","CWE-306":"auth","CWE-522":"auth",
+  "CWE-787":"memory_corruption","CWE-122":"privesc","CWE-416":"privesc","CWE-121":"memory_corruption",
+  "CWE-269":"privesc","CWE-427":"supply_chain","CWE-506":"supply_chain",
+  "CWE-601":"phishing","CWE-352":"auth","CWE-862":"auth","CWE-863":"auth",
+};
+
+function cpeToplatform(cpeStr){
+  if(!cpeStr) return [];
+  const s=cpeStr.toLowerCase(), out=[];
+  if(s.includes("windows")||s.includes("microsoft")||s.includes("iis")) out.push("onprem");
+  if(s.includes("apache")||s.includes("nginx")||s.includes("php")) out.push("web");
+  if(s.includes("aws")||s.includes("azure")||s.includes("gcp")) out.push("cloud");
+  if(s.includes("cisco")||s.includes("fortinet")||s.includes("palo")) out.push("onprem");
+  if(s.includes("jenkins")||s.includes("github")||s.includes("gitlab")) out.push("cicd");
+  if(s.includes("scada")||s.includes("siemens")||s.includes("modbus")) out.push("ot_ics");
+  if(s.includes("exchange")||s.includes("sharepoint")) out.push("email");
+  if(s.includes("salesforce")||s.includes("sap")) out.push("saas");
+  return out.length>0?[...new Set(out)]:["onprem"];
+}
+
+function parseVector(v){
+  if(!v) return "Network";
+  if(v.includes("AV:N")) return "Network";
+  if(v.includes("AV:L")) return "Local";
+  return "Network";
+}
+
+function exploitStatus(isKev,epss){
+  if(isKev) return "Active";
+  if(epss>.7) return "Likely";
+  if(epss>.3) return "Possible";
+  return "Theoretical";
+}
+
+async function fetchLiveVulns(onProgress) {
+  try {
+    onProgress('Fetching from RiskSync intelligence cache...');
+    const res  = await fetch('/threats');
+    if (!res.ok) throw new Error('Function returned ' + res.status);
+    const data = await res.json();
+    if (!data.ok || !data.vulns) throw new Error('Invalid response');
+    if (data.kevCount) liveKevCount = data.kevCount;
+    onProgress('Live data ready — ' + data.count + ' CVEs scored from ' + data.kevCount.toLocaleString() + ' KEV catalogue');
+    return data.vulns;
+  } catch(err) {
+    // Fallback: try direct NVD (works on localhost/backend)
+    try {
+      onProgress('Trying direct feed...');
+      const kevRes  = await fetch('https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json');
+      const kevData = await kevRes.json();
+      const kevSet  = new Set(kevData.vulnerabilities.map(v => v.cveID));
+      const since   = new Date(Date.now()-30*86400000).toISOString().split('.')[0]+'.000';
+      const nvdRes  = await fetch('https://services.nvd.nist.gov/rest/json/cves/2.0?cvssV3Severity=CRITICAL&pubStartDate='+since+'&resultsPerPage=100');
+      const nvdData = await nvdRes.json();
+      const mapped  = (nvdData.vulnerabilities||[]).map(entry => {
+        const cve=entry.cve, id=cve.id;
+        const desc=(cve.descriptions?.find(d=>d.lang==='en')?.value||'').slice(0,120);
+        const metrics=cve.metrics?.cvssMetricV31?.[0]||cve.metrics?.cvssMetricV30?.[0];
+        const cvss=parseFloat(metrics?.cvssData?.baseScore||5.0);
+        return {id,cvss,desc,type:'injection',src:kevSet.has(id)?'NVD+KEV':'NVD',
+                kev:kevSet.has(id),epss:kevSet.has(id)?0.85:0.3,affects:['onprem'],
+                industries:['all'],cwe:'CWE-0',publishedDate:cve.published};
+      }).filter(v=>v.cvss>=5.0);
+      onProgress('Direct feed loaded — '+mapped.length+' CVEs');
+      return mapped;
+    } catch(e2) {
+      onProgress('Using curated dataset');
+      return [];
+    }
+  }
+}
+
+// ── STATE ──
+var allVulns = [];
+var liveKevCount = 0;
+var currentSev = 'all';
+var currentInd = 'all';
+var defaultProfile = {industry:'fintech',scale:'mid',geo:'us',techPillars:['web','cloud'],sources:['cisa','nvd']};
+var currentPlatforms = ['web','cloud'];
+var currentScale = 'mid';
+
+// ── INIT ──
+
+// ── ALL FUNCTIONS (global scope) ──
+
+function setStatus(msg) {
+  document.getElementById('status-msg').textContent = msg;
+}
+
+function renderKEV() {
+  var kevHits = allVulns.filter(function(v){return v.kev;}).slice(0,5);
+  var listEl  = document.getElementById('kev-list');
+  if (!listEl) return;
+  if (!kevHits.length) {
+    listEl.innerHTML = '<div style="color:var(--muted);font-size:11px">No KEV entries in current dataset.</div>';
+    return;
+  }
+  listEl.innerHTML = kevHits.map(function(v) {
+    return '<div class="kev-item">'
+      + '<div style="flex:1"><div style="font-size:10px;font-family:monospace;color:var(--red);margin-bottom:2px">' + v.id + '</div>'
+      + '<div style="font-size:11px;color:var(--text);line-height:1.4">' + (v.desc.length>60?v.desc.slice(0,59)+'…':v.desc) + '</div></div>'
+      + '<div style="font-size:13px;font-weight:700;color:var(--red);margin-left:8px;flex-shrink:0">' + (v.cvss||0).toFixed(1) + '</div>'
+      + '</div>';
+  }).join('');
+}
+
+function renderIndScores() {
+  var el = document.getElementById('ind-scores-list');
+  if (!el) return;
+  var sorted = INDUSTRIES.map(function(ind) {
+    var profile = {industry:ind.id, scale:'mid', geo:'us', techPillars:['web','cloud'], sources:['cisa','nvd']};
+    var scored  = allVulns.map(function(v){
+      return Object.assign({}, v, {contextScore: computeVulnScore(v, profile)});
+    });
+    var avg = scored.length ? scored.reduce(function(a,v){return a+(v.contextScore||v.cvss||5);},0)/scored.length : 0;
+    return {ind:ind, score:avg};
+  }).sort(function(a,b){return b.score-a.score;});
+  var max = sorted[0] ? sorted[0].score : 10;
+  el.innerHTML = sorted.map(function(item) {
+    var col = item.score>=8?'var(--red)':item.score>=6?'var(--amber)':'var(--green)';
+    var pct = max > 0 ? (item.score/max*100).toFixed(0) : 0;
+    return '<div class="ind-score-row">'
+      + '<span style="font-size:16px;width:24px;flex-shrink:0">' + item.ind.icon + '</span>'
+      + '<span style="font-size:11px;color:var(--text);flex:1;padding-right:8px">' + item.ind.label + '</span>'
+      + '<div class="ind-bar-bg"><div class="ind-bar-fill" style="width:' + pct + '%;background:' + col + '"></div></div>'
+      + '<span style="font-size:11px;font-weight:700;color:' + col + ';margin-left:8px;font-family:monospace;width:32px;text-align:right">' + item.score.toFixed(1) + '</span>'
+      + '</div>';
+  }).join('');
+}
+
+function togglePlatform(pid, btn) {
+  var idx = currentPlatforms.indexOf(pid);
+  if (idx === -1) { currentPlatforms.push(pid); btn.classList.add('active'); }
+  else { currentPlatforms.splice(idx, 1); btn.classList.remove('active'); }
+  applyFilters();
+}
+
+function applyFilters() {
+  var ind = document.getElementById('ind-select').value;
+  var sev = currentSev;
+  currentInd = ind;
+
+  var scaleSel = document.getElementById('scale-select');
+  currentScale = scaleSel ? scaleSel.value : 'mid';
+
+  var profile = Object.assign({}, defaultProfile, {
+    industry: ind !== 'all' ? ind : defaultProfile.industry,
+    scale: currentScale,
+    techPillars: currentPlatforms.slice(),
+  });
+  var scored = allVulns.map(function(v) {
+    var cs = v.cvss || 5;
+    try { cs = computeVulnScore(v, profile) || cs; } catch(e) {}
+    return Object.assign({}, v, {contextScore: cs});
+  }).sort(function(a,b){return b.contextScore - a.contextScore;});
+
+  var filtered = scored.filter(function(v) {
+    if (sev === 'critical' && v.contextScore < 8) return false;
+    if (sev === 'high' && (v.contextScore < 6 || v.contextScore >= 8)) return false;
+    if (sev === 'kev' && !v.kev) return false;
+    return true;
+  });
+
+  updateStats(filtered, liveKevCount);
+  document.getElementById('threat-count').textContent = filtered.length + ' threats';
+  renderTable(filtered.slice(0, 20));
+}
+
+function colFor(n) { return n>=8?'#f04060':n>=6?'#f5a623':n>=4?'#2d7ef7':'#0ed27a'; }
+
+function lblFor(n) { return n>=8?'Critical':n>=6?'High':n>=4?'Medium':'Low'; }
+
+function isUnlocked() {
+  return true; // DEMO MODE — full list always visible, no email gate
+}
+
+function unlockWithEmail(email) {
+  if (!email || !email.includes('@')) return false;
+  // Store email + generate a simple session token
+  var token = btoa(email + ':' + Date.now());
+  localStorage.setItem('rs_token', token);
+  localStorage.setItem('rs_email', email);
+  return true;
+}
+
+function renderGate(afterIndex) {
+  return '<div id="email-gate" style="background:linear-gradient(0deg,#050c18 60%,rgba(5,12,24,.6) 100%);padding:32px 20px;text-align:center;border-top:1px solid #1a2540;margin-top:-2px">'
+    + '<div style="font-size:15px;font-weight:700;color:#dde4f0;margin-bottom:8px">See all ' + afterIndex + ' remaining threats</div>'
+    + '<div style="font-size:12px;color:#5a6f96;margin-bottom:20px">Enter your email to unlock the full list — free, no password needed</div>'
+    + '<div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:10px">'
+    + '<input id="gate-email" type="email" placeholder="you@company.com" '
+    + 'style="padding:10px 14px;border-radius:6px;border:1px solid #1a2540;background:#0c1220;color:#dde4f0;font-size:13px;font-family:inherit;outline:none;width:240px" '
+    + 'event.keyCode===13)submitGate()"/>'
+    + '<button onclick="submitGate()" '
+    + 'style="padding:10px 20px;border-radius:6px;border:none;background:#0ed27a;color:#000;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">Unlock Full List</button>'
+    + '</div>'
+    + '<div id="gate-err" style="color:#f04060;font-size:11px;display:none">Please enter a valid email address</div>'
+    + '<div style="font-size:11px;color:#2e3f62;margin-top:8px">No password. No spam. Unsubscribe anytime.</div>'
+    + '</div>';
+}
+
+function submitGate() {
+  var email = document.getElementById('gate-email')
+    ? (document.getElementById('gate-email').value || '').trim() : '';
+
+  if (!email || !email.includes('@') || !email.includes('.')) {
+    var err = document.getElementById('gate-err');
+    if (err) err.style.display = 'block';
+    return;
+  }
+
+  var ind = document.getElementById('ind-select')
+    ? document.getElementById('ind-select').value : 'all';
+
+  // Unlock immediately for good UX
+  unlockWithEmail(email);
+  applyFilters();
+  document.getElementById('locked-success-banner').style.display = 'flex';
+  setTimeout(function(){ document.getElementById('locked-success-banner').style.display = 'none'; }, 4000);
+
+  // POST to Resend in background
+  fetch('/subscribe', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, industry: ind, source: 'threat-table-gate' }),
+  }).catch(function(){});
+}
+
+function renderTable(threats) {
+  var FREE_LIMIT  = 5;
+  var unlocked    = isUnlocked();
+  var el          = document.getElementById('threat-table');
+  if (!el) return;
+  el.style.minHeight = el.style.minHeight || '400px';
+
+  // Split into tiers by contextual score
+  var critical = threats.filter(function(v){ return (v.contextScore||v.cvss||0) >= 9.0; });
+  var high     = threats.filter(function(v){ var s=v.contextScore||v.cvss||0; return s>=7.0 && s<9.0; });
+
+  // Free: top 5 across critical+high combined
+  // Subscriber: all critical + all high
+  var visible  = unlocked ? critical.concat(high) : critical.concat(high).slice(0, FREE_LIMIT);
+  var gatedCount = unlocked ? 0 : Math.max(0, critical.concat(high).length - FREE_LIMIT);
+  var ind      = document.getElementById('ind-select');
+  var indLabel = ind && ind.selectedOptions[0] ? ind.selectedOptions[0].textContent.trim() : 'your industry';
+  // Strip emoji from industry label
+  indLabel = indLabel.replace(/^[^a-zA-Z]+/, '').trim() || 'your industry';
+
+  var header = ''; // header already in static HTML
+
+  var rows = visible.map(function(v, i) {
+    var score = (v.contextScore && !isNaN(v.contextScore)) ? v.contextScore : (v.cvss||5.0);
+    var cl    = colFor(score);
+    var delta = score - (v.cvss||0);
+    var deltaStr = delta > 0.05
+      ? '<span class="score-delta" style="color:var(--red)">↑'+delta.toFixed(1)+'</span>'
+      : delta < -0.05
+      ? '<span class="score-delta" style="color:var(--green)">↓'+Math.abs(delta).toFixed(1)+'</span>'
+      : '';
+    var safeDesc = (v.desc||'').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+    var safeAct  = (v.action||'').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+    var safeProd = (v.product||'').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+    var popData  = 'data-id="'+v.id+'" data-cvss="'+(v.cvss||0)+'" data-score="'+score+'" '
+      + 'data-epss="'+(v.epss||0)+'" data-kev="'+(v.kev?1:0)+'" data-cwe="'+(v.cwe||'')+'" '
+      + 'data-due="'+(v.dueDate||'')+'" data-cvssvv="'+(v.cvssV||'')+'" data-src="'+(v.src||'')+'" '
+      + 'data-desc="'+safeDesc+'" data-action="'+safeAct+'" data-product="'+safeProd+'"';
+    return '<div class="threat-row" '+popData+' onmouseenter="showPopupEl(this)" onclick="showPopupEl(this)">'
+      + '<div class="threat-num">' + (i+1) + '</div>'
+      + '<div><div class="threat-desc">' + (v.desc.length>75?v.desc.slice(0,74)+'…':v.desc) + '</div>'
+      + '<div class="threat-desc-sub">'
+      + (v.kev ? '<span class="kev-badge">EXPLOITED</span>' : '')
+      + '</div></div>'
+      + '<div class="cve-id cve-col">' + v.id + '</div>'
+      + '<div class="threat-cvss">' + (v.cvss||0).toFixed(1) + '</div>'
+      + '<div class="threat-score" style="color:' + cl + '">' + score.toFixed(1) + deltaStr + '</div>'
+      + '</div>';
+  }).join('');
+
+  // Dynamic gate — specific count for selected industry
+  var gate = '';
+  if (!unlocked && gatedCount > 0) {
+    gate = '<div id="email-gate" style="background:linear-gradient(0deg,var(--bg) 55%,transparent);padding:32px 20px;text-align:center">'
+      + '<div style="font-size:22px;font-weight:900;color:var(--red);font-family:monospace;margin-bottom:6px">+' + gatedCount + '</div>'
+      + '<div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:6px">more Critical &amp; High threats for ' + indLabel + '</div>'
+      + '<div style="font-size:11px;color:var(--muted);margin-bottom:20px">Scores recalculate as you change industry — free, no password needed</div>'
+      + '<div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:8px">'
+      + '<input id="gate-email" type="email" placeholder="you@company.com" '
+      + 'style="padding:10px 14px;border-radius:6px;border:1px solid var(--border);background:var(--card);color:var(--text);font-size:13px;font-family:inherit;outline:none;width:240px" '
+      + 'onkeydown="if(event.keyCode===13)submitGate()"/>'
+      + '<button onclick="submitGate()" '
+      + 'style="padding:10px 20px;border-radius:6px;border:none;background:var(--green);color:#000;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">Unlock Free</button>'
+      + '</div>'
+      + '<div id="gate-err" style="color:var(--red);font-size:11px;display:none;margin-bottom:6px">Please enter a valid email address</div>'
+      + '<div style="font-size:11px;color:var(--dim)">No password · No spam · Unsubscribe anytime</div>'
+      + '</div>';
+  }
+
+  var unlockedNote = (unlocked && gatedCount === 0 && threats.length > 0)
+    ? '<div style="padding:10px 16px;font-size:11px;color:var(--green);border-top:1px solid var(--border);text-align:center">✓ Full list unlocked — ' + visible.length + ' threats shown</div>'
+    : '';
+
+  el.innerHTML = header + rows + gate + unlockedNote;
+
+  if (!unlocked && gatedCount > 0) {
+    setTimeout(function(){ var gi=document.getElementById('gate-email'); if(gi) gi.focus(); }, 100);
+  }
+}
+
+
+function setSev(sev, btn) {
+  currentSev = sev;
+  document.querySelectorAll('.filter-chip').forEach(function(b){b.classList.remove('active');});
+  btn.classList.add('active');
+  applyFilters();
+}
+
+// ── EMAIL ──
+
+function showLockedGate(filterType) {
+  if (isUnlocked()) {
+    // Already subscribed - show unlock message
+    alert('You are already subscribed. Platform and Scale filters coming soon!');
+    return;
+  }
+  // Show email gate modal
+  var modal = document.getElementById('locked-filter-modal');
+  var modalTitle = document.getElementById('locked-modal-title');
+  var modalDesc  = document.getElementById('locked-modal-desc');
+  if (!modal) return;
+  if (filterType === 'platform') {
+    modalTitle.textContent = '🔒 Unlock Platform Filter';
+    modalDesc.textContent  = 'Filter threats by your tech stack — Web Apps, Cloud, API, OT/ICS, CI/CD. Scores recalculate for your exact environment.';
+  } else {
+    modalTitle.textContent = '🔒 Unlock Scale Filter';
+    modalDesc.textContent  = 'Adjust risk scores for your organisation size. Small teams and enterprises face very different threat profiles.';
+  }
+  modal.style.display = 'flex';
+  document.getElementById('locked-modal-email').focus();
+}
+
+function closeLockedGate() {
+  var modal = document.getElementById('locked-filter-modal');
+  if (modal) modal.style.display = 'none';
+}
+
+function submitLockedGate() {
+  var email = (document.getElementById('locked-modal-email').value || '').trim();
+  if (!email || !email.includes('@') || !email.includes('.')) {
+    document.getElementById('locked-modal-err').style.display = 'block';
+    return;
+  }
+
+  var ind = document.getElementById('ind-select')
+    ? document.getElementById('ind-select').value : 'all';
+
+  unlockWithEmail(email);
+  closeLockedGate();
+  applyFilters();
+  document.getElementById('locked-success-banner').style.display = 'flex';
+  setTimeout(function(){ document.getElementById('locked-success-banner').style.display = 'none'; }, 4000);
+
+  fetch('/subscribe', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, industry: ind, source: 'platform-scale-gate' }),
+  }).catch(function(){});
+}
+
+function subscribeEmail() {
+  var email    = (document.getElementById('email-input').value || '').trim();
+  var industry = document.getElementById('email-industry')
+    ? document.getElementById('email-industry').value : 'all';
+
+  if (!email || !email.includes('@') || !email.includes('.')) {
+    var inp = document.getElementById('email-input');
+    if (inp) { inp.style.borderColor = 'var(--red)'; inp.placeholder = 'Please enter a valid email'; }
+    return;
+  }
+
+  // Disable button while submitting
+  var btn = document.querySelector('#email-form button');
+  if (btn) { btn.textContent = 'Subscribing...'; btn.disabled = true; }
+
+  fetch('/subscribe', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, industry, source: 'daily-brief-sidebar' }),
+  })
+  .then(function(res) { return res.json(); })
+  .then(function(data) {
+    if (data.ok) {
+      // Unlock gate + show success
+      unlockWithEmail(email);
+      document.getElementById('email-form').style.display    = 'none';
+      document.getElementById('email-success').style.display = 'block';
+      document.getElementById('email-success').textContent   =
+        '✓ Subscribed — brief arrives tomorrow at 07:00 UTC';
+      applyFilters(); // re-render with full list
+    } else {
+      if (btn) { btn.textContent = 'Subscribe — Free'; btn.disabled = false; }
+      alert(data.error || 'Subscription failed — please try again');
+    }
+  })
+  .catch(function() {
+    // Fallback: still unlock locally even if API fails
+    unlockWithEmail(email);
+    document.getElementById('email-form').style.display    = 'none';
+    document.getElementById('email-success').style.display = 'block';
+    applyFilters();
+  });
+}
+
+// ── SHARE ──
+var shareUrl = encodeURIComponent(window.location.href);
+var shareText = encodeURIComponent("Today's cybersecurity threat brief — live CVE data ranked by exploitability via @RiskSync");
+
+function shareTwitter()  { window.open('https://twitter.com/intent/tweet?text='+shareText+'&url='+shareUrl,'_blank'); }
+
+function shareLinkedIn() { window.open('https://www.linkedin.com/sharing/share-offsite/?url='+shareUrl,'_blank'); }
+
+function copyLink()      { navigator.clipboard.writeText(window.location.href).then(function(){alert('Link copied!'); }); }
+
+function shareSlack()    { window.open('slack://open','_blank'); }
+
+// ── CVE DETAIL POPUP ──
+var _popupVuln = null;
+
+function showPopup(vuln, rowEl) {
+  _popupVuln = vuln;
+  var popup = document.getElementById('cve-popup');
+  if (!popup) return;
+
+  var score = (vuln.contextScore && !isNaN(vuln.contextScore)) ? vuln.contextScore : (vuln.cvss||5);
+  var cl    = colFor(score);
+
+  document.getElementById('popup-cve-id').textContent  = vuln.id;
+  document.getElementById('popup-product').textContent  = vuln.product || vuln.src || '';
+  document.getElementById('popup-score').textContent    = score.toFixed(1);
+  document.getElementById('popup-score').style.color    = cl;
+  document.getElementById('popup-desc').textContent     = vuln.desc || 'No description available.';
+  document.getElementById('popup-cvss').textContent     = (vuln.cvss||0).toFixed(1) + (vuln.cvssV ? ' (v'+vuln.cvssV+')' : '');
+  document.getElementById('popup-epss').textContent     = vuln.epss ? (vuln.epss*100).toFixed(1)+'% exploit probability' : '—';
+  document.getElementById('popup-cwe').textContent      = vuln.cwe || '—';
+  document.getElementById('popup-due').textContent      = vuln.dueDate ? new Date(vuln.dueDate).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) : '—';
+
+  var actionWrap = document.getElementById('popup-action-wrap');
+  var actionEl   = document.getElementById('popup-action');
+  if (vuln.action) {
+    actionEl.textContent    = vuln.action;
+    actionWrap.style.display = 'block';
+  } else {
+    actionWrap.style.display = 'none';
+  }
+
+  // Links
+  var cveId = vuln.id && vuln.id.startsWith('CVE-') ? vuln.id : null;
+  var nvdLink  = document.getElementById('popup-nvd-link');
+  var cisaLink = document.getElementById('popup-cisa-link');
+  var mitreLink= document.getElementById('popup-mitre-link');
+  if (cveId) {
+    nvdLink.href   = 'https://nvd.nist.gov/vuln/detail/' + cveId;
+    mitreLink.href = 'https://cve.mitre.org/cgi-bin/cvename.cgi?name=' + cveId;
+    nvdLink.style.display   = '';
+    mitreLink.style.display = '';
+  } else {
+    nvdLink.style.display   = 'none';
+    mitreLink.style.display = 'none';
+  }
+  cisaLink.href = vuln.kev
+    ? 'https://www.cisa.gov/known-exploited-vulnerabilities-catalog'
+    : 'https://www.cisa.gov/news-events/cybersecurity-advisories';
+
+  // Position popup near the row
+  positionPopup(popup, rowEl);
+  popup.style.display = 'block';
+  popup.classList.add('visible');
+  if (window.innerWidth <= 600) document.body.style.overflow = 'hidden';
+}
+
+function positionPopup(popup, rowEl) {
+  popup.style.display = 'block';
+  var rect    = rowEl.getBoundingClientRect();
+  var popW    = 380;
+  var popH    = popup.offsetHeight || 400;
+  var vw      = window.innerWidth;
+  var vh      = window.innerHeight;
+
+  var left = rect.right + 12;
+  if (left + popW > vw - 12) left = rect.left - popW - 12;
+  if (left < 12) left = 12;
+
+  var top = rect.top;
+  if (top + popH > vh - 12) top = vh - popH - 12;
+  if (top < 12) top = 12;
+
+  popup.style.left = left + 'px';
+  popup.style.top  = top  + 'px';
+}
+
+// hidePopup defined below with mobile support
+
+// Close popup on outside click or Escape key
+document.addEventListener('click', function(e) {
+  var popup = document.getElementById('cve-popup');
+  if (!popup || !popup.classList.contains('visible')) return;
+  // Close if click is outside popup AND outside a threat row
+  if (!popup.contains(e.target) && !e.target.closest('.threat-row')) {
+    hidePopup();
+  }
+});
+
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') hidePopup();
+});
+
+// Mobile swipe down to close popup (bottom sheet)
+(function() {
+  var startY = 0;
+  var popup  = null;
+  document.addEventListener('touchstart', function(e) {
+    popup  = document.getElementById('cve-popup');
+    startY = e.touches[0].clientY;
+  }, { passive:true });
+  document.addEventListener('touchend', function(e) {
+    if (!popup || !popup.classList.contains('visible')) return;
+    var endY = e.changedTouches[0].clientY;
+    if (endY - startY > 60) hidePopup(); // swipe down 60px = close
+  }, { passive:true });
+})();
+
+// Mobile: prevent body scroll when popup is open
+function hidePopup() {
+  var popup = document.getElementById('cve-popup');
+  if (popup) {
+    popup.classList.remove('visible');
+    popup.style.display = 'none';
+    popup.style.transform = '';
+  }
+  document.body.style.overflow = '';
+  _popupVuln = null;
+}
+
+function cancelHide() {}
+
+// Global mousemove — close popup when cursor leaves both row and popup
+document.addEventListener('mousemove', function(e) {
+  var popup = document.getElementById('cve-popup');
+  if (!popup || !popup.classList.contains('visible')) return;
+
+  var pr = popup.getBoundingClientRect();
+  var inPopup = e.clientX >= pr.left && e.clientX <= pr.right
+             && e.clientY >= pr.top  && e.clientY <= pr.bottom;
+  if (inPopup) return;
+
+  var rows = document.querySelectorAll('.threat-row');
+  var inRow = false;
+  for (var i = 0; i < rows.length; i++) {
+    var rr = rows[i].getBoundingClientRect();
+    if (e.clientX >= rr.left && e.clientX <= rr.right
+     && e.clientY >= rr.top  && e.clientY <= rr.bottom) {
+      inRow = true; break;
+    }
+  }
+
+  if (!inRow) hidePopup();
+});
+
+function showPopupEl(rowEl) {
+  var d = rowEl.dataset;
+  var vuln = {
+    id:          d.id || '',
+    cvss:        parseFloat(d.cvss) || 0,
+    contextScore:parseFloat(d.score) || 0,
+    epss:        parseFloat(d.epss) || 0,
+    kev:         d.kev === '1',
+    cwe:         d.cwe || '',
+    dueDate:     d.due || '',
+    cvssV:       d.cvssvv || '',
+    src:         d.src || '',
+    desc:        d.desc || '',
+    action:      d.action || '',
+    product:     d.product || '',
+  };
+  showPopup(vuln, rowEl);
+}
+function updateStats(list, kevTotal) {
+  var src   = list || allVulns;
+  var total = kevTotal || liveKevCount || src.length;
+  // Tier counts using contextual score
+  var critical = src.filter(function(v){ return (v.contextScore||v.cvss||0)>=9.0; }).length;
+  var high     = src.filter(function(v){ var s=v.contextScore||v.cvss||0; return s>=7.0&&s<9.0; }).length;
+  var now48    = Date.now() - 86400000 * 2;
+  var newT     = src.filter(function(v){
+    var d = v.publishedDate || v.dateAdded || v.published_at || null;
+    if (!d) return false;
+    return new Date(d).getTime() > now48;
+  }).length;
+  var stEl = document.getElementById('stat-total');
+  if (!stEl) return;
+  stEl.textContent = total.toLocaleString();
+  var kevEl = document.getElementById('stat-kev');
+  if (kevEl) kevEl.textContent = critical;
+  var critEl = document.getElementById('stat-critical');
+  if (critEl) critEl.textContent = high;
+  var newEl = document.getElementById('stat-new');
+  if (newEl) newEl.textContent = newT;
+}
+
+// ── STRUCTURED DATA FOR SEO ──
+var sd = document.createElement('script');
+sd.type = 'application/ld+json';
+sd.textContent = JSON.stringify({
+  "@context":"https://schema.org",
+  "@type":"WebPage",
+  "name":"RiskSync Daily Threat Brief",
+  "description":"Daily cybersecurity threat intelligence ranked by exploitability. CISA KEV confirmed threats and CVSS scores.",
+  "url":"https://risksync.io/daily",
+  "publisher":{"@type":"Organization","name":"RiskSync","url":"https://risksync.io"}
+});
+document.head.appendChild(sd);
+
+// ── RENDER ──
+
+document.addEventListener('DOMContentLoaded', function() {
+
+  // Set date
+  document.getElementById('hero-date').textContent =
+    new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'}).toUpperCase();
+
+  // Populate industry dropdowns
+  INDUSTRIES.forEach(function(ind) {
+    ['ind-select','email-industry'].forEach(function(id) {
+      var el = document.getElementById(id);
+      if (!el) return;
+      var opt = document.createElement('option');
+      opt.value = ind.id;
+      opt.textContent = ind.icon + ' ' + ind.label;
+      el.appendChild(opt);
+    });
+  });
+
+  // Load static data and render immediately
+  allVulns = VULNS;
+  updateStats(allVulns);
+  renderKEV();
+  renderIndScores();
+  applyFilters();
+  setStatus('✓ ' + allVulns.length + ' CVEs loaded · Fetching live feed...');
+
+  // Fetch live data
+  fetchLiveVulns(function(){}).then(function(vulns) {
+    if (vulns && vulns.length > 0) {
+      allVulns = vulns;
+      console.log('Live data loaded:', vulns.length, 'vulns, liveKevCount:', liveKevCount);
+      setStatus('Scoring ' + vulns.length + ' threats for your industry...');
+      updateStats(vulns, liveKevCount);
+      renderKEV();
+      renderIndScores();
+      applyFilters();
+      setStatus('✓ ' + vulns.length + ' threats scored from ' + (liveKevCount||vulns.length).toLocaleString() + ' KEV catalogue · Updated '
+        + new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) + ' UTC');
+    } else {
+      setStatus('✓ ' + allVulns.length + ' curated CVEs · Updated daily');
+    }
+  }).catch(function() {
+    setStatus('✓ ' + allVulns.length + ' curated CVEs · Updated daily');
+  });
+
+}); // end DOMContentLoaded
+</script>
+
+
+<!-- LOCKED FILTER MODAL -->
+<div id="locked-filter-modal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(7,9,15,.9);z-index:1000;align-items:center;justify-content:center">
+  <div class="modal-box">
+    <button onclick="closeLockedGate()" style="position:absolute;top:12px;right:14px;background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;line-height:1">×</button>
+    <div id="locked-modal-title" style="font-size:16px;font-weight:800;color:var(--text);margin-bottom:8px">🔒 Unlock Filter</div>
+    <div id="locked-modal-desc" style="font-size:12px;color:var(--muted);line-height:1.7;margin-bottom:20px"></div>
+    <input id="locked-modal-email" type="email" placeholder="you@company.com"
+      style="width:100%;padding:10px 14px;border-radius:6px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:13px;font-family:inherit;outline:none;margin-bottom:8px;box-sizing:border-box"
+      onkeydown="if(event.keyCode===13)submitLockedGate()"/>
+    <div id="locked-modal-err" style="color:var(--red);font-size:11px;margin-bottom:8px;display:none">Please enter a valid email address</div>
+    <button onclick="submitLockedGate()" style="width:100%;padding:10px;border-radius:6px;border:none;background:var(--accent);color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">
+      Get Full Access — Free
+    </button>
+    <div style="font-size:11px;color:var(--dim);text-align:center;margin-top:10px">No password. No spam. Unsubscribe anytime.</div>
+  </div>
+</div>
+
+<!-- SUCCESS BANNER -->
+<div id="locked-success-banner" style="display:none;position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--green);color:#000;padding:12px 24px;border-radius:8px;font-size:13px;font-weight:700;z-index:1000;gap:8px;align-items:center">
+  ✓ Subscribed! Platform &amp; Scale filters unlocked.
+</div>
+
+
+<!-- CVE DETAIL POPUP -->
+<div id="cve-popup" onclick="event.stopPropagation()">
+  <div class="popup-header">
+    <div>
+      <div class="popup-cve" id="popup-cve-id"></div>
+      <div class="popup-product" id="popup-product"></div>
+    </div>
+    <div class="popup-score" id="popup-score"></div>
+  </div>
+  <div class="popup-desc" id="popup-desc"></div>
+  <div class="popup-action" id="popup-action-wrap">
+    <div class="popup-action-label">Required Action</div>
+    <div class="popup-action-text" id="popup-action"></div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+    <div class="popup-section">
+      <div class="popup-section-label">CVSS Base Score</div>
+      <div class="popup-section-val" id="popup-cvss"></div>
+    </div>
+    <div class="popup-section">
+      <div class="popup-section-label">EPSS Probability</div>
+      <div class="popup-section-val" id="popup-epss"></div>
+    </div>
+    <div class="popup-section">
+      <div class="popup-section-label">Weakness</div>
+      <div class="popup-section-val" id="popup-cwe"></div>
+    </div>
+    <div class="popup-section">
+      <div class="popup-section-label">Due Date</div>
+      <div class="popup-section-val" id="popup-due"></div>
+    </div>
+  </div>
+  <div class="popup-footer">
+    <a id="popup-nvd-link" class="popup-link" target="_blank" rel="noopener">NVD Details ↗</a>
+    <a id="popup-cisa-link" class="popup-link" target="_blank" rel="noopener">CISA KEV ↗</a>
+    <a id="popup-mitre-link" class="popup-link" target="_blank" rel="noopener">MITRE ↗</a>
+  </div>
+</div>
+
+</body>
+</html>
