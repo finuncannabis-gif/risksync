@@ -1683,7 +1683,151 @@ function BulletinPage({profile, liveVulns, controls, activeCategory}) {
   
 
   /* ── Generate HTML email ── */
-const generateEmail = () => {\n    const threatRows = top5.map((v,i) => {\n      const c = v.contextScore >= 8 ? '#f04060' : v.contextScore >= 6 ? '#f5a623' : '#2d7ef7';\n      return `<tr style=\"border-bottom:1px solid #1a2540\">\n        <td style=\"padding:10px 12px;font-size:11px;color:#888;font-family:monospace\">#${i+1}</td>\n        <td style=\"padding:10px 12px;font-size:12px;color:#dde4f0;line-height:1.4\">${v.desc.length>80?v.desc.slice(0,79)+'\u2026':v.desc}</td>\n        <td style=\"padding:10px 12px;font-size:10px;color:#888;font-family:monospace\">${v.id}</td>\n        <td style=\"padding:10px 12px;text-align:center\"><span style=\"background:${c}22;color:${c};border:1px solid ${c}44;border-radius:3px;padding:2px 8px;font-size:10px;font-weight:700\">${vl(v.contextScore)}</span></td>\n        <td style=\"padding:10px 12px;text-align:right;font-size:14px;font-weight:700;color:${c}\">${v.contextScore.toFixed(1)}</td>\n      </tr>`;\n    }).join('');\n\n    const kevRows = kevHits.slice(0,3).map(v => `\n      <tr>\n        <td style=\"padding:8px 12px;font-size:10px;font-family:monospace;color:#f04060\">${v.id}</td>\n        <td style=\"padding:8px 12px;font-size:11px;color:#dde4f0\">${v.desc.length>70?v.desc.slice(0,69)+'\u2026':v.desc}</td>\n        <td style=\"padding:8px 12px;text-align:right;font-size:12px;font-weight:700;color:#f04060\">${v.contextScore.toFixed(1)}</td>\n      </tr>`).join('');\n\n    return `<!DOCTYPE html>\n<html>\n<head><meta charset=\"UTF-8\"/><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"/>\n<title>RiskSync Weekly Brief \u2014 Week ${weekNum}</title>\n</head>\n<body style=\"margin:0;padding:0;background:#050c18;font-family:'Courier New',monospace\">\n<table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"background:#050c18\">\n<tr><td align=\"center\" style=\"padding:32px 16px\">\n<table width=\"600\" cellpadding=\"0\" cellspacing=\"0\" style=\"max-width:600px;width:100%\">\n\n  <!-- HEADER -->\n  <tr><td style=\"background:#080d18;border:1px solid #1a2540;border-radius:10px 10px 0 0;padding:24px 28px\">\n    <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\">\n      <tr>\n        <td>\n          <div style=\"display:inline-block;width:32px;height:32px;background:#2d7ef7;border-radius:7px;text-align:center;line-height:32px;font-size:16px;margin-bottom:10px\">\u26a1</div>\n          <div style=\"font-size:18px;font-weight:700;color:#fff;letter-spacing:.5px\">RISKSYNC</div>\n          <div style=\"font-size:10px;color:#5a6f96;margin-top:2px;letter-spacing:1px\">WEEKLY INTELLIGENCE BRIEF \u00b7 WEEK ${weekNum}</div>\n        </td>\n        <td align=\"right\" style=\"vertical-align:top\">\n          <div style=\"font-size:11px;color:#5a6f96\">${weekStr}</div>\n          <div style=\"margin-top:6px;background:${gScore>=8?'#1e0810':gScore>=6?'#1e1200':'#051a10'};border:1px solid ${col}40;border-radius:5px;padding:6px 14px;display:inline-block\">\n            <div style=\"font-size:11px;font-weight:700;color:${col}\">${lbl} \u00b7 ${gScore.toFixed(1)}/10</div>\n          </div>\n        </td>\n      </tr>\n    </table>\n  </td></tr>\n\n  <!-- PROFILE STRIP -->\n  <tr><td style=\"background:#0c1220;border-left:1px solid #1a2540;border-right:1px solid #1a2540;padding:10px 28px\">\n    <table cellpadding=\"0\" cellspacing=\"0\"><tr>\n      <td style=\"font-size:9px;color:#5a6f96;letter-spacing:.8px;padding-right:16px\">PROFILE</td>\n      <td style=\"padding-right:10px\"><span style=\"background:${ind?.color||'#2d7ef7'}22;color:${ind?.color||'#2d7ef7'};border:1px solid ${ind?.color||'#2d7ef7'}44;border-radius:3px;padding:2px 9px;font-size:10px;font-weight:700\">${ind?.label}</span></td>\n      <td style=\"padding-right:10px\"><span style=\"background:#9b72f622;color:#9b72f6;border:1px solid #9b72f644;border-radius:3px;padding:2px 9px;font-size:10px;font-weight:700\">${sc?.label}</span></td>\n      <td><span style=\"background:#22d3ee22;color:#22d3ee;border:1px solid #22d3ee44;border-radius:3px;padding:2px 9px;font-size:10px;font-weight:700\">${geo?.label}</span></td>\n    </tr></table>\n  </td></tr>\n\n  ${sections.execSummary ? `\n  <!-- EXEC SUMMARY -->\n  <tr><td style=\"background:#080d18;border-left:1px solid #1a2540;border-right:1px solid #1a2540;padding:24px 28px;border-top:1px solid #1a2540\">\n    <div style=\"font-size:9px;font-weight:700;color:#5a6f96;letter-spacing:1px;margin-bottom:10px\">EXECUTIVE SUMMARY</div>\n    <div style=\"font-size:15px;font-weight:700;color:#fff;margin-bottom:10px;line-height:1.4\">\n      Your ${ind?.label} organisation faces <span style=\"color:${col}\">${lbl.toLowerCase()}</span> cybersecurity exposure this week.\n    </div>\n    <div style=\"font-size:12px;color:#8a9bc0;line-height:1.8\">\n      Based on ${(profile.sources||[]).length} active intelligence sources, <strong style=\"color:#dde4f0\">${kevHits.length} of your top 10 threats are actively exploited</strong> in the wild (CISA KEV confirmed). \n      Your contextual risk score of <strong style=\"color:${col}\">${gScore.toFixed(1)}</strong> reflects your industry multiplier of \u00d7${ind?.multiplier}, \n      scale factor \u00d7${sc?.s_multiplier}, and regional weight \u00d7${geo?.regMultiplier}.\n    </div>\n    <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"margin-top:16px\">\n      <tr>\n        ${[\n          {label:'Risk Score', val:gScore.toFixed(1), col},\n          {label:'KEV Confirmed', val:String(kevHits.length), col:'#f04060'},\n          {label:'Avg EPSS', val:Math.round(top5.reduce((a,v)=>a+v.epss,0)/5*100)+'%', col:'#f5a623'},\n          {label:'Critical Threats', val:String(top10.filter(v=>v.contextScore>=8).length), col:'#f04060'},\n        ].map(k=>`<td align=\"center\" style=\"background:#0c1220;border:1px solid #1a2540;border-radius:6px;padding:12px 8px;width:25%\">\n          <div style=\"font-size:20px;font-weight:700;color:${k.col}\">${k.val}</div>\n          <div style=\"font-size:9px;color:#5a6f96;margin-top:3px\">${k.label}</div>\n        </td>`).join('<td width=\"8\"></td>')}\n      </tr>\n    </table>\n  </td></tr>` : ''}\n\n  ${sections.kevAlert && kevHits.length > 0 ? `\n  <!-- KEV ALERT -->\n  <tr><td style=\"background:#1e0810;border:1px solid #f0406030;border-left:4px solid #f04060;padding:16px 28px;margin-top:0\">\n    <div style=\"font-size:9px;font-weight:700;color:#f04060;letter-spacing:1px;margin-bottom:10px\">\u26a0 CISA KEV ALERT \u2014 ${kevHits.length} ACTIVELY EXPLOITED</div>\n    <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\">\n      ${kevRows}\n    </table>\n    <div style=\"font-size:10px;color:#f04060;margin-top:10px\">These vulnerabilities have confirmed real-world exploitation. Immediate patching required.</div>\n  </td></tr>` : ''}\n\n  ${sections.top5Threats ? `\n  <!-- TOP 5 THREATS -->\n  <tr><td style=\"background:#080d18;border-left:1px solid #1a2540;border-right:1px solid #1a2540;border-top:1px solid #1a2540;padding:24px 28px\">\n    <div style=\"font-size:9px;font-weight:700;color:#5a6f96;letter-spacing:1px;margin-bottom:14px\">TOP 5 CONTEXTUAL THREATS \u2014 ${ind?.label?.toUpperCase()}</div>\n    <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"border:1px solid #1a2540;border-radius:6px;overflow:hidden\">\n      <tr style=\"background:#0c1220\">\n        <td style=\"padding:8px 12px;font-size:9px;color:#5a6f96;font-weight:700\">#</td>\n        <td style=\"padding:8px 12px;font-size:9px;color:#5a6f96;font-weight:700\">DESCRIPTION</td>\n        <td style=\"padding:8px 12px;font-size:9px;color:#5a6f96;font-weight:700\">CVE</td>\n        <td style=\"padding:8px 12px;font-size:9px;color:#5a6f96;font-weight:700;text-align:center\">SEVERITY</td>\n        <td style=\"padding:8px 12px;font-size:9px;color:#5a6f96;font-weight:700;text-align:right\">SCORE</td>\n      </tr>\n      ${threatRows}\n    </table>\n  </td></tr>` : ''}\n\n  ${sections.controlRec ? `\n  <!-- CONTROL RECOMMENDATION -->\n  <tr><td style=\"background:#0d1f3c;border-left:1px solid #2d7ef740;border-right:1px solid #2d7ef740;border-top:1px solid #2d7ef730;padding:20px 28px\">\n    <div style=\"font-size:9px;font-weight:700;color:#2d7ef7;letter-spacing:1px;margin-bottom:10px\">THIS WEEK'S RECOMMENDED ACTION</div>\n    <div style=\"font-size:13px;font-weight:700;color:#fff;margin-bottom:6px\">${VULN_REMEDIATION[top5[0]?.id]?.steps[0] || 'Review and patch all KEV-listed vulnerabilities within 14 days per CISA BOD 22-01.'}</div>\n    <div style=\"font-size:11px;color:#8a9bc0;line-height:1.7\">${VULN_REMEDIATION[top5[0]?.id]?.urgency || 'Prioritise your top CISA KEV entries immediately.'}</div>\n  </td></tr>` : ''}\n\n  ${sections.regulatoryNote ? `\n  <!-- REGULATORY NOTE -->\n  <tr><td style=\"background:#080d18;border-left:1px solid #1a2540;border-right:1px solid #1a2540;border-top:1px solid #1a2540;padding:16px 28px\">\n    <div style=\"font-size:9px;font-weight:700;color:#5a6f96;letter-spacing:1px;margin-bottom:8px\">REGULATORY CONTEXT \u00b7 ${geo?.label?.toUpperCase()}</div>\n    <div style=\"font-size:11px;color:#8a9bc0;line-height:1.7\">${geo?.reg} \u2014 Organisations operating in ${geo?.label} must maintain compliance. ${kevHits.length > 0 ? (kevHits.length + " of this week's threats directly trigger mandatory notification obligations if exploited.") : 'No immediate notification triggers this week.'}</div>\n  </td></tr>` : ''}\n\n  <!-- FOOTER -->\n  <tr><td style=\"background:#050c18;border:1px solid #1a2540;border-radius:0 0 10px 10px;border-top:none;padding:20px 28px\">\n    <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\"><tr>\n      <td style=\"font-size:10px;color:#2e3f62;line-height:1.7\">\n        <strong style=\"color:#5a6f96\">RiskSync</strong> \u00b7 Micro-GRC Intelligence Platform<br/>\n        Scores computed using CVSS \u00d7 I(${ind?.multiplier}) \u00d7 S(${sc?.s_multiplier}) \u00d7 RegM(${geo?.regMultiplier}) \u00d7 PlatformM \u00d7 TypeBoost \u00d7 KEV<br/>\n        Data sources: NIST NVD \u00b7 CISA KEV \u00b7 EPSS (FIRST.org) \u00b7 ${(profile.sources||[]).length} active feeds<br/>\n        <span style=\"color:#1a2540\">You are receiving this because you configured a RiskSync bulletin subscription.</span>\n      </td>\n      <td align=\"right\" style=\"vertical-align:bottom\">\n        <div style=\"font-size:20px;color:#1a2540;font-weight:700\">RS</div>\n      </td>\n    </tr></table>\n  </td></tr>\n\n</table>\n</td></tr>\n</table>\n<style>
+const generateEmail = () => {
+    const threatRows = top5.map((v,i) => {
+      const c = v.contextScore >= 8 ? '#f04060' : v.contextScore >= 6 ? '#f5a623' : '#2d7ef7';
+      return `<tr style=\"border-bottom:1px solid #1a2540\">
+        <td style=\"padding:10px 12px;font-size:11px;color:#888;font-family:monospace\">#${i+1}</td>
+        <td style=\"padding:10px 12px;font-size:12px;color:#dde4f0;line-height:1.4\">${v.desc.length>80?v.desc.slice(0,79)+'\u2026':v.desc}</td>
+        <td style=\"padding:10px 12px;font-size:10px;color:#888;font-family:monospace\">${v.id}</td>
+        <td style=\"padding:10px 12px;text-align:center\"><span style=\"background:${c}22;color:${c};border:1px solid ${c}44;border-radius:3px;padding:2px 8px;font-size:10px;font-weight:700\">${vl(v.contextScore)}</span></td>
+        <td style=\"padding:10px 12px;text-align:right;font-size:14px;font-weight:700;color:${c}\">${v.contextScore.toFixed(1)}</td>
+      </tr>`;
+    }).join('');
+
+    const kevRows = kevHits.slice(0,3).map(v => `
+      <tr>
+        <td style=\"padding:8px 12px;font-size:10px;font-family:monospace;color:#f04060\">${v.id}</td>
+        <td style=\"padding:8px 12px;font-size:11px;color:#dde4f0\">${v.desc.length>70?v.desc.slice(0,69)+'\u2026':v.desc}</td>
+        <td style=\"padding:8px 12px;text-align:right;font-size:12px;font-weight:700;color:#f04060\">${v.contextScore.toFixed(1)}</td>
+      </tr>`).join('');
+
+    return `<!DOCTYPE html>
+<html>
+<head><meta charset=\"UTF-8\"/><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"/>
+<title>RiskSync Weekly Brief \u2014 Week ${weekNum}</title>
+</head>
+<body style=\"margin:0;padding:0;background:#050c18;font-family:'Courier New',monospace\">
+<table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"background:#050c18\">
+<tr><td align=\"center\" style=\"padding:32px 16px\">
+<table width=\"600\" cellpadding=\"0\" cellspacing=\"0\" style=\"max-width:600px;width:100%\">
+
+  <!-- HEADER -->
+  <tr><td style=\"background:#080d18;border:1px solid #1a2540;border-radius:10px 10px 0 0;padding:24px 28px\">
+    <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\">
+      <tr>
+        <td>
+          <div style=\"display:inline-block;width:32px;height:32px;background:#2d7ef7;border-radius:7px;text-align:center;line-height:32px;font-size:16px;margin-bottom:10px\">\u26a1</div>
+          <div style=\"font-size:18px;font-weight:700;color:#fff;letter-spacing:.5px\">RISKSYNC</div>
+          <div style=\"font-size:10px;color:#5a6f96;margin-top:2px;letter-spacing:1px\">WEEKLY INTELLIGENCE BRIEF \u00b7 WEEK ${weekNum}</div>
+        </td>
+        <td align=\"right\" style=\"vertical-align:top\">
+          <div style=\"font-size:11px;color:#5a6f96\">${weekStr}</div>
+          <div style=\"margin-top:6px;background:${gScore>=8?'#1e0810':gScore>=6?'#1e1200':'#051a10'};border:1px solid ${col}40;border-radius:5px;padding:6px 14px;display:inline-block\">
+            <div style=\"font-size:11px;font-weight:700;color:${col}\">${lbl} \u00b7 ${gScore.toFixed(1)}/10</div>
+          </div>
+        </td>
+      </tr>
+    </table>
+  </td></tr>
+
+  <!-- PROFILE STRIP -->
+  <tr><td style=\"background:#0c1220;border-left:1px solid #1a2540;border-right:1px solid #1a2540;padding:10px 28px\">
+    <table cellpadding=\"0\" cellspacing=\"0\"><tr>
+      <td style=\"font-size:9px;color:#5a6f96;letter-spacing:.8px;padding-right:16px\">PROFILE</td>
+      <td style=\"padding-right:10px\"><span style=\"background:${ind?.color||'#2d7ef7'}22;color:${ind?.color||'#2d7ef7'};border:1px solid ${ind?.color||'#2d7ef7'}44;border-radius:3px;padding:2px 9px;font-size:10px;font-weight:700\">${ind?.label}</span></td>
+      <td style=\"padding-right:10px\"><span style=\"background:#9b72f622;color:#9b72f6;border:1px solid #9b72f644;border-radius:3px;padding:2px 9px;font-size:10px;font-weight:700\">${sc?.label}</span></td>
+      <td><span style=\"background:#22d3ee22;color:#22d3ee;border:1px solid #22d3ee44;border-radius:3px;padding:2px 9px;font-size:10px;font-weight:700\">${geo?.label}</span></td>
+    </tr></table>
+  </td></tr>
+
+  ${sections.execSummary ? `
+  <!-- EXEC SUMMARY -->
+  <tr><td style=\"background:#080d18;border-left:1px solid #1a2540;border-right:1px solid #1a2540;padding:24px 28px;border-top:1px solid #1a2540\">
+    <div style=\"font-size:9px;font-weight:700;color:#5a6f96;letter-spacing:1px;margin-bottom:10px\">EXECUTIVE SUMMARY</div>
+    <div style=\"font-size:15px;font-weight:700;color:#fff;margin-bottom:10px;line-height:1.4\">
+      Your ${ind?.label} organisation faces <span style=\"color:${col}\">${lbl.toLowerCase()}</span> cybersecurity exposure this week.
+    </div>
+    <div style=\"font-size:12px;color:#8a9bc0;line-height:1.8\">
+      Based on ${(profile.sources||[]).length} active intelligence sources, <strong style=\"color:#dde4f0\">${kevHits.length} of your top 10 threats are actively exploited</strong> in the wild (CISA KEV confirmed). 
+      Your contextual risk score of <strong style=\"color:${col}\">${gScore.toFixed(1)}</strong> reflects your industry multiplier of \u00d7${ind?.multiplier}, 
+      scale factor \u00d7${sc?.s_multiplier}, and regional weight \u00d7${geo?.regMultiplier}.
+    </div>
+    <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"margin-top:16px\">
+      <tr>
+        ${[
+          {label:'Risk Score', val:gScore.toFixed(1), col},
+          {label:'KEV Confirmed', val:String(kevHits.length), col:'#f04060'},
+          {label:'Avg EPSS', val:Math.round(top5.reduce((a,v)=>a+v.epss,0)/5*100)+'%', col:'#f5a623'},
+          {label:'Critical Threats', val:String(top10.filter(v=>v.contextScore>=8).length), col:'#f04060'},
+        ].map(k=>`<td align=\"center\" style=\"background:#0c1220;border:1px solid #1a2540;border-radius:6px;padding:12px 8px;width:25%\">
+          <div style=\"font-size:20px;font-weight:700;color:${k.col}\">${k.val}</div>
+          <div style=\"font-size:9px;color:#5a6f96;margin-top:3px\">${k.label}</div>
+        </td>`).join('<td width=\"8\"></td>')}
+      </tr>
+    </table>
+  </td></tr>` : ''}
+
+  ${sections.kevAlert && kevHits.length > 0 ? `
+  <!-- KEV ALERT -->
+  <tr><td style=\"background:#1e0810;border:1px solid #f0406030;border-left:4px solid #f04060;padding:16px 28px;margin-top:0\">
+    <div style=\"font-size:9px;font-weight:700;color:#f04060;letter-spacing:1px;margin-bottom:10px\">\u26a0 CISA KEV ALERT \u2014 ${kevHits.length} ACTIVELY EXPLOITED</div>
+    <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\">
+      ${kevRows}
+    </table>
+    <div style=\"font-size:10px;color:#f04060;margin-top:10px\">These vulnerabilities have confirmed real-world exploitation. Immediate patching required.</div>
+  </td></tr>` : ''}
+
+  ${sections.top5Threats ? `
+  <!-- TOP 5 THREATS -->
+  <tr><td style=\"background:#080d18;border-left:1px solid #1a2540;border-right:1px solid #1a2540;border-top:1px solid #1a2540;padding:24px 28px\">
+    <div style=\"font-size:9px;font-weight:700;color:#5a6f96;letter-spacing:1px;margin-bottom:14px\">TOP 5 CONTEXTUAL THREATS \u2014 ${ind?.label?.toUpperCase()}</div>
+    <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"border:1px solid #1a2540;border-radius:6px;overflow:hidden\">
+      <tr style=\"background:#0c1220\">
+        <td style=\"padding:8px 12px;font-size:9px;color:#5a6f96;font-weight:700\">#</td>
+        <td style=\"padding:8px 12px;font-size:9px;color:#5a6f96;font-weight:700\">DESCRIPTION</td>
+        <td style=\"padding:8px 12px;font-size:9px;color:#5a6f96;font-weight:700\">CVE</td>
+        <td style=\"padding:8px 12px;font-size:9px;color:#5a6f96;font-weight:700;text-align:center\">SEVERITY</td>
+        <td style=\"padding:8px 12px;font-size:9px;color:#5a6f96;font-weight:700;text-align:right\">SCORE</td>
+      </tr>
+      ${threatRows}
+    </table>
+  </td></tr>` : ''}
+
+  ${sections.controlRec ? `
+  <!-- CONTROL RECOMMENDATION -->
+  <tr><td style=\"background:#0d1f3c;border-left:1px solid #2d7ef740;border-right:1px solid #2d7ef740;border-top:1px solid #2d7ef730;padding:20px 28px\">
+    <div style=\"font-size:9px;font-weight:700;color:#2d7ef7;letter-spacing:1px;margin-bottom:10px\">THIS WEEK'S RECOMMENDED ACTION</div>
+    <div style=\"font-size:13px;font-weight:700;color:#fff;margin-bottom:6px\">${VULN_REMEDIATION[top5[0]?.id]?.steps[0] || 'Review and patch all KEV-listed vulnerabilities within 14 days per CISA BOD 22-01.'}</div>
+    <div style=\"font-size:11px;color:#8a9bc0;line-height:1.7\">${VULN_REMEDIATION[top5[0]?.id]?.urgency || 'Prioritise your top CISA KEV entries immediately.'}</div>
+  </td></tr>` : ''}
+
+  ${sections.regulatoryNote ? `
+  <!-- REGULATORY NOTE -->
+  <tr><td style=\"background:#080d18;border-left:1px solid #1a2540;border-right:1px solid #1a2540;border-top:1px solid #1a2540;padding:16px 28px\">
+    <div style=\"font-size:9px;font-weight:700;color:#5a6f96;letter-spacing:1px;margin-bottom:8px\">REGULATORY CONTEXT \u00b7 ${geo?.label?.toUpperCase()}</div>
+    <div style=\"font-size:11px;color:#8a9bc0;line-height:1.7\">${geo?.reg} \u2014 Organisations operating in ${geo?.label} must maintain compliance. ${kevHits.length > 0 ? (kevHits.length + " of this week's threats directly trigger mandatory notification obligations if exploited.") : 'No immediate notification triggers this week.'}</div>
+  </td></tr>` : ''}
+
+  <!-- FOOTER -->
+  <tr><td style=\"background:#050c18;border:1px solid #1a2540;border-radius:0 0 10px 10px;border-top:none;padding:20px 28px\">
+    <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\"><tr>
+      <td style=\"font-size:10px;color:#2e3f62;line-height:1.7\">
+        <strong style=\"color:#5a6f96\">RiskSync</strong> \u00b7 Micro-GRC Intelligence Platform<br/>
+        Scores computed using CVSS \u00d7 I(${ind?.multiplier}) \u00d7 S(${sc?.s_multiplier}) \u00d7 RegM(${geo?.regMultiplier}) \u00d7 PlatformM \u00d7 TypeBoost \u00d7 KEV<br/>
+        Data sources: NIST NVD \u00b7 CISA KEV \u00b7 EPSS (FIRST.org) \u00b7 ${(profile.sources||[]).length} active feeds<br/>
+        <span style=\"color:#1a2540\">You are receiving this because you configured a RiskSync bulletin subscription.</span>
+      </td>
+      <td align=\"right\" style=\"vertical-align:bottom\">
+        <div style=\"font-size:20px;color:#1a2540;font-weight:700\">RS</div>
+      </td>
+    </tr></table>
+  </td></tr>
+
+</table>
+</td></tr>
+</table>
+<style>
 #rs-gate{position:fixed;top:0;left:0;right:0;bottom:0;background:#07090f;z-index:99999;display:flex;align-items:center;justify-content:center;}
 .rs-gate-box{background:#0c1220;border:1px solid #2d7ef7;border-radius:12px;padding:40px;width:360px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.6)}
 .rs-gate-logo{width:40px;height:40px;background:#2d7ef7;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;margin:0 auto 16px}
@@ -1723,7 +1867,11 @@ function rsUnlock(){
   }
 }
 </script>
-</body>\n</html>`;\n  };\n\n
+</body>
+</html>`;
+  };
+
+
 
     const handleCopyHTML = () => {
     const html = generateEmail();
