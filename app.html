@@ -615,7 +615,7 @@ function WhyThese10({profile,liveVulns}){
   const prof  = IND_PROFILE_VULN[profile.industry]||{boost:[],suppress:[]};
   const sevC  = n=>n>=8?"#f04060":n>=6?"#f5a623":n>=4?"#2d7ef7":"#0ed27a";
   const kevCount = top10.filter(v=>v.kev).length;
-  const avgEpss  = Math.round(top10.reduce((a,v)=>a+v.epss,0)/10*100);
+  const avgEpss  = Math.round(top10.reduce((a,v)=>a+v.epss,0)/top10.length*100);
   const platNames= (profile.techPillars||[]).map(pid=>TECH_PILLARS.find(t=>t.id===pid)?.label||pid);
   const boosted  = (prof.boost||[]).map(t=>t.replace(/_/g," "));
   const suppressed=(prof.suppress||[]).map(t=>t.replace(/_/g," "));
@@ -713,7 +713,7 @@ function WhyThese10({profile,liveVulns}){
       headline:"Same CVE, very different score. A 9.8 CVSS can score 3.2 for you — or 9.9. It depends entirely on your context.",
       facts:[
         {label:"Vulnerabilities scored",val:String(totalCount)},
-        {label:"Delivered to you",val:"10"},
+        {label:"Delivered to you",val:String(top10.length)},
         {label:"Score range",val:"0 to 10"},
         {label:"vs generic CVSS",val:"Often very different",hot:true},
       ],
@@ -728,12 +728,12 @@ function WhyThese10({profile,liveVulns}){
       {/* Header */}
       <div style={{padding:"14px 20px",marginBottom:14,background:"linear-gradient(120deg,"+( ind?.color||C.accent)+"20,"+C.card+" 70%)",border:"1px solid "+(ind?.color||C.accent)+"40",borderRadius:14,display:"flex",justifyContent:"space-between",alignItems:"center",flexWrap:"wrap",gap:10}}>
         <div>
-          <div style={{fontSize:11,fontWeight:700,color:C.muted,textTransform:"uppercase",letterSpacing:1,marginBottom:4}}>Why your top 10 looks the way it does</div>
-          <div style={{fontSize:17,fontWeight:800,color:"#fff",marginBottom:3}}>6 filters · {totalCount} CVEs in → 10 that matter</div>
+          <div style={{fontSize:11,fontWeight:700,color:C.muted,textTransform:"uppercase",letterSpacing:1,marginBottom:4}}>Why your top {top10.length} looks the way it does</div>
+          <div style={{fontSize:17,fontWeight:800,color:"#fff",marginBottom:3}}>6 filters · {totalCount} CVEs in → {top10.length} that matter</div>
           <div style={{fontSize:11,color:C.muted}}>{ind?.label} · {sc?.label} · {geo?.label} · {(profile.techPillars||[]).length} platforms</div>
         </div>
         <div style={{display:"flex",alignItems:"center",gap:5,flexWrap:"wrap"}}>
-          {[["10,000","Start","#2d7ef7"],["4,800","Industry","#9b72f6"],["2,100","Platform","#0ed27a"],["800","Scale","#f5a623"],["180","Exploited","#f04060"],["52","Scored","#f5a623"],["10","Yours","#f04060"]].map(([n,l,col],i,arr)=>(
+          {[["10,000","Start","#2d7ef7"],["4,800","Industry","#9b72f6"],["2,100","Platform","#0ed27a"],["800","Scale","#f5a623"],["180","Exploited","#f04060"],["52","Scored","#f5a623"],[String(top10.length),"Yours","#f04060"]].map(([n,l,col],i,arr)=>(
             <React.Fragment key={n+i}>
               <div style={{textAlign:"center"}}>
                 <div style={{fontSize:12,fontWeight:900,color:col,lineHeight:1}}>{n}</div>
@@ -912,14 +912,14 @@ function FilterFunnel({profile,liveVulns}){
     },
     {
       id:"top10",
-      label:"Top 10 delivered",
+      label:`Top ${top10.length} delivered`,
       sublabel:`Highest contextual risk for ${ind?.label}`,
-      count:10,
+      count:top10.length,
       unit:"actionable threats",
       color:"#1e0810",
       stroke:"#f04060",
       filterNote:null,
-      pct:Math.round(10/liveList.length*100),
+      pct:Math.round(top10.length/liveList.length*100),
     },
   ];
 
@@ -1056,7 +1056,7 @@ function FilterFunnel({profile,liveVulns}){
 
           {/* Top 10 mini-list */}
           <div style={{padding:"10px 13px",background:C.card,border:`1px solid ${C.red}40`,borderRadius:8,borderLeft:`3px solid ${C.red}`,marginTop:4}}>
-            <div style={{fontSize:10,fontWeight:700,color:C.red,textTransform:"uppercase",letterSpacing:.7,marginBottom:8}}>Final top 10 — {ind?.label}</div>
+            <div style={{fontSize:10,fontWeight:700,color:C.red,textTransform:"uppercase",letterSpacing:.7,marginBottom:8}}>Final top {top10.length} — {ind?.label}</div>
             {top10.map((v,i)=>{
               const col=sevCol(v.contextScore);
               return(
@@ -1107,12 +1107,12 @@ function BulletinPage({profile, liveVulns, controls, activeCategory}) {
   const [frequency, setFrequency]   = useState('daily');
   const [sections, setSections]     = useState({
     execSummary: true, top5Threats: true, kevAlert: true,
-    controlRec: true, regulatoryNote: true,
+    controlRec: true, regulatoryNote: true, newSince: true,
   });
   const [copied, setCopied] = useState(false);
   const [subLoading, setSubLoading] = useState(false);
   const [subError, setSubError] = useState('');
-  const [selectedIndustry, setSelectedIndustry] = useState(profile.industry || 'finance');
+  const [selectedIndustry, setSelectedIndustry] = useState(profile.industry || 'fintech');
   const [selectedScale, setSelectedScale]       = useState(profile.scale    || 'mid');
   const [selectedGeo, setSelectedGeo]           = useState(profile.geo      || 'us');
 
@@ -1123,9 +1123,10 @@ function BulletinPage({profile, liveVulns, controls, activeCategory}) {
   const filteredList = filterByCategory(_rawList, activeCategory);
   const bulletinProfile = {...profile, industry: selectedIndustry, scale: selectedScale, geo: selectedGeo};
   const top10   = getTop10Vulns(bulletinProfile, filteredList);
+  const newSince = getNewSince(bulletinProfile, filteredList, 48, 10);
   const gScore  = globalRisk(bulletinProfile, controls);
-  const top5    = top10.slice(0, 5);
-  const topRem  = top5[0] ? getRemediation(top5[0]) : null;
+  const topThreats    = top10;
+  const topRem  = topThreats[0] ? getRemediation(topThreats[0]) : null;
 
   const kevHits = top10.filter(v => v.kev);
   const col     = gScore >= 8 ? C.red : gScore >= 6 ? C.amber : C.green;
@@ -1138,7 +1139,7 @@ function BulletinPage({profile, liveVulns, controls, activeCategory}) {
 
   /* ── Generate HTML email ── */
 const generateEmail = () => {
-    const threatRows = top5.map((v,i) => {
+    const threatRows = topThreats.map((v,i) => {
       const c = v.contextScore >= 8 ? '#f04060' : v.contextScore >= 6 ? '#f5a623' : '#2d7ef7';
       return `<tr style=\"border-bottom:1px solid #1a2540\">
         <td style=\"padding:10px 12px;font-size:11px;color:#888;font-family:monospace\">#${i+1}</td>
@@ -1155,6 +1156,16 @@ const generateEmail = () => {
         <td style=\"padding:8px 12px;font-size:11px;color:#dde4f0\">${v.desc.length>70?v.desc.slice(0,69)+'\u2026':v.desc}</td>
         <td style=\"padding:8px 12px;text-align:right;font-size:12px;font-weight:700;color:#f04060\">${v.contextScore.toFixed(1)}</td>
       </tr>`).join('');
+
+    const newSinceRows = newSince.slice(0,5).map(v => {
+      const hrsAgo = Math.round((Date.now()-new Date(v.publishedDate).getTime())/3600000);
+      return `
+      <tr>
+        <td style=\"padding:8px 12px;font-size:10px;font-family:monospace;color:#22d3ee\">${v.id}</td>
+        <td style=\"padding:8px 12px;font-size:11px;color:#dde4f0\">${v.desc.length>65?v.desc.slice(0,64)+'\u2026':v.desc}</td>
+        <td style=\"padding:8px 12px;text-align:right;font-size:10px;color:#5a6f96\">${hrsAgo}h ago</td>
+      </tr>`;
+    }).join('');
 
     return `<!DOCTYPE html>
 <html>
@@ -1212,7 +1223,7 @@ const generateEmail = () => {
         ${[
           {label:'Risk Score', val:gScore.toFixed(1), col},
           {label:'KEV Confirmed', val:String(kevHits.length), col:'#f04060'},
-          {label:'Avg EPSS', val:Math.round(top5.reduce((a,v)=>a+v.epss,0)/5*100)+'%', col:'#f5a623'},
+          {label:'Avg EPSS', val:Math.round(topThreats.reduce((a,v)=>a+v.epss,0)/topThreats.length*100)+'%', col:'#f5a623'},
           {label:'Critical Threats', val:String(top10.filter(v=>v.contextScore>=8).length), col:'#f04060'},
         ].map(k=>`<td align=\"center\" style=\"background:#0c1220;border:1px solid #1a2540;border-radius:6px;padding:12px 8px;width:25%\">
           <div style=\"font-size:20px;font-weight:700;color:${k.col}\">${k.val}</div>
@@ -1232,10 +1243,20 @@ const generateEmail = () => {
     <div style=\"font-size:10px;color:#f04060;margin-top:10px\">These vulnerabilities have confirmed real-world exploitation. Immediate patching required.</div>
   </td></tr>` : ''}
 
+  ${sections.newSince && newSince.length > 0 ? `
+  <!-- NEW SINCE YESTERDAY -->
+  <tr><td style=\"background:#031419;border-left:1px solid #22d3ee40;border-right:1px solid #22d3ee40;border-top:1px solid #22d3ee30;padding:20px 28px\">
+    <div style=\"font-size:9px;font-weight:700;color:#22d3ee;letter-spacing:1px;margin-bottom:10px\">\u25CF NEW SINCE YESTERDAY \u2014 ${newSince.length} PUBLISHED IN LAST 48H</div>
+    <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\">
+      ${newSinceRows}
+    </table>
+    <div style=\"font-size:10px;color:#5a6f96;margin-top:10px\">Ranked by recency, not risk score \u2014 review alongside your priority list below.</div>
+  </td></tr>` : ''}
+
   ${sections.top5Threats ? `
   <!-- TOP 5 THREATS -->
   <tr><td style=\"background:#080d18;border-left:1px solid #1a2540;border-right:1px solid #1a2540;border-top:1px solid #1a2540;padding:24px 28px\">
-    <div style=\"font-size:9px;font-weight:700;color:#5a6f96;letter-spacing:1px;margin-bottom:14px\">TOP 5 CONTEXTUAL THREATS \u2014 ${ind?.label?.toUpperCase()}</div>
+    <div style=\"font-size:9px;font-weight:700;color:#5a6f96;letter-spacing:1px;margin-bottom:14px\">TOP 25 CONTEXTUAL THREATS \u2014 ${ind?.label?.toUpperCase()}</div>
     <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"border:1px solid #1a2540;border-radius:6px;overflow:hidden\">
       <tr style=\"background:#0c1220\">
         <td style=\"padding:8px 12px;font-size:9px;color:#5a6f96;font-weight:700\">#</td>
@@ -1370,9 +1391,9 @@ function rsUnlock(){
   const toggleSection = key => setSections(s => ({...s, [key]: !s[key]}));
 
   const SECTION_LABELS = {
-    execSummary:'Daily Risk Summary', top5Threats:'Top 5 Threats',
+    execSummary:'Daily Risk Summary', top5Threats:'Top 25 Threats',
     kevAlert:'KEV Alert Banner', controlRec:'Recommended Action',
-    regulatoryNote:'Regulatory Note',
+    regulatoryNote:'Regulatory Note', newSince:'New Since Yesterday',
   };
 
   return (
@@ -1551,7 +1572,7 @@ function rsUnlock(){
                   {[
                     {label:'Risk Score', val:gScore.toFixed(1), c:col},
                     {label:'KEV Confirmed', val:kevHits.length, c:'#f04060'},
-                    {label:'Avg EPSS', val:Math.round(top5.reduce((a,v)=>a+v.epss,0)/5*100)+'%', c:'#f5a623'},
+                    {label:'Avg EPSS', val:Math.round(topThreats.reduce((a,v)=>a+v.epss,0)/topThreats.length*100)+'%', c:'#f5a623'},
                     {label:'Critical', val:top10.filter(v=>v.contextScore>=8).length, c:'#f04060'},
                   ].map(k=>(
                     <div key={k.label} style={{background:'#0c1220', border:'1px solid #1a2540', borderRadius:6, padding:'12px 8px', textAlign:'center'}}>
@@ -1580,17 +1601,37 @@ function rsUnlock(){
               </div>
             )}
 
+            {/* New Since Yesterday */}
+            {sections.newSince && newSince.length > 0 && (
+              <div style={{background:'#031419', borderLeft:'1px solid #22d3ee40', borderRight:'1px solid #22d3ee40', borderTop:'1px solid #22d3ee30', padding:'20px 28px'}}>
+                <div style={{fontSize:9, fontWeight:700, color:'#22d3ee', letterSpacing:1, marginBottom:10}}>● NEW SINCE YESTERDAY — {newSince.length} PUBLISHED IN LAST 48H</div>
+                {newSince.slice(0,5).map(v=>{
+                  const hrsAgo = Math.round((Date.now()-new Date(v.publishedDate).getTime())/3600000);
+                  return (
+                    <div key={v.id} style={{display:'flex', alignItems:'center', justifyContent:'space-between', padding:'8px 0', borderBottom:'1px solid #0a2a30'}}>
+                      <div>
+                        <div style={{fontSize:10, color:'#22d3ee', fontFamily:'monospace', marginBottom:2}}>{v.id}</div>
+                        <div style={{fontSize:11, color:'#dde4f0'}}>{v.desc.length>65?v.desc.slice(0,64)+'…':v.desc}</div>
+                      </div>
+                      <div style={{fontSize:10, color:'#5a6f96', marginLeft:16, flexShrink:0}}>{hrsAgo}h ago</div>
+                    </div>
+                  );
+                })}
+                <div style={{fontSize:10, color:'#5a6f96', marginTop:10}}>Ranked by recency, not risk score — review alongside your priority list below.</div>
+              </div>
+            )}
+
             {/* Top 5 Threats */}
             {sections.top5Threats && (
               <div style={{background:'#080d18', borderLeft:'1px solid #1a2540', borderRight:'1px solid #1a2540', borderTop:'1px solid #1a2540', padding:'24px 28px'}}>
-                <div style={{fontSize:9, fontWeight:700, color:C.muted, letterSpacing:1, marginBottom:14}}>TOP 5 CONTEXTUAL THREATS — {ind?.label?.toUpperCase()}</div>
+                <div style={{fontSize:9, fontWeight:700, color:C.muted, letterSpacing:1, marginBottom:14}}>TOP 25 CONTEXTUAL THREATS — {ind?.label?.toUpperCase()}</div>
                 <div style={{border:'1px solid #1a2540', borderRadius:6, overflow:'hidden'}}>
                   <div style={{display:'grid', gridTemplateColumns:'28px 1fr 140px 72px 52px', padding:'8px 12px', background:'#0c1220'}}>
                     {['#','DESCRIPTION','CVE','SEV','SCORE'].map(h=>(
                       <div key={h} style={{fontSize:9, fontWeight:700, color:C.muted}}>{h}</div>
                     ))}
                   </div>
-                  {top5.map((v,i)=>{
+                  {topThreats.map((v,i)=>{
                     const cc=vc(v.contextScore);
                     return (
                       <div key={v.id} style={{display:'grid', gridTemplateColumns:'28px 1fr 140px 72px 52px', padding:'10px 12px', borderTop:'1px solid #1a2540', background:i%2===0?'transparent':'#0a1018'}}>
@@ -1782,7 +1823,7 @@ const NAV_ITEMS = [
   { id:"dashboard",  label:"Dashboard",          icon:"ti-layout-dashboard",   group:"main"    },
   { id:"threats",    label:"Threat Feed",         icon:"ti-satellite",          group:"main"    },
   { id:"analysis",   label:"Risk Analysis",       icon:"ti-chart-radar",        group:"main"    },
-  { id:"why10",      label:"Why These 10",        icon:"ti-layout-grid",        group:"main"    },
+  { id:"why10",      label:"Why These 25",        icon:"ti-layout-grid",        group:"main"    },
   { id:"pipeline",   label:"Filter Pipeline",     icon:"ti-cone",               group:"main"    },
   { id:"industry",   label:"Industry Multipliers",icon:"ti-building",           group:"intel"   },
   { id:"sources",    label:"Source Trust",        icon:"ti-radar",              group:"intel"   },
@@ -2974,7 +3015,7 @@ function App() {
     dashboard: "OP-CENTER / OVERVIEW",
     threats:   "THREAT FEED",
     analysis:  "RISK ANALYSIS",
-    why10:     "WHY THESE 10",
+    why10:     "WHY THESE 25",
     pipeline:  "FILTER PIPELINE",
     industry:  "INDUSTRY MULTIPLIERS",
     sources:   "SOURCE TRUST",
@@ -3196,7 +3237,7 @@ function computeVulnScore(v,profile){
   return parseFloat(Math.min(10,raw).toFixed(1));
 }
 
-function getTop10Vulns(profile, vulnList, n=10){
+function getTop10Vulns(profile, vulnList, n=25){
   const list = vulnList && vulnList.length > 0 ? vulnList : VULNS;
   return list
     .map(v=>({...v,contextScore:computeVulnScore(v,profile)}))
@@ -3214,6 +3255,19 @@ function getTop10Vulns(profile, vulnList, n=10){
       return bd - ad;
     })
     .slice(0,n);
+}
+
+/* ── NEW SINCE — chronological freshness, separate purpose from priority ranking above.
+   getTop10Vulns answers "what most needs action". This answers "what's actually new".
+   Honest limitation: only includes entries with a real publishedDate — nothing is guessed. */
+function getNewSince(profile, vulnList, hours=48, cap=25){
+  const cutoff = Date.now() - hours*3600000;
+  const list = vulnList && vulnList.length > 0 ? vulnList : VULNS;
+  return list
+    .filter(v=>v.publishedDate && new Date(v.publishedDate).getTime() > cutoff)
+    .map(v=>({...v,contextScore:computeVulnScore(v,profile)}))
+    .sort((a,b)=> new Date(b.publishedDate).getTime() - new Date(a.publishedDate).getTime())
+    .slice(0,cap);
 }
 
 /* ── SCORING ENGINE ── */
