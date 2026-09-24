@@ -1718,8 +1718,12 @@ async function fetchLiveVulns(onProgress){
     const kevRes=await fetch("https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json");
     const kevData=await kevRes.json();
     const kevSet=new Set(kevData.vulnerabilities.map(v=>v.cveID));
-    const kevActionMap={};
-    kevData.vulnerabilities.forEach(v=>{ if(v.requiredAction) kevActionMap[v.cveID]=v.requiredAction; });
+    const kevActionMap={}, kevDateAddedMap={}, kevDueDateMap={};
+    kevData.vulnerabilities.forEach(v=>{
+      if(v.requiredAction) kevActionMap[v.cveID]=v.requiredAction;
+      if(v.dateAdded) kevDateAddedMap[v.cveID]=v.dateAdded;
+      if(v.dueDate) kevDueDateMap[v.cveID]=v.dueDate;
+    });
     onProgress("CISA KEV loaded — "+kevSet.size+" confirmed exploited CVEs");
     
     onProgress("Querying NIST NVD...");
@@ -1748,7 +1752,8 @@ async function fetchLiveVulns(onProgress){
       const references=(cve.references||[]).map(r=>({url:r.url, tags:r.tags||[]})).filter(r=>r.url);
       return{id,cvss,desc:desc.slice(0,120),type,src:isKev?"NVD+KEV":"NVD",kev:isKev,
              epss:0.5,affects,industries:["all"],cwe,vector,exploit:exploitStatus(isKev,0.5),
-             publishedDate:cve.published,references,action:kevActionMap[id]};
+             publishedDate:cve.published,references,action:kevActionMap[id],
+             exploitConfirmedDate:kevDateAddedMap[id],dueDate:kevDueDateMap[id]};
     }).filter(v=>v.cvss>=5.0);
     
     const ids=mapped.map(v=>v.id).join(",");
@@ -1799,6 +1804,7 @@ function ThreatFeedPage({profile, liveVulns, activeCategory}) {
   const filteredList = filterByCategory(liveList, activeCategory);
   const ind = INDUSTRIES.find(i => i.id === profile.industry);
   const [priorityFilter, setPriorityFilter] = useState('all');
+  const [dateFilter, setDateFilter] = useState('all');
   const [search, setSearch] = useState('');
   const [manualVulns, setManualVulns] = useState([]);
   const [ingestOpen, setIngestOpen] = useState(false);
@@ -1812,9 +1818,18 @@ function ThreatFeedPage({profile, liveVulns, activeCategory}) {
     ...v, contextScore: computeVulnScore(v, profile)
   })).sort((a,b) => b.contextScore - a.contextScore);
 
+  const DATE_WINDOWS = {'24h':1,'7d':7,'30d':30,'90d':90};
   const filtered = allVulns.filter(v => {
     if (priorityFilter === 'critical' && v.contextScore < 8) return false;
     if (priorityFilter === 'high' && (v.contextScore < 6 || v.contextScore >= 8)) return false;
+    if (dateFilter !== 'all') {
+      const days = DATE_WINDOWS[dateFilter];
+      /* Honest behaviour: if we don't know when it was published, it can't be claimed to
+         fall within a bounded window — exclude rather than assume. */
+      if (!v.publishedDate) return false;
+      const ageDays = (Date.now() - new Date(v.publishedDate).getTime()) / 86400000;
+      if (ageDays > days) return false;
+    }
     if (search && !v.id.toLowerCase().includes(search.toLowerCase()) && !v.desc.toLowerCase().includes(search.toLowerCase())) return false;
     return true;
   });
@@ -1859,10 +1874,18 @@ function ThreatFeedPage({profile, liveVulns, activeCategory}) {
           <option value="critical">Critical only</option>
           <option value="high">High only</option>
         </select>
+        <select value={dateFilter} onChange={e=>setDateFilter(e.target.value)}
+          style={{padding:'6px 12px', borderRadius:4, border:`1px solid ${C.border}`, background:C.card, color:C.text, fontSize:11, cursor:'pointer'}}>
+          <option value="all">ALL TIME</option>
+          <option value="24h">Published: Last 24h</option>
+          <option value="7d">Published: Last 7 days</option>
+          <option value="30d">Published: Last 30 days</option>
+          <option value="90d">Published: Last 90 days</option>
+        </select>
         <div style={{display:'flex', alignItems:'center', gap:6, padding:'6px 12px', borderRadius:4, border:`1px solid ${ind?.color||C.accent}`, background:(ind?.color||C.accent)+'15', color:ind?.color||C.accent, fontSize:11, fontWeight:700}}>
           {ind?.label} ▲
         </div>
-        <button onClick={()=>{setPriorityFilter('all');setSearch('');}}
+        <button onClick={()=>{setPriorityFilter('all');setDateFilter('all');setSearch('');}}
           style={{padding:'6px 12px', borderRadius:4, border:`1px solid ${C.border}`, background:'transparent', color:C.muted, fontSize:11, cursor:'pointer'}}>RESET</button>
         <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search CVE or description..."
           style={{marginLeft:'auto', padding:'6px 12px', borderRadius:4, border:`1px solid ${C.border}`, background:C.card, color:C.text, fontSize:11, width:240}}/>
@@ -1892,6 +1915,9 @@ function ThreatFeedPage({profile, liveVulns, activeCategory}) {
         })}
       </div>
       <div style={{marginTop:10, fontSize:10, color:C.muted}}>{filtered.length} threats shown{manualVulns.length>0?` · ${manualVulns.length} analyst-flagged (this session)`:''}</div>
+      {dateFilter!=='all' && filtered.length===0 && (
+        <div style={{marginTop:4, fontSize:10, color:C.dim, fontStyle:'italic'}}>No threats have a known publish date within this window — entries without a publish date are excluded from date filters rather than guessed.</div>
+      )}
 
       {/* INGEST THREAT MODAL */}
       {ingestOpen && (
@@ -1931,6 +1957,7 @@ function ThreatDetailModal({vuln, onClose}){
   const score = vuln.contextScore != null ? vuln.contextScore : vuln.cvss;
   const rem = getRemediation(vuln);
   const refLinks = getReferenceLinks(vuln);
+  const fmtDate = d => d ? new Date(d).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) : '—';
   return (
     <div onClick={onClose} style={{position:'fixed',top:0,left:0,right:0,bottom:0,background:'rgba(5,12,24,.85)',zIndex:1000,display:'flex',alignItems:'center',justifyContent:'center'}}>
       <div onClick={e=>e.stopPropagation()} style={{background:'#0a1220',border:`1.5px solid ${vc(score)}`,borderRadius:12,padding:22,width:460,maxWidth:'92vw',maxHeight:'80vh',overflowY:'auto'}}>
@@ -1964,6 +1991,20 @@ function ThreatDetailModal({vuln, onClose}){
             <div style={{fontSize:9,color:C.muted,textTransform:'uppercase'}}>Source</div>
             <div style={{fontSize:11,fontWeight:700,color:C.text}}>{vuln.src||'—'}</div>
           </div>
+          <div style={{background:'#080d18',borderRadius:6,padding:'6px 8px',border:`1px solid ${C.border}`}}>
+            <div style={{fontSize:9,color:C.muted,textTransform:'uppercase'}}>CVE published</div>
+            <div style={{fontSize:11,fontWeight:700,color:C.text}}>{fmtDate(vuln.publishedDate)}</div>
+          </div>
+          <div style={{background:'#080d18',borderRadius:6,padding:'6px 8px',border:`1px solid ${C.border}`}}>
+            <div style={{fontSize:9,color:C.muted,textTransform:'uppercase'}}>Exploit confirmed</div>
+            <div style={{fontSize:11,fontWeight:700,color:vuln.kev?C.red:C.muted}}>{vuln.kev ? fmtDate(vuln.exploitConfirmedDate) : 'Not KEV-listed'}</div>
+          </div>
+          {vuln.kev && vuln.dueDate && (
+            <div style={{gridColumn:'1 / -1',background:C.redBg,borderRadius:6,padding:'6px 8px',border:`1px solid ${C.red}40`}}>
+              <div style={{fontSize:9,color:C.red,textTransform:'uppercase'}}>CISA BOD 22-01 remediation due</div>
+              <div style={{fontSize:11,fontWeight:700,color:C.red}}>{fmtDate(vuln.dueDate)}</div>
+            </div>
+          )}
         </div>
         <div>
           <div style={{padding:'7px 10px',background:vc(score)+'15',border:`1px solid ${vc(score)}40`,borderRadius:6,marginBottom:10}}>
