@@ -2264,6 +2264,21 @@ function exploitStatus(isKev,epss){
 }
 
 async function fetchLiveVulns(onProgress){
+  /* Primary path: same-origin Cloudflare Function (no CORS issue) — same pattern daily.html uses */
+  try{
+    onProgress("Fetching from RiskSync intelligence cache...");
+    const res = await fetch("/threats");
+    if(!res.ok) throw new Error("Function returned "+res.status);
+    const data = await res.json();
+    if(!data.ok || !data.vulns) throw new Error("Invalid response from /threats");
+    onProgress("Live data ready — "+data.count+" CVEs scored from "+(data.kevCount||0).toLocaleString()+" KEV catalogue");
+    return data.vulns;
+  }catch(cacheErr){
+    console.warn("/threats unavailable, trying direct feeds:", cacheErr.message);
+  }
+
+  /* Fallback: direct browser calls to CISA/NVD/EPSS — will CORS-fail in most production browsers,
+     kept only in case this ever runs somewhere those origins do allow cross-origin requests. */
   try{
     onProgress("Connecting to CISA KEV...");
     const kevRes=await fetch("https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json");
