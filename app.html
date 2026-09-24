@@ -1699,7 +1699,14 @@ async function fetchLiveVulns(onProgress){
     const data = await res.json();
     if(!data.ok || !data.vulns) throw new Error("Invalid response from /threats");
     onProgress("Live data ready — "+data.count+" CVEs scored from "+(data.kevCount||0).toLocaleString()+" KEV catalogue");
-    return data.vulns;
+    /* Never trust externally-sourced exploit/type labels — always derive from the same
+       canonical logic used everywhere else (kev+epss → exploitStatus; cwe → CWE_TYPE_MAP).
+       This is the backend-response equivalent of the curated-data fix: one source of truth. */
+    return data.vulns.map(v=>({
+      ...v,
+      type: v.type || CWE_TYPE_MAP[v.cwe] || "injection",
+      exploit: exploitStatus(v.kev, v.epss||0),
+    }));
   }catch(cacheErr){
     console.warn("/threats unavailable, trying direct feeds:", cacheErr.message);
   }
