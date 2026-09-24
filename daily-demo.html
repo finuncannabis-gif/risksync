@@ -474,6 +474,11 @@ function rsUnlock(){
       <div class="kev-card-header">⚠ CISA KEV Alerts</div>
       <div id="kev-list" style="min-height:150px"><div style="padding:12px 14px;font-size:11px;color:var(--muted)">Loading...</div></div>
     </div>
+    <!-- NEW SINCE YESTERDAY -->
+    <div class="sidebar-card" style="border-color:rgba(34,211,238,.25)">
+      <div class="sidebar-card-header" style="color:var(--cyan)">● New Since Yesterday</div>
+      <div id="new-since-list" style="min-height:60px"><div style="padding:12px 14px;font-size:11px;color:var(--muted)">Loading...</div></div>
+    </div>
     <!-- EMAIL CAPTURE -->
     <div class="sidebar-card">
       <div class="sidebar-card-header">Get This Daily</div>
@@ -899,6 +904,32 @@ function renderKEV() {
   }).join('');
 }
 
+function renderNewSince(hours) {
+  hours = hours || 48;
+  var cutoff = Date.now() - hours * 3600000;
+  var listEl = document.getElementById('new-since-list');
+  if (!listEl) return;
+  /* Honest limitation: only counts entries with a real publishedDate — never guessed. */
+  var fresh = allVulns.filter(function(v) {
+    return v.publishedDate && new Date(v.publishedDate).getTime() > cutoff;
+  }).sort(function(a,b) {
+    return new Date(b.publishedDate).getTime() - new Date(a.publishedDate).getTime();
+  }).slice(0, 5);
+
+  if (!fresh.length) {
+    listEl.innerHTML = '<div style="padding:2px 0;font-size:11px;color:var(--muted)">Nothing published in the last ' + hours + 'h — priority list below reflects standing risk, not new activity.</div>';
+    return;
+  }
+  listEl.innerHTML = fresh.map(function(v) {
+    var hrsAgo = Math.round((Date.now() - new Date(v.publishedDate).getTime()) / 3600000);
+    return '<div class="kev-item" style="border-bottom:1px solid rgba(34,211,238,.1)">'
+      + '<div style="flex:1"><div style="font-size:10px;font-family:monospace;color:var(--cyan);margin-bottom:2px">' + v.id + '</div>'
+      + '<div style="font-size:11px;color:var(--text);line-height:1.4">' + (v.desc.length>60?v.desc.slice(0,59)+'…':v.desc) + '</div></div>'
+      + '<div style="font-size:10px;color:var(--muted);margin-left:8px;flex-shrink:0">' + hrsAgo + 'h ago</div>'
+      + '</div>';
+  }).join('');
+}
+
 function renderIndScores() {
   var el = document.getElementById('ind-scores-list');
   if (!el) return;
@@ -958,7 +989,7 @@ function applyFilters() {
 
   updateStats(filtered, liveKevCount);
   document.getElementById('threat-count').textContent = filtered.length + ' threats';
-  renderTable(filtered.slice(0, 20));
+  renderTable(filtered.slice(0, 25));
 }
 
 function colFor(n) { return n>=8?'#f04060':n>=6?'#f5a623':n>=4?'#2d7ef7':'#0ed27a'; }
@@ -1438,11 +1469,10 @@ document.addEventListener('DOMContentLoaded', function() {
   allVulns = VULNS;
   updateStats(allVulns);
   renderKEV();
+  renderNewSince();
   renderIndScores();
   applyFilters();
   setStatus('✓ ' + allVulns.length + ' CVEs loaded · Fetching live feed...');
-
-  // Fetch live data
   fetchLiveVulns(function(){}).then(function(vulns) {
     if (vulns && vulns.length > 0) {
       allVulns = vulns;
@@ -1450,6 +1480,7 @@ document.addEventListener('DOMContentLoaded', function() {
       setStatus('Scoring ' + vulns.length + ' threats for your industry...');
       updateStats(vulns, liveKevCount);
       renderKEV();
+      renderNewSince();
       renderIndScores();
       applyFilters();
       setStatus('✓ ' + vulns.length + ' threats scored from ' + (liveKevCount||vulns.length).toLocaleString() + ' KEV catalogue · Updated '
