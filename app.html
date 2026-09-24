@@ -606,6 +606,7 @@ function SourceTrust({profile}){
 function VulnFunnel({profile,liveVulns}){
   const [hovered,setHovered]=useState(null);
   const [tooltipPos,setTooltipPos]=useState({x:0,y:0,side:"right"});
+  const [selectedVuln,setSelectedVuln]=useState(null);
   const containerRef=useRef(null);
   const top10=getTop10Vulns(profile,liveVulns);
   const ind=INDUSTRIES.find(i=>i.id===profile.industry);
@@ -687,7 +688,7 @@ function VulnFunnel({profile,liveVulns}){
             <span style={{width:8,height:8,borderRadius:2,background:col,display:"inline-block"}}></span>{lbl}
           </span>
         ))}
-        <span style={{marginLeft:"auto",fontSize:10,color:C.dim,fontStyle:"italic"}}>Hover any layer for details & remediation</span>
+        <span style={{marginLeft:"auto",fontSize:10,color:C.dim,fontStyle:"italic"}}>Hover for a quick summary · click for full detail & sources</span>
       </div>
 
       {/* Full-width SVG funnel */}
@@ -716,7 +717,8 @@ function VulnFunnel({profile,liveVulns}){
               <g key={v.id}
                 onMouseEnter={e=>handleMouseEnter(v,e)}
                 onMouseLeave={()=>setHovered(null)}
-                style={{cursor:"crosshair",transition:"opacity .15s"}}
+                onClick={()=>setSelectedVuln(v)}
+                style={{cursor:"pointer",transition:"opacity .15s"}}
                 opacity={hovered&&!isHov?".55":"1"}
               >
                 {/* shadow / depth bottom */}
@@ -853,7 +855,7 @@ function VulnFunnel({profile,liveVulns}){
               <div>
                 <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:7}}>
                   <div style={{fontSize:9,fontWeight:700,color:C.muted,textTransform:"uppercase",letterSpacing:.7}}>Remediation steps</div>
-                  <span style={{fontSize:8,fontWeight:700,padding:"1px 6px",borderRadius:3,background:rem.curated?C.greenBg:C.border,color:rem.curated?C.green:C.muted,border:`1px solid ${rem.curated?C.green+"40":C.border}`}}>{rem.curated?"CURATED FOR THIS CVE":"STANDARD FOR THIS VULN TYPE"}</span>
+                  <span style={{fontSize:8,fontWeight:700,padding:"1px 6px",borderRadius:3,background:rem.curated?C.greenBg:C.border,color:rem.curated?C.green:C.muted,border:`1px solid ${rem.curated?C.green+"40":C.border}`}}>{(rem.source||"").toUpperCase()}</span>
                 </div>
                 {rem.steps.map((step,si)=>(
                   <div key={si} style={{display:"flex",gap:8,marginBottom:6,alignItems:"flex-start"}}>
@@ -873,6 +875,7 @@ function VulnFunnel({profile,liveVulns}){
           );
         })()}
       </div>
+      {selectedVuln && <ThreatDetailModal vuln={selectedVuln} onClose={()=>setSelectedVuln(null)}/>}
     </div>
   );
 }
@@ -2288,6 +2291,8 @@ async function fetchLiveVulns(onProgress){
     const kevRes=await fetch("https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json");
     const kevData=await kevRes.json();
     const kevSet=new Set(kevData.vulnerabilities.map(v=>v.cveID));
+    const kevActionMap={};
+    kevData.vulnerabilities.forEach(v=>{ if(v.requiredAction) kevActionMap[v.cveID]=v.requiredAction; });
     onProgress("CISA KEV loaded — "+kevSet.size+" confirmed exploited CVEs");
     
     onProgress("Querying NIST NVD...");
@@ -2313,9 +2318,10 @@ async function fetchLiveVulns(onProgress){
       const cpes=(cve.configurations||[]).flatMap(cfg=>(cfg.nodes||[]).flatMap(n=>(n.cpeMatch||[]).map(m=>m.criteria)));
       const affects=cpeToplatform(cpes.join(" "));
       const isKev=kevSet.has(id);
+      const references=(cve.references||[]).map(r=>({url:r.url, tags:r.tags||[]})).filter(r=>r.url);
       return{id,cvss,desc:desc.slice(0,120),type,src:isKev?"NVD+KEV":"NVD",kev:isKev,
              epss:0.5,affects,industries:["all"],cwe,vector,exploit:exploitStatus(isKev,0.5),
-             publishedDate:cve.published};
+             publishedDate:cve.published,references,action:kevActionMap[id]};
     }).filter(v=>v.cvss>=5.0);
     
     const ids=mapped.map(v=>v.id).join(",");
@@ -2498,6 +2504,7 @@ function ThreatDetailModal({vuln, onClose}){
   const vl = n => n >= 8 ? 'Critical' : n >= 6 ? 'High' : n >= 4 ? 'Medium' : 'Low';
   const score = vuln.contextScore != null ? vuln.contextScore : vuln.cvss;
   const rem = getRemediation(vuln);
+  const refLinks = getReferenceLinks(vuln);
   return (
     <div onClick={onClose} style={{position:'fixed',top:0,left:0,right:0,bottom:0,background:'rgba(5,12,24,.85)',zIndex:1000,display:'flex',alignItems:'center',justifyContent:'center'}}>
       <div onClick={e=>e.stopPropagation()} style={{background:'#0a1220',border:`1.5px solid ${vc(score)}`,borderRadius:12,padding:22,width:460,maxWidth:'92vw',maxHeight:'80vh',overflowY:'auto'}}>
@@ -2539,7 +2546,7 @@ function ThreatDetailModal({vuln, onClose}){
           </div>
           <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:7}}>
             <div style={{fontSize:9,fontWeight:700,color:C.muted,textTransform:'uppercase'}}>Remediation steps</div>
-            <span style={{fontSize:8,fontWeight:700,padding:'1px 6px',borderRadius:3,background:rem.curated?C.greenBg:C.border,color:rem.curated?C.green:C.muted,border:`1px solid ${rem.curated?C.green+'40':C.border}`}}>{rem.curated?'CURATED FOR THIS CVE':'STANDARD FOR THIS VULN TYPE'}</span>
+            <span style={{fontSize:8,fontWeight:700,padding:'1px 6px',borderRadius:3,background:rem.curated?C.greenBg:C.border,color:rem.curated?C.green:C.muted,border:`1px solid ${rem.curated?C.green+'40':C.border}`}}>{(rem.source||'').toUpperCase()}</span>
           </div>
           {rem.steps.map((step,si)=>(
             <div key={si} style={{display:'flex',gap:8,marginBottom:6,alignItems:'flex-start'}}>
@@ -2549,6 +2556,14 @@ function ThreatDetailModal({vuln, onClose}){
               <span style={{fontSize:10,color:'#a0b4d0',lineHeight:1.55}}>{step}</span>
             </div>
           ))}
+        </div>
+        <div style={{marginTop:14,paddingTop:14,borderTop:`1px solid ${C.border}`}}>
+          <div style={{fontSize:9,fontWeight:700,color:C.muted,textTransform:'uppercase',marginBottom:7}}>External Sources</div>
+          <div style={{display:'flex',flexWrap:'wrap',gap:6}}>
+            {refLinks.map((l,li)=>(
+              <a key={li} href={l.url} target="_blank" rel="noopener" style={{fontSize:10,fontWeight:600,color:C.accent,textDecoration:'none',padding:'5px 10px',border:`1px solid ${C.accent}`,borderRadius:4}}>{l.label} ↗</a>
+            ))}
+          </div>
         </div>
         <button onClick={onClose} style={{marginTop:16,width:'100%',padding:'9px',borderRadius:6,border:`1px solid ${C.border}`,background:'transparent',color:C.muted,fontSize:12,cursor:'pointer'}}>Close</button>
       </div>
@@ -3814,15 +3829,40 @@ const TYPE_REMEDIATION = {
 };
 
 function getRemediation(vuln){
+  if(vuln.action){
+    return {steps:[vuln.action], urgency:"CISA KEV confirmed active exploitation — this is CISA's official required action", curated:true, source:"CISA KEV"};
+  }
   const curated = VULN_REMEDIATION[vuln.id];
-  if(curated) return {...curated, curated:true};
+  if(curated) return {...curated, curated:true, source:"RiskSync curated"};
   const tmpl = TYPE_REMEDIATION[vuln.type] || TYPE_REMEDIATION.default;
   const urgency = vuln.kev
     ? `${tmpl.urgencyBase} immediately — CISA KEV confirmed active exploitation`
     : vuln.exploit === "Active" || vuln.exploit === "Likely"
       ? `${tmpl.urgencyBase} promptly — exploitation reported likely (EPSS ${Math.round((vuln.epss||0)*100)}%)`
       : `${tmpl.urgencyBase} per your standard SLA for this severity — no confirmed active exploitation yet`;
-  return {steps:tmpl.steps, urgency, curated:false};
+  return {steps:tmpl.steps, urgency, curated:false, source:"Standard for vulnerability type"};
+}
+
+/* ── EXTERNAL REFERENCE LINKS ──
+   NVD, MITRE and CISA links are deterministic — always shown when the id looks like a real CVE.
+   Any real NVD reference links the vuln carries (vendor advisories, patches, exploit writeups)
+   are appended after — however many actually exist, not capped at a fixed set. */
+function getReferenceLinks(vuln){
+  const links = [];
+  const isCve = vuln.id && vuln.id.startsWith("CVE-");
+  if(isCve){
+    links.push({label:"NVD Details", url:`https://nvd.nist.gov/vuln/detail/${vuln.id}`});
+    links.push({label:"MITRE", url:`https://cve.mitre.org/cgi-bin/cvename.cgi?name=${vuln.id}`});
+  }
+  links.push({label: vuln.kev ? "CISA KEV Catalog" : "CISA Advisories", url: vuln.kev
+    ? "https://www.cisa.gov/known-exploited-vulnerabilities-catalog"
+    : "https://www.cisa.gov/news-events/cybersecurity-advisories"});
+  (vuln.references||[]).forEach(ref=>{
+    if(!ref || !ref.url) return;
+    const tag = (ref.tags && ref.tags[0]) || "Reference";
+    links.push({label: tag, url: ref.url});
+  });
+  return links;
 }
 
 /* ── CATEGORY → THREAT TYPE MAPPING ── */
