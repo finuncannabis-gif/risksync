@@ -2388,7 +2388,7 @@ function ThreatFeedPage({profile, liveVulns, activeCategory}) {
     setIngestOpen(false);
   };
 
-  const rem = selectedVuln ? VULN_REMEDIATION[selectedVuln.id] : null;
+
 
   return (
     <div style={{padding:'20px', overflow:'auto', height:'100%', position:'relative'}}>
@@ -2468,63 +2468,72 @@ function ThreatFeedPage({profile, liveVulns, activeCategory}) {
       )}
 
       {/* ANALYZE DETAIL PANEL */}
-      {selectedVuln && (
-        <div onClick={()=>setSelectedVuln(null)} style={{position:'fixed',top:0,left:0,right:0,bottom:0,background:'rgba(5,12,24,.85)',zIndex:1000,display:'flex',alignItems:'center',justifyContent:'center'}}>
-          <div onClick={e=>e.stopPropagation()} style={{background:'#0a1220',border:`1.5px solid ${vc(selectedVuln.contextScore)}`,borderRadius:12,padding:22,width:460,maxWidth:'92vw',maxHeight:'80vh',overflowY:'auto'}}>
-            <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:12}}>
-              <div>
-                <div style={{fontSize:13,fontWeight:800,color:vc(selectedVuln.contextScore),fontFamily:'monospace',marginBottom:4}}>{selectedVuln.id}</div>
-                <span style={{fontSize:9,fontWeight:700,padding:'2px 7px',borderRadius:3,background:vc(selectedVuln.contextScore)+'25',color:vc(selectedVuln.contextScore),border:`1px solid ${vc(selectedVuln.contextScore)}50`}}>{vl(selectedVuln.contextScore)}</span>
-                {selectedVuln.kev&&<span style={{fontSize:9,fontWeight:700,padding:'2px 6px',borderRadius:3,background:'#f0406025',color:'#f04060',marginLeft:5}}>KEV</span>}
-                {selectedVuln.manual&&<span style={{fontSize:9,fontWeight:700,padding:'2px 6px',borderRadius:3,background:C.purple+'25',color:C.purple,marginLeft:5}}>ANALYST-FLAGGED</span>}
-              </div>
-              <div style={{textAlign:'right'}}>
-                <div style={{fontSize:26,fontWeight:900,color:vc(selectedVuln.contextScore),lineHeight:1}}>{selectedVuln.contextScore.toFixed(1)}</div>
-                <div style={{fontSize:9,color:C.muted,textDecoration:'line-through'}}>{selectedVuln.cvss.toFixed(1)} CVSS</div>
-              </div>
-            </div>
-            <div style={{fontSize:12,color:'#a0b4d0',lineHeight:1.6,marginBottom:14}}>{selectedVuln.desc}</div>
-            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:6,marginBottom:14}}>
-              <div style={{background:'#080d18',borderRadius:6,padding:'6px 8px',border:`1px solid ${C.border}`}}>
-                <div style={{fontSize:9,color:C.muted,textTransform:'uppercase'}}>CWE</div>
-                <div style={{fontSize:11,fontWeight:700,color:C.text}}>{selectedVuln.cwe||'—'}</div>
-              </div>
-              <div style={{background:'#080d18',borderRadius:6,padding:'6px 8px',border:`1px solid ${C.border}`}}>
-                <div style={{fontSize:9,color:C.muted,textTransform:'uppercase'}}>EPSS</div>
-                <div style={{fontSize:11,fontWeight:700,color:C.text}}>{Math.round((selectedVuln.epss||0)*100)}%</div>
-              </div>
-              <div style={{background:'#080d18',borderRadius:6,padding:'6px 8px',border:`1px solid ${C.border}`}}>
-                <div style={{fontSize:9,color:C.muted,textTransform:'uppercase'}}>Exploit status</div>
-                <div style={{fontSize:11,fontWeight:700,color:C.text}}>{selectedVuln.exploit||'—'}</div>
-              </div>
-              <div style={{background:'#080d18',borderRadius:6,padding:'6px 8px',border:`1px solid ${C.border}`}}>
-                <div style={{fontSize:9,color:C.muted,textTransform:'uppercase'}}>Source</div>
-                <div style={{fontSize:11,fontWeight:700,color:C.text}}>{selectedVuln.src||'—'}</div>
-              </div>
-            </div>
-            {rem ? (
-              <div>
-                <div style={{padding:'7px 10px',background:vc(selectedVuln.contextScore)+'15',border:`1px solid ${vc(selectedVuln.contextScore)}40`,borderRadius:6,marginBottom:10}}>
-                  <div style={{fontSize:9,fontWeight:700,color:vc(selectedVuln.contextScore),textTransform:'uppercase',marginBottom:2}}>Urgency</div>
-                  <div style={{fontSize:10,color:vc(selectedVuln.contextScore)}}>{rem.urgency}</div>
-                </div>
-                <div style={{fontSize:9,fontWeight:700,color:C.muted,textTransform:'uppercase',marginBottom:7}}>Remediation steps</div>
-                {rem.steps.map((step,si)=>(
-                  <div key={si} style={{display:'flex',gap:8,marginBottom:6,alignItems:'flex-start'}}>
-                    <div style={{width:16,height:16,borderRadius:4,background:vc(selectedVuln.contextScore)+'25',border:`1px solid ${vc(selectedVuln.contextScore)}50`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,marginTop:1}}>
-                      <span style={{fontSize:9,fontWeight:800,color:vc(selectedVuln.contextScore)}}>{si+1}</span>
-                    </div>
-                    <span style={{fontSize:10,color:'#a0b4d0',lineHeight:1.55}}>{step}</span>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div style={{fontSize:11,color:C.muted,fontStyle:'italic'}}>No curated remediation steps on file for this entry — review manually or add to your playbook.</div>
-            )}
-            <button onClick={()=>setSelectedVuln(null)} style={{marginTop:16,width:'100%',padding:'9px',borderRadius:6,border:`1px solid ${C.border}`,background:'transparent',color:C.muted,fontSize:12,cursor:'pointer'}}>Close</button>
+      {selectedVuln && <ThreatDetailModal vuln={selectedVuln} onClose={()=>setSelectedVuln(null)}/>}
+    </div>
+  );
+}
+
+/* Shared vuln detail modal — used by Threat Feed and Dashboard so "Analyze" behaves the same everywhere */
+function ThreatDetailModal({vuln, onClose}){
+  const vc = n => n >= 8 ? '#f04060' : n >= 6 ? '#f5a623' : n >= 4 ? '#2d7ef7' : '#0ed27a';
+  const vl = n => n >= 8 ? 'Critical' : n >= 6 ? 'High' : n >= 4 ? 'Medium' : 'Low';
+  const score = vuln.contextScore != null ? vuln.contextScore : vuln.cvss;
+  const rem = VULN_REMEDIATION[vuln.id];
+  return (
+    <div onClick={onClose} style={{position:'fixed',top:0,left:0,right:0,bottom:0,background:'rgba(5,12,24,.85)',zIndex:1000,display:'flex',alignItems:'center',justifyContent:'center'}}>
+      <div onClick={e=>e.stopPropagation()} style={{background:'#0a1220',border:`1.5px solid ${vc(score)}`,borderRadius:12,padding:22,width:460,maxWidth:'92vw',maxHeight:'80vh',overflowY:'auto'}}>
+        <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:12}}>
+          <div>
+            <div style={{fontSize:13,fontWeight:800,color:vc(score),fontFamily:'monospace',marginBottom:4}}>{vuln.id}</div>
+            <span style={{fontSize:9,fontWeight:700,padding:'2px 7px',borderRadius:3,background:vc(score)+'25',color:vc(score),border:`1px solid ${vc(score)}50`}}>{vl(score)}</span>
+            {vuln.kev&&<span style={{fontSize:9,fontWeight:700,padding:'2px 6px',borderRadius:3,background:'#f0406025',color:'#f04060',marginLeft:5}}>KEV</span>}
+            {vuln.manual&&<span style={{fontSize:9,fontWeight:700,padding:'2px 6px',borderRadius:3,background:C.purple+'25',color:C.purple,marginLeft:5}}>ANALYST-FLAGGED</span>}
+          </div>
+          <div style={{textAlign:'right'}}>
+            <div style={{fontSize:26,fontWeight:900,color:vc(score),lineHeight:1}}>{score.toFixed(1)}</div>
+            <div style={{fontSize:9,color:C.muted,textDecoration:'line-through'}}>{vuln.cvss.toFixed(1)} CVSS</div>
           </div>
         </div>
-      )}
+        <div style={{fontSize:12,color:'#a0b4d0',lineHeight:1.6,marginBottom:14}}>{vuln.desc}</div>
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:6,marginBottom:14}}>
+          <div style={{background:'#080d18',borderRadius:6,padding:'6px 8px',border:`1px solid ${C.border}`}}>
+            <div style={{fontSize:9,color:C.muted,textTransform:'uppercase'}}>CWE</div>
+            <div style={{fontSize:11,fontWeight:700,color:C.text}}>{vuln.cwe||'—'}</div>
+          </div>
+          <div style={{background:'#080d18',borderRadius:6,padding:'6px 8px',border:`1px solid ${C.border}`}}>
+            <div style={{fontSize:9,color:C.muted,textTransform:'uppercase'}}>EPSS</div>
+            <div style={{fontSize:11,fontWeight:700,color:C.text}}>{Math.round((vuln.epss||0)*100)}%</div>
+          </div>
+          <div style={{background:'#080d18',borderRadius:6,padding:'6px 8px',border:`1px solid ${C.border}`}}>
+            <div style={{fontSize:9,color:C.muted,textTransform:'uppercase'}}>Exploit status</div>
+            <div style={{fontSize:11,fontWeight:700,color:C.text}}>{vuln.exploit||'—'}</div>
+          </div>
+          <div style={{background:'#080d18',borderRadius:6,padding:'6px 8px',border:`1px solid ${C.border}`}}>
+            <div style={{fontSize:9,color:C.muted,textTransform:'uppercase'}}>Source</div>
+            <div style={{fontSize:11,fontWeight:700,color:C.text}}>{vuln.src||'—'}</div>
+          </div>
+        </div>
+        {rem ? (
+          <div>
+            <div style={{padding:'7px 10px',background:vc(score)+'15',border:`1px solid ${vc(score)}40`,borderRadius:6,marginBottom:10}}>
+              <div style={{fontSize:9,fontWeight:700,color:vc(score),textTransform:'uppercase',marginBottom:2}}>Urgency</div>
+              <div style={{fontSize:10,color:vc(score)}}>{rem.urgency}</div>
+            </div>
+            <div style={{fontSize:9,fontWeight:700,color:C.muted,textTransform:'uppercase',marginBottom:7}}>Remediation steps</div>
+            {rem.steps.map((step,si)=>(
+              <div key={si} style={{display:'flex',gap:8,marginBottom:6,alignItems:'flex-start'}}>
+                <div style={{width:16,height:16,borderRadius:4,background:vc(score)+'25',border:`1px solid ${vc(score)}50`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,marginTop:1}}>
+                  <span style={{fontSize:9,fontWeight:800,color:vc(score)}}>{si+1}</span>
+                </div>
+                <span style={{fontSize:10,color:'#a0b4d0',lineHeight:1.55}}>{step}</span>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div style={{fontSize:11,color:C.muted,fontStyle:'italic'}}>No curated remediation steps on file for this entry — review manually or add to your playbook.</div>
+        )}
+        <button onClick={onClose} style={{marginTop:16,width:'100%',padding:'9px',borderRadius:6,border:`1px solid ${C.border}`,background:'transparent',color:C.muted,fontSize:12,cursor:'pointer'}}>Close</button>
+      </div>
     </div>
   );
 }
@@ -2537,10 +2546,18 @@ function RiskAnalysisPage({profile, liveVulns, controls, setControls, activeCate
   const liveList = (liveVulns && liveVulns.length > 0) ? liveVulns : VULNS;
   const filteredList = filterByCategory(liveList, activeCategory);
   const top10 = getTop10Vulns(profile, filteredList);
-      const [funnelSector, setFunnelSector] = useState('finance');
+  const [funnelSector, setFunnelSector] = useState('all');
   const [hovCell, setHovCell] = useState(null);
 
-  const SECTORS = ['All','Energy','Finance','Government','Healthcare','Manufacturing','Retail'];
+  const SECTORS = [
+    {label:'All', id:'all'}, {label:'Energy', id:'energy'}, {label:'Finance', id:'fintech'},
+    {label:'Government', id:'government'}, {label:'Healthcare', id:'healthcare'},
+    {label:'Manufacturing', id:'manufacturing'}, {label:'Retail', id:'retail'},
+  ];
+  const funnelProfile = funnelSector === 'all' ? profile : {...profile, industry: funnelSector};
+  const funnelInd = INDUSTRIES.find(i => i.id === funnelSector) || ind;
+  const funnelTop10 = getTop10Vulns(funnelProfile, filteredList);
+
   const vc = n => n >= 8 ? '#f04060' : n >= 6 ? '#f5a623' : n >= 4 ? '#2d7ef7' : '#0ed27a';
   const vl = n => n >= 8 ? 'Critical' : n >= 6 ? 'High' : n >= 4 ? 'Medium' : 'Low';
 
@@ -2597,17 +2614,17 @@ function RiskAnalysisPage({profile, liveVulns, controls, setControls, activeCate
               <div style={{fontSize:11, fontWeight:700, color:'#fff', textTransform:'uppercase', letterSpacing:.8}}>RISK FUNNEL</div>
               <div style={{fontSize:10, color:C.muted, marginTop:2}}>Top 5 threats. Click a sector to watch the funnel re-stack.</div>
             </div>
-            <span style={{fontSize:10, fontWeight:700, padding:'3px 9px', borderRadius:3, background:(ind?.color||C.accent)+'22', color:ind?.color||C.accent}}>{ind?.label}</span>
+            <span style={{fontSize:10, fontWeight:700, padding:'3px 9px', borderRadius:3, background:(funnelInd?.color||C.accent)+'22', color:funnelInd?.color||C.accent}}>{funnelInd?.label}</span>
           </div>
           <div style={{display:'flex', gap:4, flexWrap:'wrap', marginBottom:14}}>
             {SECTORS.map(s=>(
-              <button key={s} onClick={()=>setFunnelSector(s.toLowerCase())}
-                style={{fontSize:9, padding:'3px 10px', borderRadius:3, border:`1px solid ${funnelSector===s.toLowerCase()?C.accent:C.border}`, background:funnelSector===s.toLowerCase()?C.accentBg:'transparent', color:funnelSector===s.toLowerCase()?C.accent:C.muted, cursor:'pointer'}}>
-                {s}
+              <button key={s.id} onClick={()=>setFunnelSector(s.id)}
+                style={{fontSize:9, padding:'3px 10px', borderRadius:3, border:`1px solid ${funnelSector===s.id?C.accent:C.border}`, background:funnelSector===s.id?C.accentBg:'transparent', color:funnelSector===s.id?C.accent:C.muted, cursor:'pointer'}}>
+                {s.label}
               </button>
             ))}
           </div>
-          {top10.slice(0,5).map((v,i)=>{
+          {funnelTop10.slice(0,5).map((v,i)=>{
             const cc = vc(v.contextScore);
             const widths = ['100%','88%','76%','64%','52%'];
             return (
@@ -2620,7 +2637,7 @@ function RiskAnalysisPage({profile, liveVulns, controls, setControls, activeCate
                   <div style={{display:'flex', gap:6, alignItems:'center'}}>
                     {v.kev&&<span style={{fontSize:8, fontWeight:700, padding:'1px 5px', borderRadius:2, background:'#f0406025', color:'#f04060'}}>EXPLOITED</span>}
                     <span style={{fontSize:9, color:C.muted}}>{v.id.slice(0,14)}</span>
-                    {ind&&<span style={{fontSize:9, color:ind.color, fontWeight:700}}>{ind.label}</span>}
+                    {funnelInd&&<span style={{fontSize:9, color:funnelInd.color, fontWeight:700}}>{funnelInd.label}</span>}
                   </div>
                   <div style={{position:'absolute', right:8, top:'50%', transform:'translateY(-50%)', fontSize:15, fontWeight:900, color:cc}}>{v.contextScore.toFixed(1)}</div>
                 </div>
@@ -2684,7 +2701,7 @@ function RiskAnalysisPage({profile, liveVulns, controls, setControls, activeCate
               <div style={{fontSize:10,color:'#dde4f0',paddingRight:8,lineHeight:1.3}}>{v.desc.length>52?v.desc.slice(0,51)+'...':v.desc}</div>
               <div style={{fontSize:10,color:ind?.color||C.accent,fontWeight:600}}>{ind?.label}</div>
               <div style={{fontSize:11,fontWeight:700,color:C.muted}}>{v.cvss.toFixed(1)}</div>
-              <div style={{fontSize:11,color:C.muted}}>-</div>
+              <div style={{fontSize:11,fontWeight:700,color:cc}}>{v.contextScore.toFixed(1)}</div>
               <div style={{fontSize:11,color:C.muted}}>{v.likelihood}</div>
               <div style={{fontSize:11,color:C.muted}}>{v.impact}</div>
               <div><span style={{fontSize:9,fontWeight:700,padding:'2px 7px',borderRadius:2,background:cc+'20',color:cc,border:`1px solid ${cc}40`}}>{vl(v.contextScore)}</span></div>
@@ -2707,11 +2724,14 @@ function SourceTrustPage({profile, activeCategory}) {
   const plannedSources = SOURCES.filter(s => !(profile.sources||[]).includes(s.id));
   const avgTrust = activeSources.length>0 ? activeSources.reduce((a,s)=>a+s.trust,0)/activeSources.length : 0;
   const ind = INDUSTRIES.find(i => i.id === profile.industry);
+  const sc  = SCALES.find(s => s.id === profile.scale);
+  const geo = GEOS.find(g => g.id === profile.geo) || GEOS.find(g => g.id === "other");
+  const composite = ((ind?.multiplier||1)*(sc?.s_multiplier||1)*(geo?.regMultiplier||1)).toFixed(2);
 
   const SCORE_STEPS = [
     {num:'01', label:'Base CVSS Score', src:'NIST NVD', desc:'Raw severity score (0-10) from the NVD CVSSv3.1 metric. Reflects technical impact without environmental context.'},
     {num:'02', label:'Exploit Weighting', src:'CISA KEV + EPSS', desc:'CISA KEV presence forces Critical priority (Winner-takes-all). EPSS probability enriches relative exploitability ranking.'},
-    {num:'03', label:'Industry Multiplier', src:'RiskSync Config', desc:'Your profile: Finance (+1.0) x Large (+1.30) x USA - HIPAA/FISMA (+1.00) = +1.65 composite', highlight:true},
+    {num:'03', label:'Industry Multiplier', src:'RiskSync Config', desc:`Your profile: ${ind?.label||'—'} (x${ind?.multiplier||1}) x ${sc?.label||'—'} (x${sc?.s_multiplier||1}) x ${geo?.label||'—'} (x${geo?.regMultiplier||1}) = x${composite} composite`, highlight:true},
     {num:'04', label:'Control Effectiveness', src:'Analyst Input', desc:'Analyst-set reduction factor (0-100%). Represents how well existing controls mitigate the threat in your environment.'},
     {num:'05', label:'Residual Risk Score', src:'RiskSync Engine', desc:'Final score: (BaseScore x Multiplier) x (1 - Control). The actionable number your team prioritises against.'},
   ];
@@ -2794,7 +2814,7 @@ function SourceTrustPage({profile, activeCategory}) {
                 <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:2,flexWrap:'wrap'}}>
                   <span style={{fontSize:11,fontWeight:600,color:'#dde4f0'}}>{s.label}</span>
                   <span style={{fontSize:9,color:C.muted}}>{s.src}</span>
-                  {s.highlight&&<span style={{fontSize:9,fontWeight:700,padding:'1px 7px',borderRadius:2,background:C.amber+'25',color:C.amber,border:`1px solid ${C.amber}40`}}>x{ind?.multiplier||1.65} your profile</span>}
+                  {s.highlight&&<span style={{fontSize:9,fontWeight:700,padding:'1px 7px',borderRadius:2,background:C.amber+'25',color:C.amber,border:`1px solid ${C.amber}40`}}>x{composite} your profile</span>}
                 </div>
                 <div style={{fontSize:10,color:C.muted,lineHeight:1.6}}>{s.desc}</div>
               </div>
@@ -2867,7 +2887,11 @@ function ScorecardPage({profile, liveVulns, controls, setControls, activeCategor
   const filteredList = filterByCategory(liveList, activeCategory);
   const top10 = getTop10Vulns(profile, filteredList);
   const gScore = globalRisk(profile, controls);
-  const pulse = Math.round(gScore * 7);
+  const pulse = Math.round(gScore * 10);
+  const sectorAvgPulse = Math.round(
+    INDUSTRIES.reduce((sum,i) => sum + globalRisk({...profile, industry:i.id}, controls), 0) / INDUSTRIES.length * 10
+  );
+  const vsAvg = pulse - sectorAvgPulse;
   const scorecol = gScore >= 8 ? '#f04060' : gScore >= 6 ? '#f5a623' : '#0ed27a';
   const [hovCell, setHovCell] = useState(null);
 
@@ -2948,7 +2972,7 @@ function ScorecardPage({profile, liveVulns, controls, setControls, activeCategor
           <div style={{fontSize:10,fontWeight:700,color:C.muted,textTransform:'uppercase',letterSpacing:.8,marginBottom:12}}>INDUSTRY BENCHMARK</div>
           {[
             {label:'Your Score ('+ind?.label+')', val:pulse, color:scorecol},
-            {label:'Sector Average', val:62, color:C.muted},
+            {label:'Sector Average (all industries)', val:sectorAvgPulse, color:C.muted},
           ].map(b=>(
             <div key={b.label} style={{marginBottom:10}}>
               <div style={{display:'flex',justifyContent:'space-between',marginBottom:4}}>
@@ -2956,13 +2980,13 @@ function ScorecardPage({profile, liveVulns, controls, setControls, activeCategor
                 <span style={{fontSize:11,fontWeight:700,color:b.color}}>{b.val}</span>
               </div>
               <div style={{height:6,background:C.border,borderRadius:3,overflow:'hidden'}}>
-                <div style={{width:b.val+'%',height:'100%',background:b.color,borderRadius:3}}/>
+                <div style={{width:Math.min(100,b.val)+'%',height:'100%',background:b.color,borderRadius:3}}/>
               </div>
             </div>
           ))}
-          <div style={{marginTop:10,padding:'8px 10px',background:C.green+'15',borderRadius:5,border:`1px solid ${C.green}30`}}>
-            <div style={{fontSize:10,color:C.green}}>~-7 pts vs Finance sector average</div>
-            <div style={{fontSize:10,color:C.muted,marginTop:2}}>Your risk posture is better than the sector average. Maintain current controls.</div>
+          <div style={{marginTop:10,padding:'8px 10px',background:(vsAvg<=0?C.green:C.amber)+'15',borderRadius:5,border:`1px solid ${(vsAvg<=0?C.green:C.amber)}30`}}>
+            <div style={{fontSize:10,color:vsAvg<=0?C.green:C.amber}}>{vsAvg<=0?'':'+'}{vsAvg} pts vs the all-industry average</div>
+            <div style={{fontSize:10,color:C.muted,marginTop:2}}>{vsAvg<=0?'Your risk posture is better than the cross-industry average, given your current controls.':'Your risk posture is elevated vs. the cross-industry average — consider the priority controls below.'}</div>
           </div>
         </div>
       </div>
@@ -2970,7 +2994,7 @@ function ScorecardPage({profile, liveVulns, controls, setControls, activeCategor
       {/* Heat map */}
       <div style={{background:C.card,border:`1px solid ${C.border}`,borderRadius:8,padding:'16px',marginBottom:14}}>
         <div style={{display:'flex',justifyContent:'space-between',marginBottom:8}}>
-          <div style={{fontSize:11,fontWeight:700,color:'#fff',textTransform:'uppercase',letterSpacing:.8}}>RISK HEAT MAP - LIKELIHOOD x IMPACT</div>
+          <div style={{fontSize:11,fontWeight:700,color:'#fff',textTransform:'uppercase',letterSpacing:.8}}>RISK HEAT MAP - LIKELIHOOD x IMPACT (CVSS)</div>
           <div style={{fontSize:10,color:C.muted}}>Hover cells to inspect threats.</div>
         </div>
         <div style={{display:'flex',gap:10,marginBottom:10}}>
@@ -3176,7 +3200,8 @@ function OpcHeader({ title, subtitle, profile, dataStatus, onResync, activeCateg
 }
 
 
-function DashboardPage({ profile, liveVulns, controls, activeCategory }) {
+function DashboardPage({ profile, liveVulns, controls, activeCategory, setNav }) {
+  const [selectedVuln, setSelectedVuln] = useState(null);
   const liveList = (liveVulns && liveVulns.length > 0) ? liveVulns : VULNS;
   const filteredList = filterByCategory(liveList, activeCategory);
   const top10    = getTop10Vulns(profile, filteredList);
@@ -3185,12 +3210,17 @@ function DashboardPage({ profile, liveVulns, controls, activeCategory }) {
   const catScores= RISK_CATS.map(cat => ({ cat, ...computeRisk(profile, controls, cat) }));
 
   const totalThreats  = filteredList.length;
+  const scoredList    = filteredList.map(v => ({ ...v, contextScore: computeVulnScore(v, profile) }));
+  /* Standard: official NVD/CVSS severity bands (Critical >=9.0, High 7.0-8.9) */
   const critCount     = filteredList.filter(v => v.cvss >= 9).length;
   const highCount     = filteredList.filter(v => v.cvss >= 7 && v.cvss < 9).length;
+  /* Contextual: RiskSync's "Your Score" bands (Critical >=8.0, High 6.0-7.9) — same convention used everywhere else in the app (vl()) */
+  const yourCritCount = scoredList.filter(v => v.contextScore >= 8).length;
+  const yourHighCount = scoredList.filter(v => v.contextScore >= 6 && v.contextScore < 8).length;
   const kevCount      = filteredList.filter(v => v.kev).length;
-  const avgResidual   = parseFloat((catScores.reduce((a,s) => a+s.residual,0)/catScores.length*1.47).toFixed(2));
+  const avgResidual   = parseFloat((catScores.reduce((a,s) => a+s.residual,0)/catScores.length).toFixed(2));
 
-  /* Priority distribution bar chart — pure SVG */
+  /* Priority distribution bar chart — pure SVG, standard CVSS bands (contrasted with Sector Risk Profile, which is contextual) */
   const bars = [
     { label:"Critical", count: critCount,                color:"#f04060" },
     { label:"High",     count: highCount,                color:"#f5a623" },
@@ -3210,9 +3240,10 @@ function DashboardPage({ profile, liveVulns, controls, activeCategory }) {
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 12, marginBottom: 20 }}>
         {[
           { label:"TOTAL THREATS",    value: totalThreats.toLocaleString(), sub:"Global feed",             color: C.text,   icon:"ti-database" },
-          { label:"CRITICAL / HIGH",  value: `${critCount.toLocaleString()} / ${highCount.toLocaleString()}`, sub:"Across all sectors", color:"#f04060",  icon:"ti-alert-triangle" },
+          { label:"CRITICAL / HIGH",  value: `${critCount.toLocaleString()} / ${highCount.toLocaleString()}`, sub:"Standard CVSS · unweighted", color:"#f04060",  icon:"ti-alert-triangle",
+            compareLabel: `Your Score · ${ind?.label||'—'}`, compareValue: `${yourCritCount.toLocaleString()} / ${yourHighCount.toLocaleString()}`, compareColor: C.accent },
           { label:"ACTIVELY EXPLOITED",value: kevCount.toLocaleString(),    sub:"Winner-takes-all · Critical", color:"#f04060", icon:"ti-flame", badge:"ACTION REQ" },
-          { label:"AVG RESIDUAL RISK", value: avgResidual.toFixed(2),       sub:"After control deductions", color: C.accent, icon:"ti-chart-line" },
+          { label:"AVG RESIDUAL RISK", value: avgResidual.toFixed(2),       sub:"Contextual · after control deductions", color: C.accent, icon:"ti-chart-line" },
         ].map(k => (
           <div key={k.label} style={{ background: C.card, border: `1px solid ${k.color === "#f04060" && k.badge ? "#f04060" : C.border}`, borderRadius: 6, padding: "16px 18px" }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
@@ -3222,8 +3253,14 @@ function DashboardPage({ profile, liveVulns, controls, activeCategory }) {
                 : <i className={`ti ${k.icon}`} style={{ fontSize: 13, color: C.muted }} />
               }
             </div>
-            <div style={{ fontSize: k.label === "CRITICAL / HIGH" ? 22 : 28, fontWeight: 900, color: k.color, lineHeight: 1, marginBottom: 4 }}>{k.value}</div>
+            <div style={{ fontSize: k.compareValue ? 20 : 28, fontWeight: 900, color: k.color, lineHeight: 1, marginBottom: 4 }}>{k.value}</div>
             <div style={{ fontSize: 10, color: C.muted }}>{k.sub}</div>
+            {k.compareValue && (
+              <div style={{ marginTop: 8, paddingTop: 8, borderTop: `1px solid ${C.border}` }}>
+                <div style={{ fontSize: 8, fontWeight: 700, color: C.muted, textTransform: "uppercase", letterSpacing: .6, marginBottom: 2 }}>{k.compareLabel}</div>
+                <div style={{ fontSize: 18, fontWeight: 900, color: k.compareColor, lineHeight: 1 }}>{k.compareValue}</div>
+              </div>
+            )}
           </div>
         ))}
       </div>
@@ -3233,7 +3270,8 @@ function DashboardPage({ profile, liveVulns, controls, activeCategory }) {
 
         {/* Priority Distribution — bar chart */}
         <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 6, padding: "16px 18px" }}>
-          <div style={{ fontSize: 10, fontWeight: 700, color: C.text, textTransform: "uppercase", letterSpacing: .8, marginBottom: 16 }}>PRIORITY DISTRIBUTION</div>
+          <div style={{ fontSize: 10, fontWeight: 700, color: C.text, textTransform: "uppercase", letterSpacing: .8, marginBottom: 2 }}>PRIORITY DISTRIBUTION</div>
+          <div style={{ fontSize: 9, color: C.muted, marginBottom: 14 }}>Standard CVSS severity — global, unweighted</div>
           <svg viewBox="0 0 320 160" width="100%" style={{ display: "block", overflow: "visible" }}>
             {/* Y-axis labels */}
             {[0, 0.25, 0.5, 0.75, 1].map((pct,i) => {
@@ -3263,14 +3301,15 @@ function DashboardPage({ profile, liveVulns, controls, activeCategory }) {
 
         {/* Sector Risk Profile — horizontal bars */}
         <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 6, padding: "16px 18px" }}>
-          <div style={{ fontSize: 10, fontWeight: 700, color: C.text, textTransform: "uppercase", letterSpacing: .8, marginBottom: 4 }}>SECTOR RISK PROFILE</div>
+          <div style={{ fontSize: 10, fontWeight: 700, color: C.text, textTransform: "uppercase", letterSpacing: .8, marginBottom: 2 }}>SECTOR RISK PROFILE</div>
+          <div style={{ fontSize: 9, color: C.muted, marginBottom: 2 }}>RiskSync contextual score — your profile applied</div>
           <div style={{ fontSize: 10, color: ind?.color, marginBottom: 14 }}>
             ▶ {ind?.label} highlighted — your sector
           </div>
           <svg viewBox="0 0 320 160" width="100%" style={{ display: "block" }}>
             {/* X-axis */}
-            {[0,4,8,12,16].map((v,i) => {
-              const x = 50 + (v/16)*250;
+            {[0,2.5,5,7.5,10].map((v,i) => {
+              const x = 50 + (v/10)*250;
               return (
                 <g key={v}>
                   <line x1={x} y1={0} x2={x} y2={145} stroke={C.border} strokeWidth=".5"/>
@@ -3280,7 +3319,7 @@ function DashboardPage({ profile, liveVulns, controls, activeCategory }) {
             })}
             {sectorBars.map((s, i) => {
               const y    = 8 + i * 28;
-              const barW = (s.value / 16) * 250;
+              const barW = (s.value / 10) * 250;
               const isMe = RISK_CATS.some(c => c.short === s.label && ind?.riskFocus.includes(c.id));
               return (
                 <g key={s.label}>
@@ -3303,14 +3342,14 @@ function DashboardPage({ profile, liveVulns, controls, activeCategory }) {
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <span style={{ fontSize: 10, color: C.muted }}>{kevCount} KEV + {totalThreats - kevCount} NVD entries processed</span>
-            <button style={{ fontSize: 10, padding: "3px 10px", borderRadius: 3, border: `1px solid ${C.border}`, background: "transparent", color: C.muted, cursor: "pointer" }}>Show All</button>
+            <button onClick={()=>setNav && setNav('threats')} style={{ fontSize: 10, padding: "3px 10px", borderRadius: 3, border: `1px solid ${C.border}`, background: "transparent", color: C.muted, cursor: "pointer" }}>Show All</button>
           </div>
         </div>
         <div style={{ marginTop: 12 }}>
           {top10.slice(0, 8).map((v, i) => {
             const col = v.contextScore >= 8 ? C.red : v.contextScore >= 6 ? C.amber : C.accent;
             return (
-              <div key={v.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 0", borderBottom: i < 7 ? `1px solid ${C.border}` : "none" }}>
+              <div key={v.id} onClick={()=>setSelectedVuln(v)} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 0", borderBottom: i < 7 ? `1px solid ${C.border}` : "none", cursor: "pointer" }}>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 12, fontWeight: 600, color: C.text, marginBottom: 2, lineHeight: 1.3 }}>{v.desc}</div>
                   <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
@@ -3329,6 +3368,7 @@ function DashboardPage({ profile, liveVulns, controls, activeCategory }) {
           })}
         </div>
       </div>
+      {selectedVuln && <ThreatDetailModal vuln={selectedVuln} onClose={()=>setSelectedVuln(null)}/>}
     </div>
   );
 }
@@ -3427,7 +3467,7 @@ function App() {
   const gScore = globalRisk(profile, controls);
 
   /* Shared props */
-  const pageProps = { profile, liveVulns, controls, setControls, activeCategory, setActiveCategory };
+  const pageProps = { profile, liveVulns, controls, setControls, activeCategory, setActiveCategory, setNav };
 
   /* Page title map */
   const titles = {
