@@ -622,7 +622,7 @@ function VulnFunnel({profile,liveVulns}){
   const platCount=top10.filter(v=>(profile.techPillars||[]).some(pid=>v.affects.includes(pid))).length;
 
   const hoveredVuln=hovered?top10.find(v=>v.id===hovered):null;
-  const rem=hoveredVuln?VULN_REMEDIATION[hoveredVuln.id]:null;
+  const rem=hoveredVuln?getRemediation(hoveredVuln):null;
 
   const handleMouseEnter=(v,e)=>{
     const rect=containerRef.current?.getBoundingClientRect();
@@ -851,7 +851,10 @@ function VulnFunnel({profile,liveVulns}){
 
               {/* Remediation steps */}
               <div>
-                <div style={{fontSize:9,fontWeight:700,color:C.muted,textTransform:"uppercase",letterSpacing:.7,marginBottom:7}}>Remediation steps</div>
+                <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:7}}>
+                  <div style={{fontSize:9,fontWeight:700,color:C.muted,textTransform:"uppercase",letterSpacing:.7}}>Remediation steps</div>
+                  <span style={{fontSize:8,fontWeight:700,padding:"1px 6px",borderRadius:3,background:rem.curated?C.greenBg:C.border,color:rem.curated?C.green:C.muted,border:`1px solid ${rem.curated?C.green+"40":C.border}`}}>{rem.curated?"CURATED FOR THIS CVE":"STANDARD FOR THIS VULN TYPE"}</span>
+                </div>
                 {rem.steps.map((step,si)=>(
                   <div key={si} style={{display:"flex",gap:8,marginBottom:6,alignItems:"flex-start"}}>
                     <div style={{width:16,height:16,borderRadius:4,background:col+"25",border:`1px solid ${col}50`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,marginTop:1}}>
@@ -1699,6 +1702,7 @@ function BulletinPage({profile, liveVulns, controls, activeCategory}) {
   const top10   = getTop10Vulns(bulletinProfile, filteredList);
   const gScore  = globalRisk(bulletinProfile, controls);
   const top5    = top10.slice(0, 5);
+  const topRem  = top5[0] ? getRemediation(top5[0]) : null;
 
   const kevHits = top10.filter(v => v.kev);
   const col     = gScore >= 8 ? C.red : gScore >= 6 ? C.amber : C.green;
@@ -1825,8 +1829,8 @@ const generateEmail = () => {
   <!-- CONTROL RECOMMENDATION -->
   <tr><td style=\"background:#0d1f3c;border-left:1px solid #2d7ef740;border-right:1px solid #2d7ef740;border-top:1px solid #2d7ef730;padding:20px 28px\">
     <div style=\"font-size:9px;font-weight:700;color:#2d7ef7;letter-spacing:1px;margin-bottom:10px\">THIS WEEK'S RECOMMENDED ACTION</div>
-    <div style=\"font-size:13px;font-weight:700;color:#fff;margin-bottom:6px\">${VULN_REMEDIATION[top5[0]?.id]?.steps[0] || 'Review and patch all KEV-listed vulnerabilities within 14 days per CISA BOD 22-01.'}</div>
-    <div style=\"font-size:11px;color:#8a9bc0;line-height:1.7\">${VULN_REMEDIATION[top5[0]?.id]?.urgency || 'Prioritise your top CISA KEV entries immediately.'}</div>
+    <div style=\"font-size:13px;font-weight:700;color:#fff;margin-bottom:6px\">${topRem?.steps[0] || 'Review and patch all KEV-listed vulnerabilities within 14 days per CISA BOD 22-01.'}</div>
+    <div style=\"font-size:11px;color:#8a9bc0;line-height:1.7\">${topRem?.urgency || 'Prioritise your top CISA KEV entries immediately.'}</div>
   </td></tr>` : ''}
 
   ${sections.regulatoryNote ? `
@@ -2187,10 +2191,10 @@ function rsUnlock(){
               <div style={{background:'#0d1f3c', borderLeft:'1px solid #2d7ef740', borderRight:'1px solid #2d7ef740', borderTop:'1px solid #2d7ef730', padding:'20px 28px'}}>
                 <div style={{fontSize:9, fontWeight:700, color:C.accent, letterSpacing:1, marginBottom:10}}>TODAY'S PRIORITY ACTION</div>
                 <div style={{fontSize:13, fontWeight:700, color:'#fff', marginBottom:6, lineHeight:1.4}}>
-                  {VULN_REMEDIATION[top5[0]?.id]?.steps[0] || 'Review and patch all KEV-listed vulnerabilities within 14 days per CISA BOD 22-01.'}
+                  {topRem?.steps[0] || 'Review and patch all KEV-listed vulnerabilities within 14 days per CISA BOD 22-01.'}
                 </div>
                 <div style={{fontSize:11, color:'#8a9bc0', lineHeight:1.7}}>
-                  {VULN_REMEDIATION[top5[0]?.id]?.urgency || 'Prioritise your top CISA KEV entries immediately.'}
+                  {topRem?.urgency || 'Prioritise your top CISA KEV entries immediately.'}
                 </div>
               </div>
             )}
@@ -2493,7 +2497,7 @@ function ThreatDetailModal({vuln, onClose}){
   const vc = n => n >= 8 ? '#f04060' : n >= 6 ? '#f5a623' : n >= 4 ? '#2d7ef7' : '#0ed27a';
   const vl = n => n >= 8 ? 'Critical' : n >= 6 ? 'High' : n >= 4 ? 'Medium' : 'Low';
   const score = vuln.contextScore != null ? vuln.contextScore : vuln.cvss;
-  const rem = VULN_REMEDIATION[vuln.id];
+  const rem = getRemediation(vuln);
   return (
     <div onClick={onClose} style={{position:'fixed',top:0,left:0,right:0,bottom:0,background:'rgba(5,12,24,.85)',zIndex:1000,display:'flex',alignItems:'center',justifyContent:'center'}}>
       <div onClick={e=>e.stopPropagation()} style={{background:'#0a1220',border:`1.5px solid ${vc(score)}`,borderRadius:12,padding:22,width:460,maxWidth:'92vw',maxHeight:'80vh',overflowY:'auto'}}>
@@ -2528,25 +2532,24 @@ function ThreatDetailModal({vuln, onClose}){
             <div style={{fontSize:11,fontWeight:700,color:C.text}}>{vuln.src||'—'}</div>
           </div>
         </div>
-        {rem ? (
-          <div>
-            <div style={{padding:'7px 10px',background:vc(score)+'15',border:`1px solid ${vc(score)}40`,borderRadius:6,marginBottom:10}}>
-              <div style={{fontSize:9,fontWeight:700,color:vc(score),textTransform:'uppercase',marginBottom:2}}>Urgency</div>
-              <div style={{fontSize:10,color:vc(score)}}>{rem.urgency}</div>
-            </div>
-            <div style={{fontSize:9,fontWeight:700,color:C.muted,textTransform:'uppercase',marginBottom:7}}>Remediation steps</div>
-            {rem.steps.map((step,si)=>(
-              <div key={si} style={{display:'flex',gap:8,marginBottom:6,alignItems:'flex-start'}}>
-                <div style={{width:16,height:16,borderRadius:4,background:vc(score)+'25',border:`1px solid ${vc(score)}50`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,marginTop:1}}>
-                  <span style={{fontSize:9,fontWeight:800,color:vc(score)}}>{si+1}</span>
-                </div>
-                <span style={{fontSize:10,color:'#a0b4d0',lineHeight:1.55}}>{step}</span>
-              </div>
-            ))}
+        <div>
+          <div style={{padding:'7px 10px',background:vc(score)+'15',border:`1px solid ${vc(score)}40`,borderRadius:6,marginBottom:10}}>
+            <div style={{fontSize:9,fontWeight:700,color:vc(score),textTransform:'uppercase',marginBottom:2}}>Urgency</div>
+            <div style={{fontSize:10,color:vc(score)}}>{rem.urgency}</div>
           </div>
-        ) : (
-          <div style={{fontSize:11,color:C.muted,fontStyle:'italic'}}>No curated remediation steps on file for this entry — review manually or add to your playbook.</div>
-        )}
+          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:7}}>
+            <div style={{fontSize:9,fontWeight:700,color:C.muted,textTransform:'uppercase'}}>Remediation steps</div>
+            <span style={{fontSize:8,fontWeight:700,padding:'1px 6px',borderRadius:3,background:rem.curated?C.greenBg:C.border,color:rem.curated?C.green:C.muted,border:`1px solid ${rem.curated?C.green+'40':C.border}`}}>{rem.curated?'CURATED FOR THIS CVE':'STANDARD FOR THIS VULN TYPE'}</span>
+          </div>
+          {rem.steps.map((step,si)=>(
+            <div key={si} style={{display:'flex',gap:8,marginBottom:6,alignItems:'flex-start'}}>
+              <div style={{width:16,height:16,borderRadius:4,background:vc(score)+'25',border:`1px solid ${vc(score)}50`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,marginTop:1}}>
+                <span style={{fontSize:9,fontWeight:800,color:vc(score)}}>{si+1}</span>
+              </div>
+              <span style={{fontSize:10,color:'#a0b4d0',lineHeight:1.55}}>{step}</span>
+            </div>
+          ))}
+        </div>
         <button onClick={onClose} style={{marginTop:16,width:'100%',padding:'9px',borderRadius:6,border:`1px solid ${C.border}`,background:'transparent',color:C.muted,fontSize:12,cursor:'pointer'}}>Close</button>
       </div>
     </div>
@@ -3786,6 +3789,42 @@ const VULN_REMEDIATION={
   "CVE-2024-RANSOM1": {steps:["Block SMBv1 across all segments (Group Policy: disable LanmanServer SMBv1)","Apply MS17-010 patch on any remaining unpatched legacy Windows systems","Enable Windows Defender Network Protection and Attack Surface Reduction","Implement SMB signing enforcement on all domain controllers","Test backup restoration procedures — verify air-gapped copies are intact"],urgency:"Implement controls within 48h — active ransomware campaigns"},
   "CVE-2024-PHISH-1": {steps:["Deploy FIDO2/WebAuthn MFA — SMS and TOTP are bypassable by these kits","Enable anti-phishing policies in M365/Google Workspace with ATP","Implement DMARC p=reject + DKIM + SPF on all sending domains","Train finance and HR teams on out-of-band callback verification","Deploy DNS-layer filtering (Cisco Umbrella / Cloudflare Gateway) for phishing domains"],urgency:"Implement MFA upgrade within 2 weeks — kits actively harvesting SSO"},
 };
+
+/* ── TYPE-BASED REMEDIATION FALLBACK ──
+   VULN_REMEDIATION above is curated per-CVE for the ~20 static demo vulnerabilities.
+   Live-fetched CVEs (from /threats, a different ~1,900+ rotating each fetch) can never be
+   curated individually, so this provides real, useful, standard-practice guidance based on
+   the vulnerability's CWE-derived type instead of leaving live threats with no guidance at all. */
+const TYPE_REMEDIATION = {
+  injection:          {steps:["Apply the vendor patch or update to the fixed version as soon as it's available","Validate and sanitize all user-supplied input at every trust boundary","Use parameterized queries / prepared statements rather than string concatenation","Deploy a WAF rule to detect and block known injection patterns as an interim mitigation","Review application logs for anomalous input patterns matching this CWE class"], urgencyBase:"Review and patch"},
+  xxe:                {steps:["Disable XML external entity and DTD processing in all XML parsers","Apply the vendor patch for the affected component","Validate all XML input against a strict schema before parsing","Restrict outbound network access from the application server to block exfiltration via XXE","Audit logs for unusual outbound requests originating from XML-processing endpoints"], urgencyBase:"Review and patch"},
+  api_abuse:          {steps:["Apply rate limiting and authentication checks on all affected API endpoints","Review API gateway logs for abnormal request volume or sequence patterns","Apply the vendor patch or update the affected library/SDK","Enforce least-privilege scopes on API keys and tokens","Add anomaly detection for API abuse patterns to your SIEM"], urgencyBase:"Review and patch"},
+  deserialization:    {steps:["Apply the vendor patch for the affected deserialization endpoint","Disable or restrict unsafe deserialization of untrusted data where possible","Isolate the affected service from sensitive internal networks until patched","Audit logs for suspicious serialized object submissions","Rotate credentials and secrets accessible to the affected service"], urgencyBase:"Patch"},
+  auth:               {steps:["Apply the vendor patch or update to the fixed version immediately","Enforce MFA on all accounts with access to the affected system","Audit recent authentication logs for anomalous access from unexpected sources","Rotate credentials, API keys and session tokens for the affected system","Restrict external access to the affected service until patched"], urgencyBase:"Patch"},
+  memory_corruption:  {steps:["Apply the vendor patch immediately — memory corruption bugs are frequently weaponized","Enable available exploit mitigations (ASLR, DEP, CFG) on affected hosts","Isolate affected systems from untrusted network segments until patched","Monitor for crash reports or anomalous process behavior on affected hosts","Review vendor advisory for indicators of prior exploitation"], urgencyBase:"Patch"},
+  privesc:            {steps:["Apply the vendor patch or OS update immediately","Audit privileged account usage for signs of lateral movement","Enforce least-privilege access — review who has local admin / root on affected hosts","Deploy endpoint detection rules for known exploitation indicators of this CWE class","Enable enhanced logging for privilege-elevation events on affected systems"], urgencyBase:"Patch"},
+  supply_chain:       {steps:["Audit your software bill of materials for the affected component/version","Pin dependencies to a patched version and rebuild affected artifacts","Review build pipeline logs for any unexpected activity during the exposure window","Rotate any secrets or credentials that touched affected build/deploy infrastructure","Subscribe to the vendor's security advisory feed for this component going forward"], urgencyBase:"Audit and patch"},
+  phishing:           {steps:["Deploy phishing-resistant MFA (FIDO2/WebAuthn) for accounts at risk","Enable advanced anti-phishing policies in your email security gateway","Implement DMARC p=reject, DKIM and SPF on all sending domains","Train affected teams on out-of-band verification for high-risk requests","Deploy DNS-layer filtering to block known phishing infrastructure"], urgencyBase:"Implement controls"},
+  ransomware:         {steps:["Verify air-gapped/immutable backups are current and restorable","Apply the vendor patch closing the initial access vector immediately","Enforce network segmentation to limit lateral movement from any single host","Enable endpoint detection and response (EDR) with ransomware-specific behavioral rules","Test your incident response and restoration runbook now, before you need it"], urgencyBase:"Patch and verify backups"},
+  ot:                 {steps:["Apply the vendor security advisory patch for the affected OT/ICS component","Isolate affected OT systems from IT networks via unidirectional gateways where possible","Disable unnecessary discovery/management protocols on exposed OT interfaces","Deploy OT-aware monitoring (e.g. Claroty, Dragos) for anomaly detection","Coordinate patch timing with operational/safety teams given OT uptime constraints"], urgencyBase:"Patch with OT change-control"},
+  oauth:              {steps:["Audit OAuth integrations and revoke any with excessive (full_access/admin) scopes","Apply scope minimization — request only the permissions actually required","Enable short-lived tokens with rotation for all affected integrations","Log all token issuance and cross-service calls to your SIEM","Apply the vendor patch for the affected OAuth implementation"], urgencyBase:"Audit and patch"},
+  prompt_injection:   {steps:["Apply output validation on all LLM agent responses handling untrusted content","Implement tool-use allow-listing — agents call only pre-approved tool IDs","Audit third-party knowledge bases / RAG corpora feeding this agent for adversarial content","Apply least-privilege to agent tool permissions — no unmediated write access to sensitive systems","Deploy prompt-injection detection middleware as a defense-in-depth layer"], urgencyBase:"Implement controls"},
+  manual:             {steps:["Verify and reproduce the finding before prioritizing remediation resources","Assign an owner and target remediation date based on your standard SLA for this severity","Document the finding and any interim compensating controls in your tracking system","Re-score once confirmed, and add to VULN_REMEDIATION if this becomes a recurring pattern"], urgencyBase:"Triage"},
+  default:            {steps:["Apply the vendor patch or update to the fixed version as soon as it's available","Review the CVE's official advisory (NVD/vendor) for confirmed technical details","Assess whether the affected component is internet-facing or handles untrusted input","Apply compensating controls (network segmentation, WAF rules) if patching is delayed","Monitor logs for indicators associated with this CVE while remediation is in progress"], urgencyBase:"Review and patch"},
+};
+
+function getRemediation(vuln){
+  const curated = VULN_REMEDIATION[vuln.id];
+  if(curated) return {...curated, curated:true};
+  const tmpl = TYPE_REMEDIATION[vuln.type] || TYPE_REMEDIATION.default;
+  const urgency = vuln.kev
+    ? `${tmpl.urgencyBase} immediately — CISA KEV confirmed active exploitation`
+    : vuln.exploit === "Active" || vuln.exploit === "Likely"
+      ? `${tmpl.urgencyBase} promptly — exploitation reported likely (EPSS ${Math.round((vuln.epss||0)*100)}%)`
+      : `${tmpl.urgencyBase} per your standard SLA for this severity — no confirmed active exploitation yet`;
+  return {steps:tmpl.steps, urgency, curated:false};
+}
+
 /* ── CATEGORY → THREAT TYPE MAPPING ── */
 const CAT_TYPE_MAP = {
   ai_agent:    ["api_abuse","injection","auth","deserialization"],
