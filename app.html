@@ -418,12 +418,32 @@ function Onboarding({onComplete}){
 <script type="text/jsxcode" id="c3">
 function Simulator({profile,controls,setControls}){
   const [query,setQuery]=useState("");
+  const [whatIfMsg,setWhatIfMsg]=useState("");
   const ind=INDUSTRIES.find(i=>i.id===profile.industry);
   const baseScore=globalRisk(profile,[]);
   const currScore=globalRisk(profile,controls);
   const reduction=parseFloat((baseScore-currScore).toFixed(1));
   const totalCost=CONTROLS.filter(c=>controls.includes(c.id)).reduce((a,c)=>a+c.costK,0);
   const priorityControls=CONTROLS.filter(c=>{const cat=RISK_CATS.find(r=>r.id===c.riskCat);return cat&&ind?.riskFocus.includes(c.riskCat);});
+
+  const runWhatIf=()=>{
+    const q=query.trim().toLowerCase();
+    if(!q)return;
+    const matched=CONTROLS.filter(c=>{
+      const words=c.label.toLowerCase().replace(/[()/]/g," ").split(" ").filter(w=>w.length>3);
+      return words.some(w=>q.includes(w));
+    });
+    const newOnes=matched.filter(c=>!controls.includes(c.id));
+    if(newOnes.length>0){
+      setControls(prev=>[...prev,...newOnes.map(c=>c.id)]);
+      setWhatIfMsg(`Added: ${newOnes.map(c=>c.label).join(", ")} — see updated score above.`);
+    }else if(matched.length>0){
+      setWhatIfMsg(`Already active: ${matched.map(c=>c.label).join(", ")}.`);
+    }else{
+      setWhatIfMsg(`No matching control found. Try terms like "MFA", "backups", "zero trust", "prompt injection firewall".`);
+    }
+    setQuery("");
+  };
 
   return(
     <div className="fadein">
@@ -442,15 +462,20 @@ function Simulator({profile,controls,setControls}){
         ))}
       </div>
 
-      {/* Conversational query */}
-      <div style={{display:"flex",gap:8,marginBottom:16}}>
-        <input type="text" value={query} onChange={e=>setQuery(e.target.value)}
-          placeholder={`Ask e.g. "What if I add Zero Trust + MFA?"`}
-          onKeyDown={e=>{if(e.key==="Enter"&&query.trim()){alert(`What-If Query logged:\n"${query}"\n\nIn production, this routes to the AI engine with your profile context.`);setQuery("");}}}
-          style={{flex:1}}/>
-        <button onClick={()=>{if(query.trim()){alert(`What-If Query:\n"${query}"\n\nIn production this routes to the AI engine.`);setQuery("");}}}
-          style={{padding:"9px 16px",borderRadius:7,border:"none",background:C.accent,color:"#fff",fontWeight:600,fontSize:12,cursor:"pointer"}}>Ask</button>
+      {/* What-if control matcher (keyword-based, not AI) */}
+      <div style={{marginBottom:6}}>
+        <div style={{display:"flex",gap:8}}>
+          <input type="text" value={query} onChange={e=>setQuery(e.target.value)}
+            placeholder={`Try "add MFA and zero trust"`}
+            onKeyDown={e=>{if(e.key==="Enter")runWhatIf();}}
+            style={{flex:1}}/>
+          <button onClick={runWhatIf}
+            style={{padding:"9px 16px",borderRadius:7,border:"none",background:C.accent,color:"#fff",fontWeight:600,fontSize:12,cursor:"pointer"}}>Apply</button>
+        </div>
+        <div style={{fontSize:10,color:C.dim,marginTop:4}}>Matches control names by keyword and toggles them on — not an AI assistant.</div>
       </div>
+      {whatIfMsg && <div style={{fontSize:11,color:C.green,marginBottom:16,padding:"8px 12px",background:C.greenBg,borderRadius:6,border:`1px solid ${C.green}30`}}>{whatIfMsg}</div>}
+      {!whatIfMsg && <div style={{marginBottom:16}}/>}
 
       {/* Priority controls */}
       <div style={{marginBottom:16}}>
@@ -1656,9 +1681,11 @@ function BulletinPage({profile, liveVulns, controls, activeCategory}) {
   const [frequency, setFrequency]   = useState('daily');
   const [sections, setSections]     = useState({
     execSummary: true, top5Threats: true, kevAlert: true,
-    controlRec: true, regulatoryNote: true, insightFunnel: false,
+    controlRec: true, regulatoryNote: true,
   });
   const [copied, setCopied] = useState(false);
+  const [subLoading, setSubLoading] = useState(false);
+  const [subError, setSubError] = useState('');
   const [selectedIndustry, setSelectedIndustry] = useState(profile.industry || 'finance');
   const [selectedScale, setSelectedScale]       = useState(profile.scale    || 'mid');
   const [selectedGeo, setSelectedGeo]           = useState(profile.geo      || 'us');
@@ -1873,6 +1900,30 @@ function rsUnlock(){
 
 
 
+    const handleBulletinSubscribe = () => {
+      if (!email || !email.includes('@') || !email.includes('.')) {
+        setSubError('Enter a valid email address.');
+        return;
+      }
+      if (subscribed) { setSubscribed(false); setSubError(''); return; }
+      setSubLoading(true); setSubError('');
+      fetch('/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, industry: selectedIndustry, frequency, source: 'app-bulletin-sidebar' }),
+      })
+        .then(res => res.json())
+        .then(data => {
+          setSubLoading(false);
+          if (data && data.ok) { setSubscribed(true); }
+          else { setSubError((data && data.error) || 'Subscription failed — please try again.'); }
+        })
+        .catch(() => {
+          setSubLoading(false);
+          setSubError('Could not reach the subscription service — check your connection and try again.');
+        });
+    };
+
     const handleCopyHTML = () => {
     const html = generateEmail();
     navigator.clipboard.writeText(html).then(() => {
@@ -1958,10 +2009,12 @@ function rsUnlock(){
               ))}
             </div>
             <button
-              onClick={()=>{ if(email) setSubscribed(!subscribed); }}
-              style={{width:'100%', padding:'9px', borderRadius:5, border:'none', background:subscribed?C.green:C.accent, color:subscribed?'#000':'#fff', fontSize:12, fontWeight:700, cursor:'pointer'}}>
-              {subscribed ? '✓ Subscribed — Click to Unsubscribe' : 'Subscribe to Bulletin'}
+              onClick={handleBulletinSubscribe}
+              disabled={subLoading}
+              style={{width:'100%', padding:'9px', borderRadius:5, border:'none', background:subscribed?C.green:C.accent, color:subscribed?'#000':'#fff', fontSize:12, fontWeight:700, cursor:subLoading?'default':'pointer', opacity:subLoading?.7:1}}>
+              {subLoading ? 'Subscribing...' : subscribed ? '✓ Subscribed — Click to Unsubscribe' : 'Subscribe to Bulletin'}
             </button>
+            {subError && <div style={{fontSize:10, color:C.red, marginTop:6, textAlign:'center'}}>{subError}</div>}
             {subscribed && <div style={{fontSize:10, color:C.green, marginTop:6, textAlign:'center'}}>Next delivery: {frequency==='daily'?'Tomorrow 7:00 AM':frequency==='weekdays'?'Mon-Fri 7:00 AM':'On new KEV additions'}</div>}
           </div>
 
@@ -2296,8 +2349,15 @@ function ThreatFeedPage({profile, liveVulns, activeCategory}) {
   const ind = INDUSTRIES.find(i => i.id === profile.industry);
   const [priorityFilter, setPriorityFilter] = useState('all');
   const [search, setSearch] = useState('');
+  const [manualVulns, setManualVulns] = useState([]);
+  const [ingestOpen, setIngestOpen] = useState(false);
+  const [ingestForm, setIngestForm] = useState({id:'', desc:'', cvss:'7.0'});
+  const [ingestErr, setIngestErr] = useState('');
+  const [selectedVuln, setSelectedVuln] = useState(null);
 
-  const allVulns = filteredList.map(v => ({
+  const combinedList = [...manualVulns, ...filteredList];
+
+  const allVulns = combinedList.map(v => ({
     ...v, contextScore: computeVulnScore(v, profile)
   })).sort((a,b) => b.contextScore - a.contextScore);
 
@@ -2311,14 +2371,33 @@ function ThreatFeedPage({profile, liveVulns, activeCategory}) {
   const vc = n => n >= 8 ? '#f04060' : n >= 6 ? '#f5a623' : n >= 4 ? '#2d7ef7' : '#0ed27a';
   const vl = n => n >= 8 ? 'Critical' : n >= 6 ? 'High' : n >= 4 ? 'Medium' : 'Low';
 
+  const submitIngest = () => {
+    const id = ingestForm.id.trim();
+    const desc = ingestForm.desc.trim();
+    const cvss = parseFloat(ingestForm.cvss);
+    if (!id) { setIngestErr('CVE / threat ID is required.'); return; }
+    if (!desc) { setIngestErr('Description is required.'); return; }
+    if (isNaN(cvss) || cvss < 0 || cvss > 10) { setIngestErr('CVSS must be a number between 0 and 10.'); return; }
+    setManualVulns(prev => [{
+      id, desc, cvss, type:'manual', src:'Analyst-flagged', kev:false, epss:0.3,
+      affects:['onprem','cloud','saas','web'], industries:['all'], cwe:'—', vector:'—',
+      exploit:'Unverified', manual:true,
+    }, ...prev]);
+    setIngestForm({id:'', desc:'', cvss:'7.0'});
+    setIngestErr('');
+    setIngestOpen(false);
+  };
+
+  const rem = selectedVuln ? VULN_REMEDIATION[selectedVuln.id] : null;
+
   return (
-    <div style={{padding:'20px', overflow:'auto', height:'100%'}}>
+    <div style={{padding:'20px', overflow:'auto', height:'100%', position:'relative'}}>
       <div style={{display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:16}}>
         <div>
           <div style={{fontSize:22, fontWeight:900, color:'#fff', letterSpacing:.5, marginBottom:4}}>THREAT FEED</div>
           <div style={{fontSize:11, color:ind?.color||C.accent}}>Filtered to your sector: {ind?.label}</div>
         </div>
-        <button style={{display:'flex', alignItems:'center', gap:7, padding:'9px 16px', borderRadius:5, border:`1px solid ${C.accent}`, background:C.accentBg, color:C.accent, fontSize:12, fontWeight:700, cursor:'pointer'}}>
+        <button onClick={()=>setIngestOpen(true)} style={{display:'flex', alignItems:'center', gap:7, padding:'9px 16px', borderRadius:5, border:`1px solid ${C.accent}`, background:C.accentBg, color:C.accent, fontSize:12, fontWeight:700, cursor:'pointer'}}>
           <i className="ti ti-plus" style={{fontSize:13}}/>INGEST THREAT
         </button>
       </div>
@@ -2348,19 +2427,104 @@ function ThreatFeedPage({profile, liveVulns, activeCategory}) {
           return (
             <div key={v.id} style={{display:'grid', gridTemplateColumns:'1fr 160px 80px 90px 100px 80px', padding:'11px 16px', borderBottom:i<filtered.length-1?`1px solid ${C.border}`:'none', alignItems:'center', background:i%2===0?'transparent':C.bg+'40'}}>
               <div style={{paddingRight:12}}>
-                <div style={{fontSize:12, fontWeight:500, color:'#dde4f0', lineHeight:1.35, marginBottom:v.kev?4:0}}>{v.desc.length>90?v.desc.slice(0,89)+'...':v.desc}</div>
+                <div style={{fontSize:12, fontWeight:500, color:'#dde4f0', lineHeight:1.35, marginBottom:(v.kev||v.manual)?4:0}}>{v.desc.length>90?v.desc.slice(0,89)+'...':v.desc}</div>
                 {v.kev&&<span style={{fontSize:9, fontWeight:700, padding:'1px 7px', borderRadius:2, background:'#f0406025', color:'#f04060', border:'1px solid #f0406050'}}>EXPLOITED</span>}
+                {v.manual&&<span style={{fontSize:9, fontWeight:700, padding:'1px 7px', borderRadius:2, background:C.purple+'20', color:C.purple, border:`1px solid ${C.purple}50`}}>ANALYST-FLAGGED</span>}
               </div>
               <div style={{fontSize:10, color:C.muted, fontFamily:'monospace'}}>{v.id}</div>
               <div><span style={{fontSize:10, fontWeight:700, padding:'2px 8px', borderRadius:2, background:cc+'20', color:cc, border:`1px solid ${cc}40`}}>{vl(v.contextScore)}</span></div>
               <div style={{fontSize:13, fontWeight:700, color:C.muted}}>{v.cvss.toFixed(1)}</div>
               <div style={{fontSize:13, fontWeight:700, color:cc}}>{v.contextScore.toFixed(1)}</div>
-              <div><button style={{fontSize:10, fontWeight:700, padding:'4px 10px', borderRadius:3, border:`1px solid ${C.accent}40`, background:'transparent', color:C.accent, cursor:'pointer'}}>ANALYZE</button></div>
+              <div><button onClick={()=>setSelectedVuln(v)} style={{fontSize:10, fontWeight:700, padding:'4px 10px', borderRadius:3, border:`1px solid ${C.accent}40`, background:'transparent', color:C.accent, cursor:'pointer'}}>ANALYZE</button></div>
             </div>
           );
         })}
       </div>
-      <div style={{marginTop:10, fontSize:10, color:C.muted}}>{filtered.length} threats shown</div>
+      <div style={{marginTop:10, fontSize:10, color:C.muted}}>{filtered.length} threats shown{manualVulns.length>0?` · ${manualVulns.length} analyst-flagged (this session)`:''}</div>
+
+      {/* INGEST THREAT MODAL */}
+      {ingestOpen && (
+        <div onClick={()=>setIngestOpen(false)} style={{position:'fixed',top:0,left:0,right:0,bottom:0,background:'rgba(5,12,24,.85)',zIndex:1000,display:'flex',alignItems:'center',justifyContent:'center'}}>
+          <div onClick={e=>e.stopPropagation()} style={{background:C.card,border:`1px solid ${C.accent}`,borderRadius:10,padding:24,width:380,maxWidth:'90vw'}}>
+            <div style={{fontSize:15,fontWeight:800,color:'#fff',marginBottom:4}}>Ingest a threat</div>
+            <div style={{fontSize:11,color:C.muted,marginBottom:16,lineHeight:1.5}}>Manually flag a CVE or internal finding. It's scored with your profile and added to this session's feed immediately.</div>
+            <div style={{fontSize:10,color:C.muted,marginBottom:4}}>CVE / Threat ID</div>
+            <input value={ingestForm.id} onChange={e=>setIngestForm(f=>({...f,id:e.target.value}))} placeholder="CVE-2026-XXXXX or internal ref"
+              style={{width:'100%',padding:'9px 12px',borderRadius:5,border:`1px solid ${C.border}`,background:C.bg,color:C.text,fontSize:12,marginBottom:10,boxSizing:'border-box'}}/>
+            <div style={{fontSize:10,color:C.muted,marginBottom:4}}>Description</div>
+            <textarea value={ingestForm.desc} onChange={e=>setIngestForm(f=>({...f,desc:e.target.value}))} placeholder="Short description of the vulnerability or finding" rows={3}
+              style={{width:'100%',padding:'9px 12px',borderRadius:5,border:`1px solid ${C.border}`,background:C.bg,color:C.text,fontSize:12,marginBottom:10,boxSizing:'border-box',fontFamily:'inherit',resize:'vertical'}}/>
+            <div style={{fontSize:10,color:C.muted,marginBottom:4}}>CVSS base score (0–10)</div>
+            <input type="number" min="0" max="10" step="0.1" value={ingestForm.cvss} onChange={e=>setIngestForm(f=>({...f,cvss:e.target.value}))}
+              style={{width:'100%',padding:'9px 12px',borderRadius:5,border:`1px solid ${C.border}`,background:C.bg,color:C.text,fontSize:12,marginBottom:12,boxSizing:'border-box'}}/>
+            {ingestErr && <div style={{color:C.red,fontSize:11,marginBottom:10}}>{ingestErr}</div>}
+            <div style={{display:'flex',gap:8}}>
+              <button onClick={()=>setIngestOpen(false)} style={{flex:1,padding:'10px',borderRadius:6,border:`1px solid ${C.border}`,background:'transparent',color:C.muted,fontSize:12,cursor:'pointer'}}>Cancel</button>
+              <button onClick={submitIngest} style={{flex:1,padding:'10px',borderRadius:6,border:'none',background:C.accent,color:'#fff',fontSize:12,fontWeight:700,cursor:'pointer'}}>Add to Feed</button>
+            </div>
+            <div style={{fontSize:9,color:C.dim,marginTop:10}}>Session-only — analyst-flagged threats aren't persisted to a backend yet.</div>
+          </div>
+        </div>
+      )}
+
+      {/* ANALYZE DETAIL PANEL */}
+      {selectedVuln && (
+        <div onClick={()=>setSelectedVuln(null)} style={{position:'fixed',top:0,left:0,right:0,bottom:0,background:'rgba(5,12,24,.85)',zIndex:1000,display:'flex',alignItems:'center',justifyContent:'center'}}>
+          <div onClick={e=>e.stopPropagation()} style={{background:'#0a1220',border:`1.5px solid ${vc(selectedVuln.contextScore)}`,borderRadius:12,padding:22,width:460,maxWidth:'92vw',maxHeight:'80vh',overflowY:'auto'}}>
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:12}}>
+              <div>
+                <div style={{fontSize:13,fontWeight:800,color:vc(selectedVuln.contextScore),fontFamily:'monospace',marginBottom:4}}>{selectedVuln.id}</div>
+                <span style={{fontSize:9,fontWeight:700,padding:'2px 7px',borderRadius:3,background:vc(selectedVuln.contextScore)+'25',color:vc(selectedVuln.contextScore),border:`1px solid ${vc(selectedVuln.contextScore)}50`}}>{vl(selectedVuln.contextScore)}</span>
+                {selectedVuln.kev&&<span style={{fontSize:9,fontWeight:700,padding:'2px 6px',borderRadius:3,background:'#f0406025',color:'#f04060',marginLeft:5}}>KEV</span>}
+                {selectedVuln.manual&&<span style={{fontSize:9,fontWeight:700,padding:'2px 6px',borderRadius:3,background:C.purple+'25',color:C.purple,marginLeft:5}}>ANALYST-FLAGGED</span>}
+              </div>
+              <div style={{textAlign:'right'}}>
+                <div style={{fontSize:26,fontWeight:900,color:vc(selectedVuln.contextScore),lineHeight:1}}>{selectedVuln.contextScore.toFixed(1)}</div>
+                <div style={{fontSize:9,color:C.muted,textDecoration:'line-through'}}>{selectedVuln.cvss.toFixed(1)} CVSS</div>
+              </div>
+            </div>
+            <div style={{fontSize:12,color:'#a0b4d0',lineHeight:1.6,marginBottom:14}}>{selectedVuln.desc}</div>
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:6,marginBottom:14}}>
+              <div style={{background:'#080d18',borderRadius:6,padding:'6px 8px',border:`1px solid ${C.border}`}}>
+                <div style={{fontSize:9,color:C.muted,textTransform:'uppercase'}}>CWE</div>
+                <div style={{fontSize:11,fontWeight:700,color:C.text}}>{selectedVuln.cwe||'—'}</div>
+              </div>
+              <div style={{background:'#080d18',borderRadius:6,padding:'6px 8px',border:`1px solid ${C.border}`}}>
+                <div style={{fontSize:9,color:C.muted,textTransform:'uppercase'}}>EPSS</div>
+                <div style={{fontSize:11,fontWeight:700,color:C.text}}>{Math.round((selectedVuln.epss||0)*100)}%</div>
+              </div>
+              <div style={{background:'#080d18',borderRadius:6,padding:'6px 8px',border:`1px solid ${C.border}`}}>
+                <div style={{fontSize:9,color:C.muted,textTransform:'uppercase'}}>Exploit status</div>
+                <div style={{fontSize:11,fontWeight:700,color:C.text}}>{selectedVuln.exploit||'—'}</div>
+              </div>
+              <div style={{background:'#080d18',borderRadius:6,padding:'6px 8px',border:`1px solid ${C.border}`}}>
+                <div style={{fontSize:9,color:C.muted,textTransform:'uppercase'}}>Source</div>
+                <div style={{fontSize:11,fontWeight:700,color:C.text}}>{selectedVuln.src||'—'}</div>
+              </div>
+            </div>
+            {rem ? (
+              <div>
+                <div style={{padding:'7px 10px',background:vc(selectedVuln.contextScore)+'15',border:`1px solid ${vc(selectedVuln.contextScore)}40`,borderRadius:6,marginBottom:10}}>
+                  <div style={{fontSize:9,fontWeight:700,color:vc(selectedVuln.contextScore),textTransform:'uppercase',marginBottom:2}}>Urgency</div>
+                  <div style={{fontSize:10,color:vc(selectedVuln.contextScore)}}>{rem.urgency}</div>
+                </div>
+                <div style={{fontSize:9,fontWeight:700,color:C.muted,textTransform:'uppercase',marginBottom:7}}>Remediation steps</div>
+                {rem.steps.map((step,si)=>(
+                  <div key={si} style={{display:'flex',gap:8,marginBottom:6,alignItems:'flex-start'}}>
+                    <div style={{width:16,height:16,borderRadius:4,background:vc(selectedVuln.contextScore)+'25',border:`1px solid ${vc(selectedVuln.contextScore)}50`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,marginTop:1}}>
+                      <span style={{fontSize:9,fontWeight:800,color:vc(selectedVuln.contextScore)}}>{si+1}</span>
+                    </div>
+                    <span style={{fontSize:10,color:'#a0b4d0',lineHeight:1.55}}>{step}</span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div style={{fontSize:11,color:C.muted,fontStyle:'italic'}}>No curated remediation steps on file for this entry — review manually or add to your playbook.</div>
+            )}
+            <button onClick={()=>setSelectedVuln(null)} style={{marginTop:16,width:'100%',padding:'9px',borderRadius:6,border:`1px solid ${C.border}`,background:'transparent',color:C.muted,fontSize:12,cursor:'pointer'}}>Close</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -2403,6 +2567,16 @@ function RiskAnalysisPage({profile, liveVulns, controls, setControls, activeCate
     cell: Math.min(5,Math.ceil(v.cvss/2)) * Math.min(5,Math.ceil(v.epss*5+(v.kev?2:0)))
   })).sort((a,b) => b.cell - a.cell);
 
+  const downloadAnalysisReport = () => {
+    const rows = ["CVE ID,Title,Sector,Base CVSS,Context Score,Likelihood,Impact,Priority",
+      ...posTable.map(v => v.id+',"'+v.desc.replace(/"/g,'""')+'",'+(ind?.label||'')+','+v.cvss+','+v.contextScore+','+v.likelihood+','+v.impact+','+vl(v.contextScore))
+    ].join('\n');
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([rows], {type:'text/csv'}));
+    a.download = 'RiskSync_RiskAnalysis_'+new Date().toISOString().slice(0,10)+'.csv';
+    a.click();
+  };
+
   return (
     <div style={{padding:'20px', overflow:'auto', height:'100%'}}>
       <div style={{display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:18}}>
@@ -2410,7 +2584,7 @@ function RiskAnalysisPage({profile, liveVulns, controls, setControls, activeCate
           <div style={{fontSize:22, fontWeight:900, color:'#fff', letterSpacing:.5, marginBottom:4}}>RISK ANALYSIS</div>
           <div style={{fontSize:11, color:C.muted}}>Animated funnel prioritization · 5x5 heat map · threat positioning</div>
         </div>
-        <button style={{display:'flex', alignItems:'center', gap:6, padding:'8px 16px', borderRadius:5, border:`1px solid ${C.border}`, background:C.card, color:C.muted, fontSize:11, cursor:'pointer'}}>
+        <button onClick={downloadAnalysisReport} style={{display:'flex', alignItems:'center', gap:6, padding:'8px 16px', borderRadius:5, border:`1px solid ${C.border}`, background:C.card, color:C.muted, fontSize:11, cursor:'pointer'}}>
           <i className="ti ti-download" style={{fontSize:12}}/>Download Report
         </button>
       </div>
@@ -2736,6 +2910,8 @@ function ScorecardPage({profile, liveVulns, controls, setControls, activeCategor
     a.download='RiskSync_Scorecard.csv';a.click();
   };
 
+  const printPDF = () => { window.print(); };
+
   return (
     <div style={{padding:'20px', overflow:'auto', height:'100%'}}>
       <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:18}}>
@@ -2744,7 +2920,7 @@ function ScorecardPage({profile, liveVulns, controls, setControls, activeCategor
           <div style={{fontSize:10,color:C.muted,marginTop:3}}>{ind?.label} · {sc?.label} · USA - {geo?.label} · Data-Heavy (PII / IP)</div>
         </div>
         <div style={{display:'flex',gap:8}}>
-          <button onClick={downloadCSV} style={{display:'flex',alignItems:'center',gap:6,padding:'7px 14px',borderRadius:4,border:`1px solid ${C.border}`,background:C.card,color:C.muted,fontSize:11,cursor:'pointer'}}>
+          <button onClick={printPDF} style={{display:'flex',alignItems:'center',gap:6,padding:'7px 14px',borderRadius:4,border:`1px solid ${C.border}`,background:C.card,color:C.muted,fontSize:11,cursor:'pointer'}}>
             <i className="ti ti-download" style={{fontSize:11}}/>PDF
           </button>
           <button onClick={downloadCSV} style={{display:'flex',alignItems:'center',gap:6,padding:'7px 14px',borderRadius:4,border:`1px solid ${C.green}50`,background:C.greenBg,color:C.green,fontSize:11,fontWeight:700,cursor:'pointer'}}>
@@ -2840,14 +3016,14 @@ function ScorecardPage({profile, liveVulns, controls, setControls, activeCategor
               </button>
               <div style={{flex:1,minWidth:0}}>
                 <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:2,flexWrap:'wrap'}}>
-                  <span style={{fontSize:11,fontWeight:600,color:isOn?'#fff':C.muted}}>{ctrl.name}</span>
+                  <span style={{fontSize:11,fontWeight:600,color:isOn?'#fff':C.muted}}>{ctrl.label}</span>
                   <span style={{fontSize:9,color:C.muted}}>{ctrl.type}</span>
                   {ind&&<span style={{fontSize:9,fontWeight:700,padding:'1px 6px',borderRadius:2,background:(ind.color||C.accent)+'20',color:ind.color||C.accent}}>Priority for {ind.label}</span>}
                 </div>
-                <div style={{fontSize:10,color:C.dim}}>{ctrl.desc||'Select remaining controls.'}</div>
+                <div style={{fontSize:10,color:C.dim}}>{ctrl.bestFor||'Select remaining controls.'}</div>
               </div>
               <div style={{textAlign:'right',flexShrink:0}}>
-                <div style={{fontSize:13,fontWeight:700,color:C.green}}>{ctrl.reduction}%</div>
+                <div style={{fontSize:13,fontWeight:700,color:C.green}}>{Math.round(ctrl.mitigation*100)}%</div>
                 <div style={{fontSize:9,color:C.muted}}>mitigation</div>
               </div>
             </div>
@@ -2871,7 +3047,7 @@ function ScorecardPage({profile, liveVulns, controls, setControls, activeCategor
 }
 
 
-function Sidebar({ profile, nav, setNav, dataStatus, gScore }) {
+function Sidebar({ profile, nav, setNav, dataStatus, gScore, onEditProfile }) {
   const ind = INDUSTRIES.find(i => i.id === profile.industry);
   const sc  = SCALES.find(s => s.id === profile.scale);
   const ds  = dataStatus || { state:"idle", count:0 };
@@ -2907,6 +3083,9 @@ function Sidebar({ profile, nav, setNav, dataStatus, gScore }) {
         <div style={{ display: "flex", alignItems: "center", gap: 5, marginTop: 5 }}>
           <span style={{ fontSize: 9, color: C.muted }}>{ds.count || 0} feeds active</span>
         </div>
+        <button onClick={onEditProfile} style={{ marginTop: 8, width: "100%", padding: "5px 0", borderRadius: 4, border: `1px solid ${C.border}`, background: "transparent", color: C.muted, fontSize: 9, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 4 }}>
+          <i className="ti ti-edit" style={{ fontSize: 10 }} /> Edit Profile
+        </button>
       </div>
 
       {/* Nav groups */}
@@ -3224,7 +3403,24 @@ function App() {
   }, []);
 
   const handleComplete = useCallback(p => { setProfile(p); setOnboarded(true); }, []);
-  const handleResync   = () => { setOnboarded(false); setProfile(null); setControls([]); setNav("dashboard"); };
+  const handleResync   = () => {
+    setDataStatus(s => ({ ...s, state:"loading", msg:"Re-syncing feeds..." }));
+    fetchLiveVulns(msg => setDataStatus(s => ({...s, state:"loading", msg})))
+      .then(vulns => {
+        if (vulns.length > 0) {
+          setLiveVulns(vulns);
+          setDataStatus({ state:"live", msg:`${vulns.length} CVEs loaded`, count:vulns.length, lastUpdated:new Date() });
+        } else {
+          setDataStatus({ state:"fallback", msg:`Using ${VULNS.length} curated CVEs`, count:VULNS.length, lastUpdated:null });
+        }
+      });
+  };
+
+  const handleEditProfile = () => {
+    if (window.confirm('Edit your profile? This restarts onboarding — your current industry, scale, region and platform settings will be cleared.')) {
+      setOnboarded(false); setProfile(null); setControls([]); setNav("dashboard");
+    }
+  };
 
   if (!onboarded) return <Onboarding onComplete={handleComplete}/>;
 
@@ -3251,7 +3447,7 @@ function App() {
     <div style={{ display:"flex", height:"100vh", background:C.bg, overflow:"hidden", fontFamily:"'IBM Plex Mono','Fira Code',monospace" }}>
 
       {/* LEFT SIDEBAR */}
-      <Sidebar profile={profile} nav={nav} setNav={setNav} dataStatus={dataStatus} gScore={gScore}/>
+      <Sidebar profile={profile} nav={nav} setNav={setNav} dataStatus={dataStatus} gScore={gScore} onEditProfile={handleEditProfile}/>
 
       {/* MAIN CONTENT */}
       <div style={{ flex:1, display:"flex", flexDirection:"column", overflow:"hidden", minWidth:0 }}>
