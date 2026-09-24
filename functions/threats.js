@@ -30,7 +30,17 @@ export async function onRequest(context) {
     if (kv) {
       const cached = await kv.get(cacheKey);
       if (cached) {
-        return new Response(cached, { status:200, headers:CORS });
+        // Inject a diagnostic marker so which path served this response is
+        // directly checkable in the payload, instead of inferred from patterns
+        // like "every CVSS is exactly 9.0". Falls through to live fetch below
+        // if the cached value isn't valid JSON for any reason.
+        try {
+          const parsed = JSON.parse(cached);
+          parsed._diagnostic = { source: 'kv-cache', servedAt: new Date().toISOString() };
+          return new Response(JSON.stringify(parsed), { status:200, headers:CORS });
+        } catch (parseErr) {
+          // fall through to live fetch
+        }
       }
     }
 
@@ -57,7 +67,7 @@ export async function onRequest(context) {
         const cwe  = (v.cwes||[])[0] || 'CWE-0';
         const cvss = epss > 0.8 ? 9.0 : epss > 0.5 ? 7.5 : 6.5;
         return {
-          id: v.cveID, cvss, desc: (v.shortDescription||v.vulnerabilityName||'').slice(0,150),
+          id: v.cveID, cvss, cvssEstimated:true, desc: (v.shortDescription||v.vulnerabilityName||'').slice(0,150),
           type: CWE_MAP[cwe]||'injection', src:'CISA KEV', kev:true, epss,
           affects:['onprem'], industries:['all'], cwe,
           publishedDate:v.dateAdded, dateAdded:v.dateAdded,
@@ -68,10 +78,11 @@ export async function onRequest(context) {
 
     // Map GitHub advisories
     const ghMapped = ghAdvs.map(a => {
-      const cvss = parseFloat(a.cvss?.score||7.0);
+      const hasCvss = a.cvss?.score != null;
+      const cvss = parseFloat(hasCvss ? a.cvss.score : 7.0);
       const cve  = a.cve_id||(a.identifiers||[]).find(i=>i.type==='CVE')?.value||a.ghsa_id;
       return {
-        id:cve||a.ghsa_id, cvss, desc:(a.summary||'').slice(0,150),
+        id:cve||a.ghsa_id, cvss, cvssEstimated: !hasCvss, desc:(a.summary||'').slice(0,150),
         type:'supply_chain', src:'GitHub Advisory', kev:false,
         epss:epssMap[cve]||0.3, affects:['cicd','cloud'], industries:['all'],
         cwe:'CWE-0', publishedDate:a.published_at,
@@ -92,6 +103,7 @@ export async function onRequest(context) {
       sources:['CISA KEV','FIRST EPSS','GitHub Advisory'],
       note:'KV not yet populated — run risksync-enricher for full NVD enrichment',
       updatedAt:new Date().toISOString(), vulns:all,
+      _diagnostic: { source:'live-fallback', servedAt:new Date().toISOString(), reason:'KV cache empty or unreadable' },
     };
 
     // Store in KV for next request (1hr TTL so enricher cron can overwrite)
