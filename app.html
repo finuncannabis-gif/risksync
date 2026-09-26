@@ -2054,10 +2054,16 @@ function ThreatDetailModal({vuln, onClose}){
             <div style={{fontSize:9,fontWeight:700,color:vc(score),textTransform:'uppercase',marginBottom:2}}>Urgency</div>
             <div style={{fontSize:10,color:vc(score)}}>{rem.urgency}</div>
           </div>
-          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:7}}>
-            <div style={{fontSize:9,fontWeight:700,color:C.muted,textTransform:'uppercase'}}>Remediation steps</div>
-            <span style={{fontSize:8,fontWeight:700,padding:'1px 6px',borderRadius:3,background:rem.curated?C.greenBg:C.border,color:rem.curated?C.green:C.muted,border:`1px solid ${rem.curated?C.green+'40':C.border}`}}>{(rem.source||'').toUpperCase()}</span>
+          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:7,flexWrap:'wrap',gap:5}}>
+            <div style={{fontSize:9,fontWeight:700,color:C.muted,textTransform:'uppercase'}}>{rem.category==='remediation' ? 'Remediation steps' : 'Advisory'}</div>
+            <div style={{display:'flex',gap:5}}>
+              <span style={{fontSize:8,fontWeight:700,padding:'1px 6px',borderRadius:3,background:rem.category==='remediation'?C.greenBg:'#f5a62325',color:rem.category==='remediation'?C.green:'#f5a623',border:`1px solid ${rem.category==='remediation'?C.green+'40':'#f5a62340'}`}}>{rem.category==='remediation' ? 'REMEDIATION' : 'ADVISORY'}</span>
+              <span style={{fontSize:8,fontWeight:700,padding:'1px 6px',borderRadius:3,background:C.border,color:C.muted,border:`1px solid ${C.border}`}}>{(rem.source||'').toUpperCase()}</span>
+            </div>
           </div>
+          {rem.category==='advisory' && (
+            <div style={{fontSize:9,color:C.muted,marginBottom:7,fontStyle:'italic'}}>No specific fix version confirmed yet — this points to official guidance rather than a concrete step.</div>
+          )}
           {rem.steps.map((step,si)=>(
             <div key={si} style={{display:'flex',gap:8,marginBottom:6,alignItems:'flex-start'}}>
               <div style={{width:16,height:16,borderRadius:4,background:vc(score)+'25',border:`1px solid ${vc(score)}50`,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,marginTop:1}}>
@@ -3361,19 +3367,33 @@ const TYPE_REMEDIATION = {
   default:            {steps:["Apply the vendor patch or update to the fixed version as soon as it's available","Review the CVE's official advisory (NVD/vendor) for confirmed technical details","Assess whether the affected component is internet-facing or handles untrusted input","Apply compensating controls (network segmentation, WAF rules) if patching is delayed","Monitor logs for indicators associated with this CVE while remediation is in progress"], urgencyBase:"Review and patch"},
 };
 
+/* ── REMEDIATION vs ADVISORY classification ──
+   Not the same as "source". A CISA KEV action is often a generic pointer
+   ("see the vendor bulletin") rather than an actual fix — that's an
+   Advisory, not a Remediation, regardless of which tier it came from.
+   Curated entries (VULN_REMEDIATION) are hand-written to be specific
+   (real patch/hotfix versions) so they're always genuine remediation.
+   Type templates are generic guidance by construction — always Advisory. */
+function classifyAction(text){
+  if(!text) return 'advisory';
+  const hasVersion = /\b\d+(\.\d+){1,3}\b/.test(text);
+  const genericPointer = /see the vendor bulletin|per vendor instructions|as they become available|discontinue use of the product/i.test(text);
+  return (hasVersion && !genericPointer) ? 'remediation' : 'advisory';
+}
+
 function getRemediation(vuln){
   if(vuln.action){
-    return {steps:[vuln.action], urgency:"CISA KEV confirmed active exploitation — this is CISA's official required action", curated:true, source:"CISA KEV"};
+    return {steps:[vuln.action], urgency:"CISA KEV confirmed active exploitation — this is CISA's official required action", curated:true, source:"CISA KEV", category:classifyAction(vuln.action)};
   }
   const curated = VULN_REMEDIATION[vuln.id];
-  if(curated) return {...curated, curated:true, source:"RiskSync curated"};
+  if(curated) return {...curated, curated:true, source:"RiskSync curated", category:"remediation"};
   const tmpl = TYPE_REMEDIATION[vuln.type] || TYPE_REMEDIATION.default;
   const urgency = vuln.kev
     ? `${tmpl.urgencyBase} immediately — CISA KEV confirmed active exploitation`
     : vuln.exploit === "Active" || vuln.exploit === "Likely"
       ? `${tmpl.urgencyBase} promptly — exploitation reported likely (EPSS ${Math.round((vuln.epss||0)*100)}%)`
       : `${tmpl.urgencyBase} per your standard SLA for this severity — no confirmed active exploitation yet`;
-  return {steps:tmpl.steps, urgency, curated:false, source:"Standard for vulnerability type"};
+  return {steps:tmpl.steps, urgency, curated:false, source:"Standard for vulnerability type", category:"advisory"};
 }
 
 /* ── EXTERNAL REFERENCE LINKS ──
