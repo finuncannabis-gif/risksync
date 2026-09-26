@@ -3382,11 +3382,11 @@ function classifyAction(text){
 }
 
 function getRemediation(vuln){
+  const curated = VULN_REMEDIATION[vuln.id];
+  if(curated) return {...curated, curated:true, source:"RiskSync curated", category:"remediation"};
   if(vuln.action){
     return {steps:[vuln.action], urgency:"CISA KEV confirmed active exploitation — this is CISA's official required action", curated:true, source:"CISA KEV", category:classifyAction(vuln.action)};
   }
-  const curated = VULN_REMEDIATION[vuln.id];
-  if(curated) return {...curated, curated:true, source:"RiskSync curated", category:"remediation"};
   const tmpl = TYPE_REMEDIATION[vuln.type] || TYPE_REMEDIATION.default;
   const urgency = vuln.kev
     ? `${tmpl.urgencyBase} immediately — CISA KEV confirmed active exploitation`
