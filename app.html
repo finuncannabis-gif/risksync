@@ -3384,6 +3384,25 @@ function classifyAction(text){
 function getRemediation(vuln){
   const curated = VULN_REMEDIATION[vuln.id];
   if(curated) return {...curated, curated:true, source:"RiskSync curated", category:"remediation"};
+
+  // Real fixed-version data extracted from NVD's CPE ranges or OSV's fix events —
+  // already present in data we fetch, just newly parsed. Genuine remediation,
+  // even without hand-written steps, because it names an actual fixed version.
+  if(vuln.fixedVersions && vuln.fixedVersions.length){
+    const verList = vuln.fixedVersions.join(', ');
+    const steps = [
+      `Update ${vuln.product || 'the affected component'} to a version at or beyond: ${verList}`,
+      "Confirm the deployed build number against your vendor's release notes — some vendors backport fixes without changing the visible version string",
+      "Re-scan or re-check the asset after patching to confirm the fixed version is actually running",
+    ];
+    const urgency = vuln.kev
+      ? "CISA KEV confirmed active exploitation — a verified fixed version exists, patch immediately"
+      : vuln.exploit === "Active" || vuln.exploit === "Likely"
+        ? `Verified fixed version exists — patch promptly (EPSS ${Math.round((vuln.epss||0)*100)}%)`
+        : "Verified fixed version exists — patch per your standard SLA for this severity";
+    return {steps, urgency, curated:false, source:"NVD/OSV verified fix", category:"remediation"};
+  }
+
   if(vuln.action){
     return {steps:[vuln.action], urgency:"CISA KEV confirmed active exploitation — this is CISA's official required action", curated:true, source:"CISA KEV", category:classifyAction(vuln.action)};
   }
