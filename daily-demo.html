@@ -4,7 +4,7 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>Daily Threat Brief — RiskSync | Today's Top Cybersecurity Threats</title>
-<meta name="description" content="Free daily cybersecurity threat intelligence. Top CVEs ranked by real-world exploitability, CISA KEV alerts, and contextual risk scores for your industry. Updated every morning."/>
+<meta name="description" content="Free daily cybersecurity threat intelligence. Top CVEs ranked by real-world exploitation, CISA KEV alerts, and CISA's SSVC decision tree for your industry and platforms. Updated every morning."/>
 <meta name="keywords" content="cybersecurity threats, daily CVE briefing, CISA KEV, NVD vulnerabilities, threat intelligence, cybersecurity news"/>
 <meta property="og:title" content="RiskSync Daily Threat Brief — Today's Top Cybersecurity Threats"/>
 <meta property="og:description" content="Free daily threat intelligence ranked by exploitability. CISA KEV confirmed threats, CVSS scores, and industry-specific risk context."/>
@@ -402,8 +402,8 @@ function rsUnlock(){
 <!-- STAT CARDS -->
 <div class="stats-row">
   <div class="stat-card"><div class="stat-val mono" id="stat-total" style="color:var(--text)">—</div><div class="stat-lbl">KEV Catalogue</div></div>
-  <div class="stat-card red"><div class="stat-val mono" id="stat-kev" style="color:var(--red)">—</div><div class="stat-lbl">Critical ≥9.0</div></div>
-  <div class="stat-card amber"><div class="stat-val mono" id="stat-critical" style="color:var(--amber)">—</div><div class="stat-lbl">High ≥7.0</div></div>
+  <div class="stat-card red"><div class="stat-val mono" id="stat-kev" style="color:var(--red)">—</div><div class="stat-lbl">Act</div></div>
+  <div class="stat-card amber"><div class="stat-val mono" id="stat-critical" style="color:var(--amber)">—</div><div class="stat-lbl">Attend</div></div>
   <div class="stat-card green"><div class="stat-val mono" id="stat-new" style="color:var(--green)">—</div><div class="stat-lbl">New Today</div></div>
 </div>
 
@@ -416,10 +416,14 @@ function rsUnlock(){
   </select>
 
   <span class="filter-label" style="margin-left:4px">Platform</span>
-  <button class="filter-chip active" data-plat="web" onclick="togglePlatform('web',this)">Web</button>
+  <button class="filter-chip active" data-plat="onprem" onclick="togglePlatform('onprem',this)">On-premise</button>
+  <button class="filter-chip" data-plat="remote" onclick="togglePlatform('remote',this)">Remote/VPN</button>
   <button class="filter-chip active" data-plat="cloud" onclick="togglePlatform('cloud',this)">Cloud</button>
-  <button class="filter-chip" data-plat="api" onclick="togglePlatform('api',this)">API</button>
+  <button class="filter-chip" data-plat="saas" onclick="togglePlatform('saas',this)">SaaS</button>
   <button class="filter-chip" data-plat="ot_ics" onclick="togglePlatform('ot_ics',this)">OT/ICS</button>
+  <button class="filter-chip" data-plat="iot" onclick="togglePlatform('iot',this)">IoT</button>
+  <button class="filter-chip" data-plat="ai_llm" onclick="togglePlatform('ai_llm',this)">AI/LLM</button>
+  <button class="filter-chip" data-plat="payment" onclick="togglePlatform('payment',this)">Payment</button>
 
   <span class="filter-label" style="margin-left:4px">Scale</span>
   <select class="filter-select" id="scale-select" onchange="applyFilters()">
@@ -503,10 +507,10 @@ function rsUnlock(){
     </div>
   </div>
 
-  <!-- COL 3: INDUSTRY RISK INDEX -->
+  <!-- COL 3: URGENT ITEMS BY INDUSTRY -->
   <div>
     <div class="sidebar-card" style="height:100%">
-      <div class="sidebar-card-header">Industry Risk Index</div>
+      <div class="sidebar-card-header">Act / Attend by industry, for your platforms</div>
       <div id="ind-scores-list" style="min-height:200px"><div style="padding:12px 14px;font-size:11px;color:var(--muted)">Loading...</div></div>
     </div>
   </div>
@@ -516,8 +520,8 @@ function rsUnlock(){
 <!-- FOOTER --><!-- FOOTER --><!-- FOOTER --><!-- FOOTER -->
 <footer>
   <strong style="color:var(--text)">RiskSync Daily Threat Brief</strong><br/>
-  Data sourced from <a href="https://nvd.nist.gov">NIST NVD</a> · <a href="https://www.cisa.gov/known-exploited-vulnerabilities-catalog">CISA KEV</a> · <a href="https://www.first.org/epss">FIRST EPSS</a><br/>
-  Scores: CVSS × Industry Multiplier × Scale × Regional Weight × Exploit Probability<br/>
+  Data sourced from <a href="https://www.cve.org">CVE List</a> · <a href="https://www.cisa.gov/known-exploited-vulnerabilities-catalog">CISA KEV</a> · <a href="https://www.first.org/epss">FIRST EPSS</a><br/>
+  Ranked with the <a href="https://www.cisa.gov/stakeholder-specific-vulnerability-categorization-ssvc">CISA SSVC</a> decision tree: Act, Attend, Track* or Track<br/>
   <div style="margin-top:12px;display:flex;gap:16px;justify-content:center;flex-wrap:wrap">
     <a href="index.html">Full Platform</a>
     <a href="mailto:hello@risksync.io">Contact</a>
@@ -547,49 +551,40 @@ const C={
 
 /* ── DATA ── */
 const INDUSTRIES=[
-  {id:"healthcare",label:"Healthcare",icon:"⊕",multiplier:1.5,primaryRisk:"Privacy & Human Factor",topThreat:"AI-Powered Patient Impersonation",riskFocus:["synthetic_id","ot_legacy","ai_agent"],regulatoryBodies:["HIPAA","GDPR","NIS2"],color:"#f04060"},
-  {id:"manufacturing",label:"Manufacturing",icon:"⬡",multiplier:1.4,primaryRisk:"Operational Technology (OT)",topThreat:"Kill-Switch Ransomware on Legacy OT",riskFocus:["ot_legacy","supply_chain","ai_agent"],regulatoryBodies:["NERC CIP","NIS2","ISO 27001"],color:"#f5a623"},
-  {id:"software",label:"Software / SaaS / Dev",icon:"◈",multiplier:1.3,primaryRisk:"IP & AI Governance",topThreat:"AI-Agent Code Injection / Supply Chain",riskFocus:["ai_agent","supply_chain","compliance"],regulatoryBodies:["SOC 2","ISO 27001","GDPR"],color:"#9b72f6"},
-  {id:"fintech",label:"FinTech / Banking",icon:"◆",multiplier:1.5,primaryRisk:"Fraud & Trust",topThreat:"Deepfake CFO Vishing / BEC 2.0",riskFocus:["synthetic_id","compliance","supply_chain"],regulatoryBodies:["PCI-DSS","DORA","FCA"],color:"#2d7ef7"},
-  {id:"energy",label:"Energy / Utilities",icon:"⚡",multiplier:1.6,primaryRisk:"Geopolitical Sabotage",topThreat:"State-Sponsored ICS / SCADA Attack",riskFocus:["ot_legacy","supply_chain","compliance"],regulatoryBodies:["NERC CIP","NIS2","IEC 62443"],color:"#f5a623"},
-  {id:"government",label:"Government / Defence",icon:"⊞",multiplier:1.6,primaryRisk:"Espionage & Continuity",topThreat:"APT Supply Chain & Credential Theft",riskFocus:["supply_chain","synthetic_id","ai_agent"],regulatoryBodies:["FISMA","NIST CSF","IL2/IL4"],color:"#22d3ee"},
-  {id:"retail",label:"Retail / E-Commerce",icon:"◉",multiplier:1.2,primaryRisk:"PCI & Brand Reputation",topThreat:"Seasonal Magecart / API Skimming",riskFocus:["supply_chain","compliance","synthetic_id"],regulatoryBodies:["PCI-DSS","GDPR","CCPA"],color:"#f472b6"},
-  {id:"telecom",label:"Telecommunications",icon:"◎",multiplier:1.4,primaryRisk:"Network Infrastructure",topThreat:"SS7 Exploitation / VoIP Hijack",riskFocus:["supply_chain","ot_legacy","compliance"],regulatoryBodies:["FCC","NIS2","ETSI"],color:"#0ed27a"},
-  {id:"education",label:"Education",icon:"◫",multiplier:1.1,primaryRisk:"Identity & Network Scale",topThreat:"Large-Scale Phishing / Ransomware",riskFocus:["synthetic_id","supply_chain","compliance"],regulatoryBodies:["FERPA","GDPR","COPPA"],color:"#22d3ee"},
-  {id:"legal",label:"Legal / Professional Svcs",icon:"▣",multiplier:1.3,primaryRisk:"Client Data & Confidentiality",topThreat:"Spear-phishing for M&A Intelligence",riskFocus:["synthetic_id","supply_chain","ai_agent"],regulatoryBodies:["SRA","GDPR","ABA"],color:"#9b72f6"},
-  {id:"logistics",label:"Logistics / Transport",icon:"◧",multiplier:1.3,primaryRisk:"Supply Chain & Fleet OT",topThreat:"GPS Spoofing / Vendor API Compromise",riskFocus:["supply_chain","ot_legacy","compliance"],regulatoryBodies:["TSA","NIS2","ISO 28000"],color:"#f5a623"},
-  {id:"media",label:"Media / Entertainment",icon:"◨",multiplier:1.1,primaryRisk:"IP & Content Piracy",topThreat:"Deepfake Content & DDoS Extortion",riskFocus:["synthetic_id","supply_chain","ai_agent"],regulatoryBodies:["DMCA","GDPR","FCC"],color:"#f472b6"},
-  {id:"realestate",label:"Real Estate / PropTech",icon:"◱",multiplier:1.2,primaryRisk:"BEC & Wire Fraud",topThreat:"Deepfake Buyer / Wire Transfer Fraud",riskFocus:["synthetic_id","compliance","supply_chain"],regulatoryBodies:["FinCEN","GDPR","RERA"],color:"#2d7ef7"},
-  {id:"pharma",label:"Pharma / Life Sciences",icon:"⊗",multiplier:1.4,primaryRisk:"IP & Regulatory Integrity",topThreat:"Clinical Trial Data Exfiltration",riskFocus:["ai_agent","supply_chain","compliance"],regulatoryBodies:["FDA 21 CFR","GxP","EMA"],color:"#0ed27a"},
+  {id:"healthcare",label:"Healthcare",icon:"⊕",regulatoryBodies:["HIPAA","GDPR","NIS2"],color:"#f04060"},
+  {id:"manufacturing",label:"Manufacturing",icon:"⬡",regulatoryBodies:["NERC CIP","NIS2","ISO 27001"],color:"#f5a623"},
+  {id:"software",label:"Software / SaaS / Dev",icon:"◈",regulatoryBodies:["SOC 2","ISO 27001","GDPR"],color:"#9b72f6"},
+  {id:"fintech",label:"FinTech / Banking",icon:"◆",regulatoryBodies:["PCI-DSS","DORA","FCA"],color:"#2d7ef7"},
+  {id:"energy",label:"Energy / Utilities",icon:"⚡",regulatoryBodies:["NERC CIP","NIS2","IEC 62443"],color:"#f5a623"},
+  {id:"government",label:"Government / Defence",icon:"⊞",regulatoryBodies:["FISMA","NIST CSF","IL2/IL4"],color:"#22d3ee"},
+  {id:"retail",label:"Retail / E-Commerce",icon:"◉",regulatoryBodies:["PCI-DSS","GDPR","CCPA"],color:"#f472b6"},
+  {id:"telecom",label:"Telecommunications",icon:"◎",regulatoryBodies:["FCC","NIS2","ETSI"],color:"#0ed27a"},
+  {id:"education",label:"Education",icon:"◫",regulatoryBodies:["FERPA","GDPR","COPPA"],color:"#22d3ee"},
+  {id:"legal",label:"Legal / Professional Svcs",icon:"▣",regulatoryBodies:["SRA","GDPR","ABA"],color:"#9b72f6"},
+  {id:"logistics",label:"Logistics / Transport",icon:"◧",regulatoryBodies:["TSA","NIS2","ISO 28000"],color:"#f5a623"},
+  {id:"media",label:"Media / Entertainment",icon:"◨",regulatoryBodies:["DMCA","GDPR","FCC"],color:"#f472b6"},
+  {id:"realestate",label:"Real Estate / PropTech",icon:"◱",regulatoryBodies:["FinCEN","GDPR","RERA"],color:"#2d7ef7"},
+  {id:"pharma",label:"Pharma / Life Sciences",icon:"⊗",regulatoryBodies:["FDA 21 CFR","GxP","EMA"],color:"#0ed27a"},
 ];
 
 const SCALES=[
-  {id:"micro",label:"Micro / Startup",range:"1–49",s_multiplier:1.6,note:"Highest per-incident fatality risk. 88% of ransomware targets this band."},
-  {id:"small",label:"Small",range:"50–249",s_multiplier:1.4,note:"Unlikely to have a dedicated SOC. Low control effectiveness baseline."},
-  {id:"mid",label:"Mid-Market",range:"250–999",s_multiplier:1.2,note:"Growing complexity. Security investment begins but gaps remain large."},
-  {id:"large",label:"Large Enterprise",range:"1,000–9,999",s_multiplier:1.1,note:"High blast radius but more redundant controls. Compliance risk elevated."},
-  {id:"global",label:"Global / Tier-1",range:"10,000+",s_multiplier:1.0,note:"Nation-state interest. Regulation & legal exposure dominate risk posture."},
+  {id:"micro",label:"Micro / Startup",range:"1–49"},
+  {id:"small",label:"Small",range:"50–249"},
+  {id:"mid",label:"Mid-Market",range:"250–999"},
+  {id:"large",label:"Large Enterprise",range:"1,000–9,999"},
+  {id:"global",label:"Global / Tier-1",range:"10,000+"},
 ];
 
-const SUB_TAGS=[
-  {id:"public_sector",label:"Public / Gov Clients",delta:.2,category:"espionage"},
-  {id:"critical_infra",label:"Critical Infrastructure",delta:.3,category:"downtime"},
-  {id:"remote_first",label:"Remote-First Workforce",delta:.2,category:"identity"},
-  {id:"ai_heavy",label:"AI / LLM Heavy Use",delta:.25,category:"ai_agent"},
-  {id:"regulated_data",label:"Stores Regulated Data",delta:.2,category:"compliance"},
-  {id:"ot_environment",label:"OT / ICS Environment",delta:.3,category:"ot_legacy"},
-  {id:"global_supply",label:"Global Supply Chain",delta:.2,category:"supply_chain"},
-  {id:"payment_processing",label:"Payment Processing",delta:.2,category:"compliance"},
-];
+
 
 const GEOS=[
-  {id:"eu",label:"European Union",reg:"GDPR · NIS2 · EU AI Act · EU CSF 2026",regMultiplier:1.2},
-  {id:"us",label:"United States",reg:"HIPAA · FISMA · CCPA · CIRCIA · FTC",regMultiplier:1.1},
-  {id:"uk",label:"United Kingdom",reg:"UK GDPR · FCA SYSC · NIS Regs",regMultiplier:1.15},
-  {id:"apac",label:"Asia-Pacific",reg:"PDPA · PIPL (CN) · PIPA (KR) · MAS TRM",regMultiplier:1.1},
-  {id:"me_af",label:"Middle East / Africa",reg:"NCA (SA) · NESA (UAE) · POPIA (ZA)",regMultiplier:1.0},
-  {id:"latam",label:"Latin America",reg:"LGPD (BR) · PDPA (CL) · Ley 1581 (CO)",regMultiplier:1.0},
-  {id:"other",label:"Other / Global",reg:"ISO 27001 · NIST CSF 2.0 · CIS Controls",regMultiplier:1.0},
+  {id:"eu",label:"European Union",reg:"GDPR · NIS2 · DORA"},
+  {id:"us",label:"United States",reg:"HIPAA · FISMA · CCPA · CIRCIA"},
+  {id:"uk",label:"United Kingdom",reg:"UK GDPR · NIS Regulations"},
+  {id:"apac",label:"Asia-Pacific",reg:"PDPA (SG) · PIPL (CN) · APPI (JP)"},
+  {id:"me_af",label:"Middle East / Africa",reg:"NCA (SA) · POPIA (ZA)"},
+  {id:"latam",label:"Latin America",reg:"LGPD (BR)"},
+  {id:"other",label:"Other / Global",reg:"ISO 27001 · NIST CSF 2.0 · CIS Controls"},
 ];
 
 const TECH_PILLARS=[
@@ -603,45 +598,11 @@ const TECH_PILLARS=[
   {id:"payment",label:"Payment / POS Systems",icon:"◆",threatTags:["compliance","synthetic_id"]},
 ];
 
-const RISK_CATS=[
-  {id:"ai_agent",label:"AI & Agent Governance",short:"Agentic AI",color:"#9b72f6",baseScore:8.9,trend:.4},
-  {id:"supply_chain",label:"Supply Chain & 3rd Party",short:"Supply Chain",color:"#f5a623",baseScore:8.4,trend:.2},
-  {id:"synthetic_id",label:"Deepfake & Synthetic ID",short:"Synthetic ID",color:"#f472b6",baseScore:7.9,trend:.6},
-  {id:"compliance",label:"Regulatory Compliance",short:"Compliance",color:"#2d7ef7",baseScore:7.2,trend:-.1},
-  {id:"ot_legacy",label:"OT & Legacy Resilience",short:"OT / Legacy",color:"#f5a623",baseScore:8.6,trend:.3},
-];
 
-const SOURCES=[
-  {id:"cisa",name:"CISA KEV",tier:"I",trust:1.00,color:"#f04060",tier_label:"Verified Gov",status:"live",desc:"Confirmed active exploits. Triggers auto-Critical override."},
-  {id:"nvd",name:"NIST NVD",tier:"I",trust:1.00,color:"#2d7ef7",tier_label:"Verified Gov",status:"live",desc:"CVSS base scores. Foundation of all B values."},
-  {id:"msrc",name:"Microsoft MSRC",tier:"I",trust:.97,color:"#0078d4",tier_label:"Verified Vendor",status:"live",desc:"Patch Tuesday + zero-day advisories."},
-  {id:"misp",name:"MISP / CIRCL",tier:"II",trust:.85,color:"#0ed27a",tier_label:"Community",status:"live",desc:"1,100+ orgs sharing IoCs. Peer signal for sector-specific attacks."},
-  {id:"otx",name:"AlienVault OTX",tier:"II",trust:.82,color:"#22d3ee",tier_label:"Community",status:"live",desc:"19M+ IoC records/day. STIX/TAXII machine-readable."},
-  {id:"sans",name:"SANS ISC",tier:"II",trust:.75,color:"#9b72f6",tier_label:"Community",status:"live",desc:"500k+ sensor global network. Early scanning/exploit activity."},
-  {id:"epss",name:"EPSS (FIRST.org)",tier:"II",trust:.90,color:"#f472b6",tier_label:"ML Scoring",status:"live",desc:"ML probability score: how likely is this CVE to be exploited?"},
-  {id:"falcon",name:"FalconFeeds.io",tier:"III",trust:.95,color:"#f5a623",tier_label:"Dark Web",status:"pro",desc:"Real-time ransomware victim logs. Tracks SME-targeting groups."},
-  {id:"flare",name:"Flare.io",tier:"III",trust:.88,color:"#f04060",tier_label:"Dark Web",status:"pro",desc:"Dark web leak monitoring. Breach detection before disclosure."},
-  {id:"openphish",name:"OpenPhish",tier:"III",trust:.80,color:"#22d3ee",tier_label:"Specialized",status:"pro",desc:"Real-time phishing URL feeds. Critical for Healthcare / FinTech."},
-  {id:"vaikora",name:"Vaikora AI Signals",tier:"IV",trust:.78,color:"#9b72f6",tier_label:"AI/Agent Intel",status:"enterprise",desc:"2026 specialist: AI agent exploits, LLM prompt injection, API abuse."},
-  {id:"aikido",name:"Aikido / OSV.dev",tier:"IV",trust:.83,color:"#0ed27a",tier_label:"Supply Chain",status:"enterprise",desc:"Open-source SCA + dependency vulnerability tracking."},
-  {id:"isac",name:"Sector ISACs",tier:"IV",trust:.92,color:"#f472b6",tier_label:"Sector Intel",status:"enterprise",desc:"FS-ISAC / H-ISAC / E-ISAC — sector-specific sharing communities."},
-  {id:"vulncheck",name:"VulnCheck",tier:"IV",trust:.88,color:"#f5a623",tier_label:"Exploit Intel",status:"enterprise",desc:"500+ sources. Threat actor attribution. Botnet telemetry."},
-];
 
-const CONTROLS=[
-  {id:"mfa",label:"Phishing-Resistant MFA (FIDO2)",mitigation:.85,costK:12,type:"Technical",bestFor:"All — Identity protection",riskCat:"synthetic_id"},
-  {id:"backups",label:"Air-Gapped Immutable Backups",mitigation:.90,costK:18,type:"Structural",bestFor:"Healthcare · Manufacturing · OT",riskCat:"ot_legacy"},
-  {id:"prompt_fw",label:"AI Prompt Injection Firewall",mitigation:.60,costK:24,type:"Technical",bestFor:"Software / SaaS · FinTech",riskCat:"ai_agent"},
-  {id:"oob_auth",label:"Out-of-Band Transfer Authorization",mitigation:.95,costK:8,type:"Process",bestFor:"All small-scale · Financial",riskCat:"synthetic_id"},
-  {id:"ztna",label:"Zero-Trust Network Micro-segmentation",mitigation:.70,costK:45,type:"Network",bestFor:"Large-scale · Manufacturing · OT",riskCat:"supply_chain"},
-  {id:"ot_monitor",label:"OT/ICS Real-Time Monitoring",mitigation:.75,costK:38,type:"Technical",bestFor:"Manufacturing · Energy · Logistics",riskCat:"ot_legacy"},
-  {id:"sca",label:"Software Composition Analysis",mitigation:.55,costK:14,type:"Technical",bestFor:"Software · SaaS · FinTech",riskCat:"supply_chain"},
-  {id:"cspm",label:"Cloud Security Posture Mgmt",mitigation:.65,costK:28,type:"Technical",bestFor:"Cloud-first · SaaS · Multi-cloud",riskCat:"compliance"},
-  {id:"dlp",label:"Data Loss Prevention (AI-aware)",mitigation:.60,costK:22,type:"Technical",bestFor:"Healthcare · Legal · Pharma",riskCat:"compliance"},
-  {id:"vishing",label:"Vishing / Deepfake Awareness Training",mitigation:.45,costK:6,type:"Process",bestFor:"All — especially Finance teams",riskCat:"synthetic_id"},
-  {id:"patch_auto",label:"Auto-Patch Management",mitigation:.60,costK:10,type:"Technical",bestFor:"All — baseline hygiene",riskCat:"ot_legacy"},
-  {id:"ai_gov",label:"AI Agent Governance Platform",mitigation:.80,costK:55,type:"Governance",bestFor:"Software · FinTech · Pharma",riskCat:"ai_agent"},
-];
+
+
+
 
 /* ── VULNERABILITY DATABASE ── */
 const VULNS=[
@@ -667,44 +628,142 @@ const VULNS=[
   {id:"CVE-2024-PHISH-1",cvss:7.5,desc:"Adversarial phishing kit targeting SSO credentials",type:"phishing",src:"OpenPhish+MISP",kev:false,epss:.72,affects:["email","web","saas"],industries:["all"],cwe:"CWE-359",vector:"Social",exploit:"Active"},
 ];
 
-const IND_PROFILE_VULN={
-  healthcare:    {boost:["ransomware","auth","phishing","ot"],      suppress:["prompt_injection","injection"]},
-  manufacturing: {boost:["ot","ransomware","supply_chain"],          suppress:["prompt_injection","oauth"]},
-  software:      {boost:["injection","supply_chain","prompt_injection","oauth"], suppress:["ot","ransomware"]},
-  fintech:       {boost:["auth","oauth","phishing","supply_chain"],  suppress:["ot"]},
-  energy:        {boost:["ot","ransomware","supply_chain"],          suppress:["prompt_injection","injection"]},
-  government:    {boost:["supply_chain","auth","privesc","phishing"],suppress:["prompt_injection"]},
-  retail:        {boost:["phishing","oauth","injection"],            suppress:["ot"]},
-  telecom:       {boost:["auth","supply_chain","privesc"],           suppress:["prompt_injection","ot"]},
-  education:     {boost:["phishing","ransomware","auth"],            suppress:["ot","prompt_injection"]},
-  legal:         {boost:["phishing","supply_chain","oauth"],         suppress:["ot"]},
-  logistics:     {boost:["ot","supply_chain","ransomware"],          suppress:["prompt_injection"]},
-  media:         {boost:["phishing","auth","supply_chain"],          suppress:["ot","prompt_injection"]},
-  realestate:    {boost:["phishing","oauth","auth"],                 suppress:["ot","prompt_injection"]},
-  pharma:        {boost:["supply_chain","auth","injection"],         suppress:["ot"]},
+/* SSVC-ENGINE-START
+   Prioritisation engine. Follows CISA's SSVC decision tree (CISA SSVC Guide, Nov 2022): Table 9 (36 rows) and
+   Table 8 (mission and well-being) are encoded verbatim below and covered by tests.
+   Three decision points are EVIDENCE and identical for every organisation: exploitation, automatable, technical impact
+   (CISA publishes them in the CVE record). One is ORGANISATION-SPECIFIC: mission and well-being, derived from the
+   profile (mission prevalence of the affected product + public well-being impact of the sector).
+   Output: an urgency tier (Act / Attend / Track* / Track), a score inside that tier's band, and a plain-language
+   explanation. Region and scale never move a tier. */
+const SSVC_ROWS=[
+  ["none","no","partial","low","Track"],["none","no","partial","medium","Track"],["none","no","partial","high","Track"],
+  ["none","no","total","low","Track"],["none","no","total","medium","Track"],["none","no","total","high","Track*"],
+  ["none","yes","partial","low","Track"],["none","yes","partial","medium","Track"],["none","yes","partial","high","Attend"],
+  ["none","yes","total","low","Track"],["none","yes","total","medium","Track"],["none","yes","total","high","Attend"],
+  ["poc","no","partial","low","Track"],["poc","no","partial","medium","Track"],["poc","no","partial","high","Track*"],
+  ["poc","no","total","low","Track"],["poc","no","total","medium","Track*"],["poc","no","total","high","Attend"],
+  ["poc","yes","partial","low","Track"],["poc","yes","partial","medium","Track"],["poc","yes","partial","high","Attend"],
+  ["poc","yes","total","low","Track"],["poc","yes","total","medium","Track*"],["poc","yes","total","high","Attend"],
+  ["active","no","partial","low","Track"],["active","no","partial","medium","Track"],["active","no","partial","high","Attend"],
+  ["active","no","total","low","Track"],["active","no","total","medium","Attend"],["active","no","total","high","Act"],
+  ["active","yes","partial","low","Attend"],["active","yes","partial","medium","Attend"],["active","yes","partial","high","Act"],
+  ["active","yes","total","low","Attend"],["active","yes","total","medium","Act"],["active","yes","total","high","Act"],
+];
+const SSVC_MAP={}; SSVC_ROWS.forEach(r=>{SSVC_MAP[r.slice(0,4).join("|")]=r[4];});
+const SSVC_MW={
+  minimal:  {minimal:"low",    material:"medium", irreversible:"high"},
+  support:  {minimal:"medium", material:"medium", irreversible:"high"},
+  essential:{minimal:"high",   material:"high",   irreversible:"high"},
 };
-
-function computeVulnScore(v,profile){
-  const ind=INDUSTRIES.find(i=>i.id===profile.industry);
-  const sc=SCALES.find(s=>s.id===profile.scale);
-  const geo=GEOS.find(g=>g.id===profile.geo)||GEOS.find(g=>g.id==="other");
-  if(!ind||!sc)return v.cvss;
-  const indM=ind.multiplier;
-  const scaleM=sc.s_multiplier;
-  const geoM=geo.regMultiplier;
-  const platMatch=(profile.techPillars||[]).some(pid=>{
-    const pillar=TECH_PILLARS.find(t=>t.id===pid);
-    return v.affects.includes(pid)||(pillar&&v.affects.some(a=>a===pid));
-  });
-  const platM=platMatch?1.18:0.55;
-  const indMatch=v.industries.includes("all")||v.industries.includes(profile.industry);
-  const indRelevance=indMatch?1.0:0.5;
-  const prof=IND_PROFILE_VULN[profile.industry]||{boost:[],suppress:[]};
-  const typeBoost=prof.boost.includes(v.type)?1.28:prof.suppress.includes(v.type)?0.38:1.0;
-  const kevBonus=v.kev?1.1:1.0;
-  const raw=v.cvss*indM*scaleM*geoM*platM*indRelevance*typeBoost*kevBonus;
-  return parseFloat(Math.min(10,raw).toFixed(1));
+const SSVC_WB_MATERIAL=["healthcare","energy","manufacturing","logistics","telecom","government","pharma"];
+const TIER_RANK={Act:4,Attend:3,"Track*":2,Track:1};
+/* "None" = not in your stack: SSVC scores products that are present. A product you do not run is out of scope, so it is listed for awareness at the bottom, never as urgent. */
+const TIER_BAND={Act:[8.0,10.0],Attend:[6.0,7.9],"Track*":[4.0,5.9],Track:[2.1,3.9],None:[0.5,2.0]};
+const TIER_META={
+  Act:     {color:C.red,   bg:C.redBg,    timing:"Remediate as soon as possible. Needs leadership-level attention."},
+  Attend:  {color:C.amber, bg:C.amberBg,  timing:"Remediate sooner than your standard update timeline. Needs supervisory attention."},
+  "Track*":{color:C.accent,bg:C.accentBg, timing:"Remediate within standard update timelines and watch for changes."},
+  Track:   {color:C.green, bg:C.greenBg,  timing:"Remediate within standard update timelines."},
+};
+function ssvcPoints(v){
+  const s=v.ssvc||{};
+  return {e:v.kev?"active":(s.e||"none"), a:s.a||"no", t:s.t||"partial", src:s.src||"assumed"};
 }
+function ssvcWellBeing(profile){
+  const pil=profile.techPillars||[];
+  const ind=(typeof INDUSTRIES!=="undefined"?INDUSTRIES.find(i=>i.id===profile.industry):null);
+  const name=ind?ind.label:(profile.industry||"your sector");
+  if((profile.industry==="energy"&&pil.includes("ot_ics"))||(profile.industry==="healthcare"&&pil.includes("iot")))
+    return {level:"irreversible",basis:name+" with "+(profile.industry==="energy"?"OT/ICS":"connected medical/IoT devices")+": compromise can cause physical harm"};
+  if(SSVC_WB_MATERIAL.includes(profile.industry))
+    return {level:"material",basis:name+": compromise can affect safety or essential services"};
+  return {level:"minimal",basis:name+": limited public well-being impact"};
+}
+function vendorLevel(vend,name){
+  if(!name) return 0;
+  const n=String(name).toLowerCase().trim(); let best=0;
+  for(const k in vend){ const kk=String(k).toLowerCase().trim(); if(kk===n||(kk.length>=4&&n.length>=4&&(n.includes(kk)||kk.includes(n)))) best=Math.max(best,vend[k]); }
+  return best;
+}
+function ssvcMission(v,profile){
+  const pil=profile.techPillars||[];
+  const vend=profile.vendors||{};
+  const vendorsDone=Object.keys(vend).length>0;
+  const platMatch=pil.some(pid=>(v.affects||[]).includes(pid));
+  if(vendorsDone&&v.vendor){
+    const lvl=vendorLevel(vend,v.vendor);
+    if(lvl===2) return {level:"essential",kind:"declared",basis:"You marked "+v.vendor+" business-critical"};
+    if(lvl===1) return {level:"support",kind:"declared",basis:"You use "+v.vendor};
+    return {level:"none",kind:"declared",basis:v.vendor+" is not in your vendor list, so it is listed for awareness only"};
+  }
+  if(v.kev&&v.platKnown===false) return {level:"support",kind:"assumed",basis:"Product not classified, so assumed to apply. Add your vendors to sharpen this."};
+  if(platMatch) return {level:"support",kind:"platform",basis:"Matches a platform you run"};
+  return {level:"none",kind:"platform",basis:"Does not match a platform you run, so it is listed for awareness only"};
+}
+function ssvcAssess(v,profile){
+  const points=ssvcPoints(v), mission=ssvcMission(v,profile), wellBeing=ssvcWellBeing(profile);
+  const notInStack=mission.level==="none";
+  const mw=notInStack?"n/a":SSVC_MW[mission.level][wellBeing.level];
+  const tier=notInStack?"Track":SSVC_MAP[[points.e,points.a,points.t,mw].join("|")];
+  const w=Math.min(1,Math.max(0,.5*(v.epss||0)+.3*((v.cvss||0)/10)+.1*(v.ransomware?1:0)+.1*(mission.level==="essential"?1:0)));
+  const band=notInStack?TIER_BAND.None:TIER_BAND[tier];
+  return {tier,notInStack,points,mission,wellBeing,mw,weight:w,score:parseFloat((band[0]+w*(band[1]-band[0])).toFixed(1))};
+}
+function computeVulnScore(v,profile){
+  if(!profile||!profile.industry) return v.cvss;
+  return ssvcAssess(v,profile).score;
+}
+function ssvcExplain(v,profile){
+  const A=ssvcAssess(v,profile), p=A.points, lines=[], flags=[];
+  const srcTag=p.src==="CISA"?" (CISA)":p.src==="derived"?" (derived from the CVSS vector)":" (assumed)";
+  lines.push(p.e==="active"?(v.kev?"Confirmed exploited in the wild (CISA KEV)":"Exploited in the wild"):p.e==="poc"?"A public proof of concept exists":"No known exploitation");
+  if(v.ransomware) lines.push("Used in ransomware campaigns (CISA)");
+  lines.push("Technical impact: "+(p.t==="total"?"total control or disclosure":"partial")+srcTag);
+  lines.push("Exploitation "+(p.a==="yes"?"can":"cannot")+" be reliably automated"+srcTag);
+  lines.push(A.mission.basis);
+  if(!A.notInStack){ lines.push("Sector: "+A.wellBeing.basis); lines.push("Mission and well-being for you: "+A.mw); }
+  if(v.cvssEstimated) flags.push("CVSS is an estimate");
+  if(v.epssEst) flags.push("EPSS is an estimate");
+  if(p.src!=="CISA") flags.push("Automation and impact points are "+(p.src==="derived"?"derived":"assumed")+", not published by CISA");
+  if(A.mission.kind==="assumed") flags.push("Applicability is assumed until you add your vendors");
+  return {assessment:A,lines,flags};
+}
+/* Vulnerability types the data really carries (the classifier's output), used for the header filter and reports. */
+const VULN_TYPES=[
+  {id:"injection",label:"Injection and path traversal",short:"Injection",color:C.red},
+  {id:"memory_corruption",label:"Memory corruption",short:"Memory",color:C.amber},
+  {id:"privesc",label:"Privilege escalation",short:"Privesc",color:C.purple},
+  {id:"auth",label:"Authentication and access control",short:"Auth",color:C.accent},
+  {id:"deserialization",label:"Deserialization",short:"Deserial.",color:C.cyan},
+  {id:"api_abuse",label:"SSRF, CSRF and API abuse",short:"API abuse",color:C.green},
+  {id:"supply_chain",label:"Supply chain",short:"Supply chain",color:C.amber},
+  {id:"config",label:"Misconfiguration",short:"Config",color:C.muted},
+  {id:"xxe",label:"XML external entity",short:"XXE",color:C.muted},
+  {id:"phishing",label:"Open redirect and phishing",short:"Phishing",color:C.muted},
+  {id:"unknown",label:"Unclassified",short:"Unclassified",color:C.muted},
+];
+function typeLabel(id){ const t=VULN_TYPES.find(x=>x.id===id); return t?t.label:"Unclassified"; }
+/* One summary of the assessments for a profile. Every dashboard, report and simulator number comes from here. */
+function exposureSummary(profile,list){
+  const rows=(list||[]).map(v=>({v,a:ssvcAssess(v,profile)}));
+  const c={total:rows.length,act:0,attend:0,trackStar:0,track:0,nis:0,inStack:0,kev:0,kevInStack:0,assumed:0,ransomwareInStack:0};
+  const byVendor={}, byType={};
+  const bump=(m,k,tierKey)=>{const o=(m[k]=m[k]||{act:0,attend:0,trackStar:0,track:0,total:0}); o.total++; o[tierKey]++;};
+  rows.forEach(({v,a})=>{
+    if(v.kev) c.kev++;
+    if(a.notInStack){ c.nis++; return; }
+    c.inStack++; if(v.kev) c.kevInStack++; if(v.ransomware) c.ransomwareInStack++; if(a.mission.kind==="assumed") c.assumed++;
+    const k=a.tier==="Act"?"act":a.tier==="Attend"?"attend":a.tier==="Track*"?"trackStar":"track";
+    c[k]++; bump(byVendor,v.vendor||"Other sources",k); bump(byType,v.type||"unknown",k);
+  });
+  return Object.assign(c,{byVendor,byType,rows});
+}
+/* Tier label from a score alone. Bands are disjoint (covered by tests), so this always agrees with the engine. */
+function scoreTier(n){ return n>=8?"ACT":n>=6?"ATTEND":n>=4?"TRACK*":n>=2.1?"TRACK":"NOT IN STACK"; }
+/* SSVC-ENGINE-END */
+/* Which date makes an entry "recent": a KEV entry became urgent when CISA added it; anything else when it was published. */
+function recencyDate(v){ return (v.kev&&v.dateAdded)?v.dateAdded:v.publishedDate; }
 
 function getTop10Vulns(profile, vulnList){
   const list = vulnList && vulnList.length > 0 ? vulnList : VULNS;
@@ -719,41 +778,7 @@ const sevOf=n=>n>=8?"CRITICAL":n>=6?"HIGH":n>=4?"MEDIUM":"LOW";
 const sevColor=n=>n>=8?C.red:n>=6?C.amber:n>=4?C.accent:C.green;
 const sevBg=n=>n>=8?C.redBg:n>=6?C.amberBg:n>=4?C.accentBg:C.greenBg;
 
-function computeRisk(profile,controls_enabled,cat){
-  if(!profile.industry||!profile.scale)return null;
-  const ind=INDUSTRIES.find(i=>i.id===profile.industry);
-  const sc=SCALES.find(s=>s.id===profile.scale);
-  const geo=GEOS.find(g=>g.id===profile.geo)||GEOS.find(g=>g.id==="other");
-  if(!ind||!sc)return null;
-  const catRelevant=ind.riskFocus.includes(cat.id);
-  const industryM=catRelevant?ind.multiplier:ind.multiplier*.6;
-  const scaleM=sc.s_multiplier;
-  const regM=geo.regMultiplier;
-  const tagDelta=(profile.subTags||[]).reduce((a,tid)=>{const tag=SUB_TAGS.find(t=>t.id===tid);return tag&&tag.category===cat.id?a+tag.delta:a;},0);
-  const activeSrcs=SOURCES.filter(s=>profile.sources?.includes(s.id));
-  const sourceConf=activeSrcs.length>0?activeSrcs.reduce((a,s)=>a+s.trust,0)/activeSrcs.length:.7;
-  const pillarMatch=(profile.techPillars||[]).some(pid=>{const p=TECH_PILLARS.find(t=>t.id===pid);return p?.threatTags.includes(cat.id);});
-  const pillarM=pillarMatch?1.1:.85;
-  const B=cat.baseScore;
-  const inherent=Math.min(10,B*industryM*scaleM*regM*pillarM+tagDelta);
-  const trendFactor=1+(cat.trend*.05);
-  const catControls=CONTROLS.filter(ctrl=>controls_enabled.includes(ctrl.id)&&ctrl.riskCat===cat.id);
-  const ctrlEff=catControls.length>0?Math.min(.95,catControls.reduce((a,c)=>a+c.mitigation,0)*.7):0;
-  const residual=Math.max(.5,inherent*(1-ctrlEff)*trendFactor*sourceConf);
-  return{
-    inherent:parseFloat(Math.min(10,inherent).toFixed(1)),
-    residual:parseFloat(Math.min(10,residual).toFixed(1)),
-    ctrlEff:parseFloat((ctrlEff*100).toFixed(0)),
-    sourceConf:parseFloat((sourceConf*100).toFixed(0)),
-    catRelevant,pillarMatch,
-  };
-}
 
-function globalRisk(profile,controls){
-  const scores=RISK_CATS.map(cat=>computeRisk(profile,controls,cat));
-  const valid=scores.filter(Boolean);
-  return valid.length>0?parseFloat((valid.reduce((a,s)=>a+s.residual,0)/valid.length).toFixed(1)):0;
-}
 
 /* ── UI PRIMITIVES ── */
 
@@ -843,30 +868,8 @@ async function fetchLiveVulns(onProgress) {
     onProgress('Live data ready — ' + data.count + ' CVEs scored from ' + data.kevCount.toLocaleString() + ' KEV catalogue');
     return data.vulns;
   } catch(err) {
-    // Fallback: try direct NVD (works on localhost/backend)
-    try {
-      onProgress('Trying direct feed...');
-      const kevRes  = await fetch('https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json');
-      const kevData = await kevRes.json();
-      const kevSet  = new Set(kevData.vulnerabilities.map(v => v.cveID));
-      const since   = new Date(Date.now()-30*86400000).toISOString().split('.')[0]+'.000';
-      const nvdRes  = await fetch('https://services.nvd.nist.gov/rest/json/cves/2.0?cvssV3Severity=CRITICAL&pubStartDate='+since+'&resultsPerPage=100');
-      const nvdData = await nvdRes.json();
-      const mapped  = (nvdData.vulnerabilities||[]).map(entry => {
-        const cve=entry.cve, id=cve.id;
-        const desc=(cve.descriptions?.find(d=>d.lang==='en')?.value||'').slice(0,120);
-        const metrics=cve.metrics?.cvssMetricV31?.[0]||cve.metrics?.cvssMetricV30?.[0];
-        const cvss=parseFloat(metrics?.cvssData?.baseScore||5.0);
-        return {id,cvss,desc,type:'injection',src:kevSet.has(id)?'NVD+KEV':'NVD',
-                kev:kevSet.has(id),epss:kevSet.has(id)?0.85:0.3,affects:['onprem'],
-                industries:['all'],cwe:'CWE-0',publishedDate:cve.published};
-      }).filter(v=>v.cvss>=5.0);
-      onProgress('Direct feed loaded — '+mapped.length+' CVEs');
-      return mapped;
-    } catch(e2) {
-      onProgress('Using curated dataset');
-      return [];
-    }
+    // No browser-side fallback: direct calls would be CORS-blocked, and the placeholder values they fill in would look real.
+    return [];
   }
 }
 
@@ -875,8 +878,8 @@ var allVulns = [];
 var liveKevCount = 0;
 var currentSev = 'all';
 var currentInd = 'all';
-var defaultProfile = {industry:'fintech',scale:'mid',geo:'us',techPillars:['web','cloud'],sources:['cisa','nvd']};
-var currentPlatforms = ['web','cloud'];
+var defaultProfile = {industry:'fintech',scale:'mid',geo:'us',techPillars:['onprem','cloud'],sources:['cisa','cve','epss']};
+var currentPlatforms = ['onprem','cloud'];
 var currentScale = 'mid';
 
 // ── INIT ──
@@ -911,17 +914,17 @@ function renderNewSince(hours) {
   if (!listEl) return;
   /* Honest limitation: only counts entries with a real publishedDate — never guessed. */
   var fresh = allVulns.filter(function(v) {
-    return v.publishedDate && new Date(v.publishedDate).getTime() > cutoff;
+    return recencyDate(v) && new Date(recencyDate(v)).getTime() > cutoff;
   }).sort(function(a,b) {
-    return new Date(b.publishedDate).getTime() - new Date(a.publishedDate).getTime();
+    return new Date(recencyDate(b)).getTime() - new Date(recencyDate(a)).getTime();
   }).slice(0, 5);
 
   if (!fresh.length) {
-    listEl.innerHTML = '<div style="padding:2px 0;font-size:11px;color:var(--muted)">Nothing published in the last ' + hours + 'h — priority list below reflects standing risk, not new activity.</div>';
+    listEl.innerHTML = '<div style="padding:2px 0;font-size:11px;color:var(--muted)">Nothing added to KEV or published in the last ' + hours + 'h — priority list below reflects standing risk, not new activity.</div>';
     return;
   }
   listEl.innerHTML = fresh.map(function(v) {
-    var hrsAgo = Math.round((Date.now() - new Date(v.publishedDate).getTime()) / 3600000);
+    var hrsAgo = Math.round((Date.now() - new Date(recencyDate(v)).getTime()) / 3600000);
     return '<div class="kev-item" style="border-bottom:1px solid rgba(34,211,238,.1)">'
       + '<div style="flex:1"><div style="font-size:10px;font-family:monospace;color:var(--cyan);margin-bottom:2px">' + v.id + '</div>'
       + '<div style="font-size:11px;color:var(--text);line-height:1.4">' + (v.desc.length>60?v.desc.slice(0,59)+'…':v.desc) + '</div></div>'
@@ -933,23 +936,17 @@ function renderNewSince(hours) {
 function renderIndScores() {
   var el = document.getElementById('ind-scores-list');
   if (!el) return;
-  var sorted = INDUSTRIES.map(function(ind) {
-    var profile = {industry:ind.id, scale:'mid', geo:'us', techPillars:['web','cloud'], sources:['cisa','nvd']};
-    var scored  = allVulns.map(function(v){
-      return Object.assign({}, v, {contextScore: computeVulnScore(v, profile)});
-    });
-    var avg = scored.length ? scored.reduce(function(a,v){return a+(v.contextScore||v.cvss||5);},0)/scored.length : 0;
-    return {ind:ind, score:avg};
-  }).sort(function(a,b){return b.score-a.score;});
-  var max = sorted[0] ? sorted[0].score : 10;
-  el.innerHTML = sorted.map(function(item) {
-    var col = item.score>=8?'var(--red)':item.score>=6?'var(--amber)':'var(--green)';
-    var pct = max > 0 ? (item.score/max*100).toFixed(0) : 0;
+  var rows = INDUSTRIES.map(function(ind) {
+    var S = exposureSummary({industry:ind.id, scale:'mid', geo:'us', techPillars:currentPlatforms.slice(), vendors:{}}, allVulns);
+    return {ind:ind, act:S.act, attend:S.attend};
+  }).sort(function(a,b){return (b.act-a.act) || (b.attend-a.attend);});
+  var max = Math.max(1, rows[0] ? rows[0].act + rows[0].attend : 1);
+  el.innerHTML = rows.map(function(r) {
     return '<div class="ind-score-row">'
-      + '<span style="font-size:16px;width:24px;flex-shrink:0">' + item.ind.icon + '</span>'
-      + '<span style="font-size:11px;color:var(--text);flex:1;padding-right:8px">' + item.ind.label + '</span>'
-      + '<div class="ind-bar-bg"><div class="ind-bar-fill" style="width:' + pct + '%;background:' + col + '"></div></div>'
-      + '<span style="font-size:11px;font-weight:700;color:' + col + ';margin-left:8px;font-family:monospace;width:32px;text-align:right">' + item.score.toFixed(1) + '</span>'
+      + '<span style="font-size:16px;width:24px;flex-shrink:0">' + r.ind.icon + '</span>'
+      + '<span style="font-size:11px;color:var(--text);flex:1;padding-right:8px">' + r.ind.label + '</span>'
+      + '<div class="ind-bar-bg" style="display:flex"><div class="ind-bar-fill" style="width:' + (r.act/max*100).toFixed(0) + '%;background:var(--red)"></div><div class="ind-bar-fill" style="width:' + (r.attend/max*100).toFixed(0) + '%;background:var(--amber)"></div></div>'
+      + '<span style="font-size:11px;font-weight:700;color:var(--text);margin-left:8px;font-family:monospace;width:44px;text-align:right">' + r.act + ' / ' + r.attend + '</span>'
       + '</div>';
   }).join('');
 }
@@ -975,10 +972,10 @@ function applyFilters() {
     techPillars: currentPlatforms.slice(),
   });
   var scored = allVulns.map(function(v) {
-    var cs = v.cvss || 5;
-    try { cs = computeVulnScore(v, profile) || cs; } catch(e) {}
-    return Object.assign({}, v, {contextScore: cs});
-  }).sort(function(a,b){return b.contextScore - a.contextScore;});
+    var cs = v.cvss || 5, w = 0;
+    try { var A = ssvcAssess(v, profile); cs = A.score; w = A.weight; } catch(e) {}
+    return Object.assign({}, v, {contextScore: cs, _w: w});
+  }).sort(function(a,b){return (b.contextScore - a.contextScore) || (b._w - a._w);});
 
   var filtered = scored.filter(function(v) {
     if (sev === 'critical' && v.contextScore < 8) return false;
@@ -994,7 +991,7 @@ function applyFilters() {
 
 function colFor(n) { return n>=8?'#f04060':n>=6?'#f5a623':n>=4?'#2d7ef7':'#0ed27a'; }
 
-function lblFor(n) { return n>=8?'Critical':n>=6?'High':n>=4?'Medium':'Low'; }
+function lblFor(n) { return scoreTier(n); }
 
 function isUnlocked() {
   return true; // DEMO MODE — full list always visible, no email gate
@@ -1060,8 +1057,8 @@ function renderTable(threats) {
   el.style.minHeight = el.style.minHeight || '400px';
 
   // Split into tiers by contextual score
-  var critical = threats.filter(function(v){ return (v.contextScore||v.cvss||0) >= 9.0; });
-  var high     = threats.filter(function(v){ var s=v.contextScore||v.cvss||0; return s>=7.0 && s<9.0; });
+  var critical = threats.filter(function(v){ return (v.contextScore||v.cvss||0) >= 8.0; });
+  var high     = threats.filter(function(v){ var s=v.contextScore||v.cvss||0; return s>=6.0 && s<8.0; });
 
   // Free: top 5 across critical+high combined
   // Subscriber: all critical + all high
@@ -1078,11 +1075,7 @@ function renderTable(threats) {
     var score = (v.contextScore && !isNaN(v.contextScore)) ? v.contextScore : (v.cvss||5.0);
     var cl    = colFor(score);
     var delta = score - (v.cvss||0);
-    var deltaStr = delta > 0.05
-      ? '<span class="score-delta" style="color:var(--red)">↑'+delta.toFixed(1)+'</span>'
-      : delta < -0.05
-      ? '<span class="score-delta" style="color:var(--green)">↓'+Math.abs(delta).toFixed(1)+'</span>'
-      : '';
+    var deltaStr = '';
     var safeDesc = (v.desc||'').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
     var safeAct  = (v.action||'').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
     var safeProd = (v.product||'').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
@@ -1095,6 +1088,7 @@ function renderTable(threats) {
       + '<div><div class="threat-desc">' + (v.desc.length>75?v.desc.slice(0,74)+'…':v.desc) + '</div>'
       + '<div class="threat-desc-sub">'
       + (v.kev ? '<span class="kev-badge">EXPLOITED</span>' : '')
+      + '<span class="kev-badge" style="margin-left:4px;color:'+cl+';border-color:'+cl+'66">'+scoreTier(score)+'</span>'
       + '</div></div>'
       + '<div class="cve-id cve-col">' + v.id + '</div>'
       + '<div class="threat-cvss">' + (v.cvss||0).toFixed(1) + '</div>'
@@ -1107,7 +1101,7 @@ function renderTable(threats) {
   if (!unlocked && gatedCount > 0) {
     gate = '<div id="email-gate" style="background:linear-gradient(0deg,var(--bg) 55%,transparent);padding:32px 20px;text-align:center">'
       + '<div style="font-size:22px;font-weight:900;color:var(--red);font-family:monospace;margin-bottom:6px">+' + gatedCount + '</div>'
-      + '<div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:6px">more Critical &amp; High threats for ' + indLabel + '</div>'
+      + '<div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:6px">more Act &amp; Attend threats for ' + indLabel + '</div>'
       + '<div style="font-size:11px;color:var(--muted);margin-bottom:20px">Scores recalculate as you change industry — free, no password needed</div>'
       + '<div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:8px">'
       + '<input id="gate-email" type="email" placeholder="you@company.com" '
@@ -1413,8 +1407,8 @@ function updateStats(list, kevTotal) {
   var src   = list || allVulns;
   var total = kevTotal || liveKevCount || src.length;
   // Tier counts using contextual score
-  var critical = src.filter(function(v){ return (v.contextScore||v.cvss||0)>=9.0; }).length;
-  var high     = src.filter(function(v){ var s=v.contextScore||v.cvss||0; return s>=7.0&&s<9.0; }).length;
+  var critical = src.filter(function(v){ return (v.contextScore||v.cvss||0)>=8.0; }).length;
+  var high     = src.filter(function(v){ var s=v.contextScore||v.cvss||0; return s>=6.0&&s<8.0; }).length;
   var now48    = Date.now() - 86400000 * 2;
   var newT     = src.filter(function(v){
     var d = v.publishedDate || v.dateAdded || v.published_at || null;
@@ -1472,7 +1466,7 @@ document.addEventListener('DOMContentLoaded', function() {
   renderNewSince();
   renderIndScores();
   applyFilters();
-  setStatus('✓ ' + allVulns.length + ' CVEs loaded · Fetching live feed...');
+  setStatus('Demo data: ' + allVulns.length + ' curated CVEs · Fetching live feed...');
   fetchLiveVulns(function(){}).then(function(vulns) {
     if (vulns && vulns.length > 0) {
       allVulns = vulns;
@@ -1486,10 +1480,10 @@ document.addEventListener('DOMContentLoaded', function() {
       setStatus('✓ ' + vulns.length + ' threats scored from ' + (liveKevCount||vulns.length).toLocaleString() + ' KEV catalogue · Updated '
         + new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) + ' UTC');
     } else {
-      setStatus('✓ ' + allVulns.length + ' curated CVEs · Updated daily');
+      setStatus('Demo data: ' + allVulns.length + ' curated CVEs. The live feed is unavailable.');
     }
   }).catch(function() {
-    setStatus('✓ ' + allVulns.length + ' curated CVEs · Updated daily');
+    setStatus('Demo data: ' + allVulns.length + ' curated CVEs. The live feed is unavailable.');
   });
 
 }); // end DOMContentLoaded
