@@ -19,6 +19,10 @@
 - Rebuilt 2026-11-17 from live feed (kv-cache, 1,781 KEV, all with SSVC). Pages are a snapshot: rebuild with the script + a saved /threats JSON (sandbox cannot reach the site). Daily auto-refresh still needs a GitHub Action (workflow permission) or manual run.
 - Decision 2026-11-17: keep /app access-code gate during development; move to "option 2" (public sample-data demo, extras behind email sign-up) once built.
 
+## Parked 2026-11-17 (owner: revisit later)
+- Milestone 4 match alerts / subscriber system. Reason: needs subscriber storage, double opt-in + unsubscribe, and a Worker-vs-new-Worker decision (A: add to risksync-enricher, B: separate Worker).
+- FINDING: `/subscribe` only sends a Resend welcome email; it stores no subscriber list and has no unsubscribe link. Sign-ups (incl. CVE-page "Notify me") exist only in Resend's sent-mail log. Check there for any real sign-ups.
+
 ## Known issues / findings
 1. DONE 2026-11-17: daily.html replaced with SSVC brief; canonical/JSON-LD now syncrisk.co.uk. Contact email now hello@syncrisk.co.uk (Cloudflare Email Routing → finun.cannabis@gmail.com).
 2. DONE 2026-11-17: www→apex 301 redirect rule deployed (Cloudflare). Confirm by opening https://www.syncrisk.co.uk/app.
