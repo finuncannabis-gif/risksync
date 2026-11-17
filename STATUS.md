@@ -11,6 +11,13 @@
 - Tests (kept in /mnt/user-data/outputs/tests, not in the repo): matcher 20, inventory flow 12, render 32, engine 39, daily 12.
 
 
+## Milestone 3 (branch `cve-pages`, NOT merged until owner says "merge")
+- Static pages: `cve/<ID>.html` (served at /cve/<ID>), hub `cve/index.html`, `sitemap.xml` (all KEV + /daily + / + /cve/). Built by `node scripts/build-cve-pages.mjs [payload.json|https://syncrisk.co.uk/threats] .`; engine is read from the SSVC block in daily.html (no drift).
+- Why static, not a Function: parsing the 1.5-2.4MB KV payload costs ~5ms+ CPU per request vs the 10ms free limit.
+- Tests: 1,728 pages, 5,184 tier decisions match the independent Table 9; no undefined/NaN; estimates shown as "Not scored yet"; fix items tagged by trust tier.
+- STALE RISK: pages are a snapshot. Committed set built from the 2026-09-28 payload (1,728 KEV); live KEV is 1,781. Before merge, rebuild from the live feed (sandbox cannot reach syncrisk.co.uk). Ongoing refresh needs a GitHub Action (needs `workflow` permission for the Claude app) or a manual rebuild.
+- Decision 2026-11-17: keep /app access-code gate during development; move to "option 2" (public sample-data demo, extras behind email sign-up) once built.
+
 ## Known issues / findings
 1. DONE 2026-11-17: daily.html replaced with SSVC brief; canonical/JSON-LD now syncrisk.co.uk. Contact email now hello@syncrisk.co.uk (Cloudflare Email Routing → finun.cannabis@gmail.com).
 2. DONE 2026-11-17: www→apex 301 redirect rule deployed (Cloudflare). Confirm by opening https://www.syncrisk.co.uk/app.
