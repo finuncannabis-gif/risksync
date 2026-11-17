@@ -16,7 +16,7 @@
 - Why static, not a Function: parsing the 1.5-2.4MB KV payload costs ~5ms+ CPU per request vs the 10ms free limit.
 - Tests: 1,728 pages, 5,184 tier decisions match the independent Table 9; no undefined/NaN; estimates shown as "Not scored yet"; fix items tagged by trust tier.
 - NEXT: submit sitemap in Google Search Console; rebuild from live feed (+53 entries) and decide Action for daily refresh.
-- STALE RISK: pages are a snapshot. Committed set built from the 2026-09-28 payload (1,728 KEV); live KEV is 1,781. Before merge, rebuild from the live feed (sandbox cannot reach syncrisk.co.uk). Ongoing refresh needs a GitHub Action (needs `workflow` permission for the Claude app) or a manual rebuild.
+- Rebuilt 2026-11-17 from live feed (kv-cache, 1,781 KEV, all with SSVC). Pages are a snapshot: rebuild with the script + a saved /threats JSON (sandbox cannot reach the site). Daily auto-refresh still needs a GitHub Action (workflow permission) or manual run.
 - Decision 2026-11-17: keep /app access-code gate during development; move to "option 2" (public sample-data demo, extras behind email sign-up) once built.
 
 ## Known issues / findings
