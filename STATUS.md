@@ -19,6 +19,12 @@
 - Rebuilt 2026-11-17 from live feed (kv-cache, 1,781 KEV, all with SSVC). Pages are a snapshot: rebuild with the script + a saved /threats JSON (sandbox cannot reach the site). Daily auto-refresh still needs a GitHub Action (workflow permission) or manual run.
 - Decision 2026-11-17: keep /app access-code gate during development; move to "option 2" (public sample-data demo, extras behind email sign-up) once built.
 
+## Milestone 5 (branch `board-tracker`, NOT merged until owner says "merge")
+- Board Summary reworked: no "top N"; Act items grouped by vendor (200 groups vs 405 by product), every vendor reachable ("Show all"), tie-breakers visible per row (ransomware, EPSS, fix info, newest). Printable report opens in its own tab (old window.print only printed the first screen because of the app's fixed-height layout).
+- Fix tracker: statuses Not started / In progress / Fixed / Risk accepted (+reason), stored only in the browser (localStorage), CSV export/import as backup; status column also on My Inventory. No scoring change.
+- Tests: render 32, inventory 12, engine 39, board_flow 17 (jsdom, real feed), board_logic 21. Screenshots from the real 1,781-KEV feed.
+- Limits: per-browser only (accounts = milestone 7); CSV import trusts the file (rows not a CVE id or known status are skipped and counted).
+
 ## Parked 2026-11-17 (owner: revisit later)
 - Milestone 4 match alerts / subscriber system. Reason: needs subscriber storage, double opt-in + unsubscribe, and a Worker-vs-new-Worker decision (A: add to risksync-enricher, B: separate Worker).
 - FINDING: `/subscribe` only sends a Resend welcome email; it stores no subscriber list and has no unsubscribe link. Sign-ups (incl. CVE-page "Notify me") exist only in Resend's sent-mail log. Check there for any real sign-ups.
