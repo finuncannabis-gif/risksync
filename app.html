@@ -1412,7 +1412,7 @@ function ThreatDetailModal({vuln, onClose, profile}){
           </div>
           <div style={{background:'#080d18',borderRadius:6,padding:'6px 8px',border:`1px solid ${C.border}`}}>
             <div style={{fontSize:9,color:C.muted,textTransform:'uppercase'}}>EPSS</div>
-            <div style={{fontSize:11,fontWeight:700,color:C.text}}>{Math.round((vuln.epss||0)*100)}%</div>
+            <div style={{fontSize:11,fontWeight:700,color:C.text}}>{vuln.epssEst?'Not scored yet':(vuln.epss>0&&vuln.epss<0.005?'<1%':Math.round((vuln.epss||0)*100)+'%')}</div>
           </div>
           <div style={{background:'#080d18',borderRadius:6,padding:'6px 8px',border:`1px solid ${C.border}`}}>
             <div style={{fontSize:9,color:C.muted,textTransform:'uppercase'}}>Exploit status</div>
