@@ -6,7 +6,7 @@
 - Fixed today: top-bar counter no longer invented (was 14%/86% split); EPSS shows "<1%" / "Not scored yet".
 
 ## Known issues / findings
-1. DONE 2026-11-17: daily.html replaced with SSVC brief; canonical/JSON-LD now syncrisk.co.uk. Still open: hello@risksync.io mailto (confirm that mailbox/domain exists).
+1. DONE 2026-11-17: daily.html replaced with SSVC brief; canonical/JSON-LD now syncrisk.co.uk. Contact email now hello@syncrisk.co.uk (Cloudflare Email Routing → finun.cannabis@gmail.com).
 2. www.syncrisk.co.uk takes ~26% of requests: add a www→apex 301 (Cloudflare rule).
 3. ~1,106 KEV entries have no parsed fix (generic Advisory only).
 4. Repo `functions/enrich.js` differs from the earlier Worker copy — confirm which is live.
