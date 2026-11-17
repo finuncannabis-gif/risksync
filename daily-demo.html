@@ -399,6 +399,8 @@ function rsUnlock(){
   <span id="hero-date" style="color:var(--muted)"></span> &nbsp;·&nbsp; <span id="status-msg">Loading threat intelligence...</span>
 </div>
 
+<div id="degraded-banner" style="display:none;padding:9px 24px;background:rgba(245,166,35,.08);border-bottom:1px solid rgba(245,166,35,.3);font-size:11px;color:var(--amber);text-align:center">Limited data mode: the scoring feed is unavailable right now, so urgency counts are not shown. Try again shortly.</div>
+
 <!-- STAT CARDS -->
 <div class="stats-row">
   <div class="stat-card"><div class="stat-val mono" id="stat-total" style="color:var(--text)">—</div><div class="stat-lbl">KEV Catalogue</div></div>
@@ -865,6 +867,10 @@ async function fetchLiveVulns(onProgress) {
     const data = await res.json();
     if (!data.ok || !data.vulns) throw new Error('Invalid response');
     if (data.kevCount) liveKevCount = data.kevCount;
+    // Degraded feed: the basic fallback has no CISA scoring data, so urgency counts would be meaningless.
+    var kevs = data.vulns.filter(function(v){ return v.kev; });
+    var withSsvc = kevs.filter(function(v){ return v.ssvc; }).length;
+    feedDegraded = !!((data._diagnostic && data._diagnostic.source === 'live-fallback') || (kevs.length > 0 && withSsvc / kevs.length < 0.1));
     onProgress('Live data ready — ' + data.count + ' CVEs scored from ' + data.kevCount.toLocaleString() + ' KEV catalogue');
     return data.vulns;
   } catch(err) {
@@ -876,6 +882,7 @@ async function fetchLiveVulns(onProgress) {
 // ── STATE ──
 var allVulns = [];
 var liveKevCount = 0;
+var feedDegraded = false;
 var currentSev = 'all';
 var currentInd = 'all';
 var defaultProfile = {industry:'fintech',scale:'mid',geo:'us',techPillars:['onprem','cloud'],sources:['cisa','cve','epss']};
@@ -940,6 +947,12 @@ function renderIndScores() {
     var S = exposureSummary({industry:ind.id, scale:'mid', geo:'us', techPillars:currentPlatforms.slice(), vendors:{}}, allVulns);
     return {ind:ind, act:S.act, attend:S.attend};
   }).sort(function(a,b){return (b.act-a.act) || (b.attend-a.attend);});
+  if (feedDegraded) { el.innerHTML = '<div style="padding:12px 14px;font-size:11px;color:var(--muted)">Unavailable in limited data mode.</div>'; return; }
+  var same = rows.length > 0 && rows.every(function(r){ return r.act === rows[0].act && r.attend === rows[0].attend; });
+  if (same) {
+    el.innerHTML = '<div style="padding:12px 14px;font-size:11px;line-height:1.5;color:var(--muted)">For your platforms every industry has the same urgency: <b style="color:var(--text)">' + rows[0].act + ' Act / ' + rows[0].attend + ' Attend</b>. Industry changes urgency only if you run OT/ICS or connected IoT devices. Tick those platforms above to compare.</div>';
+    return;
+  }
   var max = Math.max(1, rows[0] ? rows[0].act + rows[0].attend : 1);
   el.innerHTML = rows.map(function(r) {
     return '<div class="ind-score-row">'
@@ -1424,6 +1437,12 @@ function updateStats(list, kevTotal) {
   if (critEl) critEl.textContent = high;
   var newEl = document.getElementById('stat-new');
   if (newEl) newEl.textContent = newT;
+  if (feedDegraded) { if (kevEl) kevEl.textContent = 'n/a'; if (critEl) critEl.textContent = 'n/a'; }
+}
+
+function showDegraded(on) {
+  var b = document.getElementById('degraded-banner');
+  if (b) b.style.display = on ? 'block' : 'none';
 }
 
 // ── STRUCTURED DATA FOR SEO ──
@@ -1477,6 +1496,8 @@ document.addEventListener('DOMContentLoaded', function() {
       renderNewSince();
       renderIndScores();
       applyFilters();
+      showDegraded(feedDegraded);
+      if (feedDegraded) { setStatus('⚠ Limited data: ' + vulns.length + ' threats loaded without scoring · ' + new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) + ' UTC'); return; }
       setStatus('✓ ' + vulns.length + ' threats scored from ' + (liveKevCount||vulns.length).toLocaleString() + ' KEV catalogue · Updated '
         + new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) + ' UTC');
     } else {

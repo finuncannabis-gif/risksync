@@ -5,6 +5,9 @@
 - KEV freshness confirmed: Nov 9 (GPUStack) and Nov 10 (Cisco BroadWorks) additions present.
 - Fixed today: top-bar counter no longer invented (was 14%/86% split); EPSS shows "<1%" / "Not scored yet".
 
+## In progress (branch daily-polish, NOT on main)
+- Daily page: "Limited data mode" banner + n/a (never 0) when the feed is the unscored fallback; identical-industry panel collapses into an honest note. Daily smoke 12/12.
+
 ## Known issues / findings
 1. DONE 2026-11-17: daily.html replaced with SSVC brief; canonical/JSON-LD now syncrisk.co.uk. Contact email now hello@syncrisk.co.uk (Cloudflare Email Routing → finun.cannabis@gmail.com).
 2. www.syncrisk.co.uk takes ~26% of requests: add a www→apex 301 (Cloudflare rule).
