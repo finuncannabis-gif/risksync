@@ -29,6 +29,8 @@
 - Milestone 4 match alerts / subscriber system. Reason: needs subscriber storage, double opt-in + unsubscribe, and a Worker-vs-new-Worker decision (A: add to risksync-enricher, B: separate Worker).
 - FINDING: `/subscribe` only sends a Resend welcome email; it stores no subscriber list and has no unsubscribe link. Sign-ups (incl. CVE-page "Notify me") exist only in Resend's sent-mail log. Check there for any real sign-ups.
 
+- Milestone 6 (AI-researched fixes) ON HOLD per owner 2026-11-18. Cost estimate (Sonnet 5.5 $2/$10 per M tokens, web search $10/1,000; assumes 4 searches, 30K in, 2K out per CVE): ~$0.12/CVE Sonnet, ~$0.05 Haiku 5.5; pilot of 20 ~ $1-2.50; all ~1,106 fix-less CVEs ~ $50-130; ~ $1/week ongoing. Needs a separate API account (not covered by Pro) with prepaid credit and spend cap. AI fixes must be labelled lowest tier, cite a URL, and be machine-checked against that page. Free pilot option: run 20 CVEs in-session via web search.
+
 ## Known issues / findings
 1. DONE 2026-11-17: daily.html replaced with SSVC brief; canonical/JSON-LD now syncrisk.co.uk. Contact email now hello@syncrisk.co.uk (Cloudflare Email Routing → finun.cannabis@gmail.com).
 2. DONE 2026-11-17: www→apex 301 redirect rule deployed (Cloudflare). Confirm by opening https://www.syncrisk.co.uk/app.
