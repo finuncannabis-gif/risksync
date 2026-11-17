@@ -1648,16 +1648,91 @@ function Simulator({profile,liveVulns}){
   );
 }
 
+function useTracker(){
+  const [map,setMap]=useState(()=>trkLoad());
+  const [saved,setSaved]=useState(true);
+  const set=(id,s,note)=>{ const m=trkSet(map,id,s,note); setMap(m); setSaved(trkSave(m)); };
+  const merge=imp=>{ const m=trkMerge(map,imp); setMap(m); setSaved(trkSave(m)); };
+  return {map,set,merge,saved};
+}
+function TrackSelect({id,T}){
+  const e=T.map[id], s=e?e.s:"todo";
+  const col=s==="fixed"?C.green:s==="doing"?C.amber:s==="accepted"?C.purple:C.muted;
+  return(
+    <div>
+      <select value={s} onChange={ev=>T.set(id,ev.target.value,e?e.note:"")} style={{fontSize:10,padding:"3px 6px",borderRadius:4,border:`1px solid ${C.border}`,background:C.card||"transparent",color:col,cursor:"pointer"}}>
+        {BT_STATUSES.map(o=><option key={o.id} value={o.id}>{o.label}</option>)}
+      </select>
+      {s==="accepted"&&<input defaultValue={e?e.note:""} placeholder="Reason (optional)" maxLength={300} onBlur={ev=>T.set(id,"accepted",ev.target.value)} style={{display:"block",marginTop:4,width:150,fontSize:10,padding:"3px 6px",borderRadius:4,border:`1px solid ${C.border}`,background:"transparent",color:C.text}}/>}
+    </div>
+  );
+}
+function downloadCsv(csv,name){ const url=URL.createObjectURL(new Blob([csv],{type:"text/csv"})); const a=document.createElement("a"); a.href=url; a.download=name; a.click(); URL.revokeObjectURL(url); }
+function ActGroups({S,T}){
+  const groups=boardGroups(S.rows);
+  const [open,setOpen]=useState({});
+  const [showAll,setShowAll]=useState(false);
+  const [msg,setMsg]=useState("");
+  const fileRef=useRef(null);
+  const total=groups.reduce((s,g)=>s+g.n,0);
+  const ids=groups.reduce((a,g)=>a.concat(g.items.map(r=>r.v.id)),[]);
+  const c=trkCounts(T.map,ids);
+  const shown=showAll?groups:groups.slice(0,25);
+  const cell={padding:"6px 9px",fontSize:11,color:C.muted,borderBottom:`1px solid ${C.border}`,verticalAlign:"top"};
+  const exportCsv=()=>downloadCsv(trkToCsv(T.map,S.rows.filter(r=>!r.a.notInStack&&r.a.tier==="Act")),"syncrisk-fix-tracker-"+new Date().toISOString().slice(0,10)+".csv");
+  const onImport=ev=>{ const f=ev.target.files&&ev.target.files[0]; ev.target.value=""; if(!f) return;
+    const rd=new FileReader(); rd.onload=()=>{ const r=trkFromCsv(String(rd.result||"")); if(r.error){ setMsg(r.error); return; } T.merge(r.map); setMsg("Imported "+r.imported+" rows"+(r.skipped?", skipped "+r.skipped+" that were not a CVE id or a known status":"")+"."); }; rd.readAsText(f); };
+  const btn={fontSize:10,padding:"3px 10px",borderRadius:4,border:`1px solid ${C.border}`,background:"transparent",color:C.muted,cursor:"pointer",marginLeft:6};
+  return(
+    <div>
+      <div style={{display:"flex",gap:10,flexWrap:"wrap",marginBottom:12}}>
+        <Kpi label="Fixed" value={c.fixed.toLocaleString()} sub={"of "+total.toLocaleString()+" Act"} color={C.green}/>
+        <Kpi label="In progress" value={c.doing.toLocaleString()} color={C.amber}/>
+        <Kpi label="Risk accepted" value={c.accepted.toLocaleString()} color={C.purple}/>
+        <Kpi label="Not started" value={c.todo.toLocaleString()} color={C.red}/>
+      </div>
+      <Panel title={"Act items by vendor ("+total.toLocaleString()+" CVEs, "+groups.length+" vendors)"} right={<span>
+        <button onClick={exportCsv} style={btn}>Export tracker CSV</button>
+        <button onClick={()=>fileRef.current&&fileRef.current.click()} style={btn}>Import CSV</button>
+        <input ref={fileRef} type="file" accept=".csv,text/csv" onChange={onImport} style={{display:"none"}}/></span>}>
+        <div style={{fontSize:10,color:C.muted,marginBottom:8,lineHeight:1.6}}>Every item here is confirmed exploited, so none is ranked as skippable. Vendors are ordered by number of Act CVEs, then ransomware use. Inside a vendor, items are ordered by ransomware use (CISA), then EPSS, then whether a fix is published, then newest. Each row says why. Statuses are saved only in this browser{T.saved?"":" (could not save: browser storage is blocked)"}. Use Export CSV as your backup.{msg&&<span style={{color:C.accent}}> {msg}</span>}</div>
+        {shown.map(g=>{ const gc=trkCounts(T.map,g.items.map(r=>r.v.id)), isOpen=!!open[g.key]; return(
+          <div key={g.key} style={{borderBottom:`1px solid ${C.border}`}}>
+            <div onClick={()=>setOpen(Object.assign({},open,{[g.key]:!isOpen}))} style={{display:"flex",alignItems:"center",gap:10,padding:"8px 2px",cursor:"pointer",flexWrap:"wrap"}}>
+              <span style={{width:12,color:C.dim,fontSize:10}}>{isOpen?"▾":"▸"}</span>
+              <span style={{flex:1,minWidth:120,fontSize:12,fontWeight:700,color:C.text}}>{g.name}</span>
+              <span style={{fontSize:11,color:C.red}}>{g.n} Act</span>
+              {g.ransom>0&&<span style={{fontSize:10,color:C.purple}}>{g.ransom} ransomware-linked</span>}
+              <span style={{fontSize:10,color:C.muted}}>{g.fixes} with fix info</span>
+              <span style={{fontSize:10,color:gc.fixed===g.n?C.green:C.muted}}>{gc.fixed} of {g.n} fixed{gc.accepted?" · "+gc.accepted+" accepted":""}</span>
+            </div>
+            {isOpen&&<div style={{overflowX:"auto",paddingBottom:8}}><table style={{width:"100%",borderCollapse:"collapse"}}><thead><tr>{["CVE","Product","Why this order","CISA due","Status"].map(h=>(<th key={h} style={{...cell,fontSize:9,textTransform:"uppercase",letterSpacing:.5,color:C.dim,textAlign:"left"}}>{h}</th>))}</tr></thead>
+              <tbody>{g.items.map(r=>(<tr key={r.v.id}><td style={{...cell,fontFamily:"monospace",whiteSpace:"nowrap"}}><a href={"/cve/"+r.v.id} target="_blank" rel="noopener" style={{color:C.text}}>{r.v.id}</a></td><td style={cell}>{r.v.product||""}</td><td style={{...cell,color:r.v.ransomware?C.purple:C.muted}}>{r.why.join(" · ")}</td><td style={cell}>{r.v.dueDate||"—"}</td><td style={cell}><TrackSelect id={r.v.id} T={T}/></td></tr>))}</tbody></table></div>}
+          </div>); })}
+        {!showAll&&groups.length>shown.length&&<div style={{marginTop:8}}><button onClick={()=>setShowAll(true)} style={{...btn,marginLeft:0}}>Show all {groups.length} vendors</button><span style={{fontSize:10,color:C.dim,marginLeft:8}}>Showing the 25 vendors with the most Act CVEs. The other {groups.length-shown.length} vendors hold {total-shown.reduce((s,g)=>s+g.n,0)} CVEs, all in the CSV.</span></div>}
+      </Panel>
+    </div>
+  );
+}
+
 function ScorecardPage({profile,liveVulns,activeCategory}){
   const base=(liveVulns&&liveVulns.length>0)?liveVulns:VULNS;
   const list=filterByCategory(base,activeCategory);
   const S=exposureSummary(profile,list);
+  const T=useTracker();
   const ind=INDUSTRIES.find(i=>i.id===profile.industry), sc=SCALES.find(s=>s.id===profile.scale), geo=GEOS.find(g=>g.id===profile.geo);
   const wb=ssvcWellBeing(profile);
-  const act=S.rows.filter(r=>!r.a.notInStack&&r.a.tier==="Act").map(r=>r.v).sort((a,b)=>(a.dueDate||"9999").localeCompare(b.dueDate||"9999")).slice(0,12);
   const kevRows=list.filter(v=>v.kev);
   const share=f=>kevRows.length?Math.round(kevRows.filter(f).length/kevRows.length*100):0;
   const vend=profile.vendors||{}, nVend=Object.keys(vend).length;
+  const openReport=()=>{
+    const html=btReportHtml({date:new Date().toLocaleDateString("en-GB",{day:"numeric",month:"long",year:"numeric"}),
+      headline:S.act>0?S.act.toLocaleString()+" vulnerabilities need action now":S.attend>0?S.attend.toLocaleString()+" vulnerabilities need attention":"Nothing urgent in your stack",
+      context:[ind&&ind.label,sc&&sc.label,geo&&geo.label,nVend>0?nVend+" vendors listed":"vendor step skipped"].filter(Boolean).join(" · "),
+      act:S.act,attend:S.attend,track:S.trackStar+S.track,nis:S.nis,groups:boardGroups(S.rows),tracker:T.map,wellBeing:wb.basis,
+      facts:["Real CVSS: "+share(v=>!v.cvssEstimated)+"% of confirmed-exploited items.","CISA SSVC values: "+share(v=>v.ssvc&&v.ssvc.src==="CISA")+"%.","Products classified to a platform: "+share(v=>v.platKnown!==false)+"%.",S.assumed>0?S.assumed.toLocaleString()+" items assume the product applies to you.":"Applicability is based on the vendors you listed."]});
+    window.open(URL.createObjectURL(new Blob([html],{type:"text/html"})),"_blank");
+  };
   const cell={padding:"6px 9px",fontSize:11,color:C.muted,borderBottom:`1px solid ${C.border}`};
   return(
     <div style={{padding:20,overflow:"auto",height:"100%"}} className="fadein">
@@ -1668,18 +1743,14 @@ function ScorecardPage({profile,liveVulns,activeCategory}){
           <div style={{fontSize:20,fontWeight:800,color:"#fff",marginBottom:3}}>{S.act>0?`${S.act.toLocaleString()} vulnerabilities need action now`:S.attend>0?`${S.attend.toLocaleString()} vulnerabilities need attention`:"Nothing urgent in your stack"}</div>
           <div style={{fontSize:11,color:C.muted}}>{ind?.label} · {sc?.label} · {geo?.label} · {nVend>0?`${nVend} vendors listed`:"vendor step skipped"}</div>
         </div>
-        <button onClick={()=>window.print()} style={{fontSize:11,padding:"6px 14px",borderRadius:5,border:`1px solid ${C.accent}`,background:"transparent",color:C.accent,cursor:"pointer"}}>Print / save as PDF</button>
+        <button onClick={openReport} style={{fontSize:11,padding:"6px 14px",borderRadius:5,border:`1px solid ${C.accent}`,background:"transparent",color:C.accent,cursor:"pointer"}}>Open printable report</button>
       </div>
       <AssumeBanner S={S} profile={profile}/>
       <div style={{display:"flex",gap:10,flexWrap:"wrap",marginBottom:12}}>
         <Kpi label="Act" value={S.act.toLocaleString()} color={C.red}/><Kpi label="Attend" value={S.attend.toLocaleString()} color={C.amber}/>
         <Kpi label="Track" value={(S.trackStar+S.track).toLocaleString()} color={C.green}/><Kpi label="Not in your stack" value={S.nis.toLocaleString()} color={C.muted}/>
       </div>
-      <Panel title="Act items, soonest CISA due date first">
-        <table style={{width:"100%",borderCollapse:"collapse"}}><thead><tr>{["CVE","Vendor","Vendor fix","CISA due","Note"].map(h=>(<th key={h} style={{...cell,fontSize:9,textTransform:"uppercase",letterSpacing:.5,color:C.dim,textAlign:"left"}}>{h}</th>))}</tr></thead>
-          <tbody>{act.map(v=>(<tr key={v.id}><td style={{...cell,fontFamily:"monospace",color:C.text}}>{v.id}</td><td style={cell}>{v.vendor||""}</td><td style={{...cell,color:v.fixedVersions?C.green:C.muted}}>{v.fixedVersions?"published":"not recorded"}</td><td style={cell}>{v.dueDate||"—"}</td><td style={{...cell,color:C.purple}}>{v.ransomware?"ransomware-linked":""}</td></tr>))}</tbody></table>
-        {S.act>act.length&&<div style={{fontSize:10,color:C.muted,marginTop:6}}>Showing {act.length} of {S.act.toLocaleString()}. The full list is in Risk Analysis, as a CSV.</div>}
-      </Panel>
+      <ActGroups S={S} T={T}/>
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
         <Panel title="How this was decided"><div style={{fontSize:11,color:C.muted,lineHeight:1.6}}>CISA's SSVC decision tree combines exploitation, automatability and technical impact (published by CISA) with your mission and well-being. Sector: {wb.basis}. Company size and region do not change the result.</div></Panel>
         <Panel title="What to trust less">
@@ -2005,6 +2076,7 @@ const INV_SAMPLE="vendor,product,version,critical\nMicrosoft,Exchange Server 201
 const INV_TIER_RANK={Act:0,Attend:1,"Track*":2,Track:3};
 function InventoryPage({profile,liveVulns}){
   const base=(liveVulns&&liveVulns.length>0)?liveVulns:null;
+  const T=useTracker();
   const [text,setText]=useState("");
   const [res,setRes]=useState(null);
   const [showAll,setShowAll]=useState(false);
@@ -2064,7 +2136,7 @@ function InventoryPage({profile,liveVulns}){
         <Panel title={"Affected vulnerabilities ("+res.rows.length+")"} right={res.rows.length>0&&<button onClick={exportCsv} style={{fontSize:10,padding:"3px 10px",borderRadius:4,border:`1px solid ${C.border}`,background:"transparent",color:C.muted,cursor:"pointer"}}>Export CSV</button>}>
           {res.rows.length===0?<div style={{fontSize:12,color:C.muted}}>None of your items match a vulnerability in CISA's known-exploited catalog.</div>:
           <div style={{overflowX:"auto"}}><table style={{width:"100%",borderCollapse:"collapse"}}>
-            <thead><tr>{["CVE","Your item","Match","Urgency","Version check"].map(h=><th key={h} style={{...cell,textAlign:"left",fontSize:9,textTransform:"uppercase",letterSpacing:.6,color:C.dim}}>{h}</th>)}</tr></thead>
+            <thead><tr>{["CVE","Your item","Match","Urgency","Version check","Fix status"].map(h=><th key={h} style={{...cell,textAlign:"left",fontSize:9,textTransform:"uppercase",letterSpacing:.6,color:C.dim}}>{h}</th>)}</tr></thead>
             <tbody>{shown.map(r=>(
               <tr key={r.v.id} style={{opacity:r.fixed?.6:1}}>
                 <td style={{...cell,fontFamily:"monospace",color:C.text,whiteSpace:"nowrap"}}>{r.v.id}<div style={{fontSize:10,color:C.dim,fontFamily:"inherit"}}>{(r.v.desc||"").slice(0,70)}</div></td>
@@ -2072,6 +2144,7 @@ function InventoryPage({profile,liveVulns}){
                 <td style={cell}><Chip label={r.conf==="strong"?"MATCHED":"POSSIBLE"} color={r.conf==="strong"?C.green:C.amber} small/><div style={{fontSize:10,color:C.dim,marginTop:3}}>{r.why}</div></td>
                 <td style={cell}><TierChip score={r.a.score}/> <span style={{color:C.dim}}>{r.a.score}</span>{r.v.dueDate&&<div style={{fontSize:10,color:C.dim,marginTop:3}}>CISA due {r.v.dueDate}</div>}</td>
                 <td style={{...cell,color:verCol(r.ver.k)}}>{r.ver.text}</td>
+                <td style={cell}><TrackSelect id={r.v.id} T={T}/></td>
               </tr>))}</tbody>
           </table></div>}
           {res.rows.length>shown.length&&<button onClick={()=>setShowAll(true)} style={{marginTop:10,fontSize:11,padding:"5px 12px",borderRadius:5,border:`1px solid ${C.border}`,background:"transparent",color:C.muted,cursor:"pointer"}}>Show all {res.rows.length}</button>}
@@ -2659,6 +2732,101 @@ function matchInventory(items,vulns){
   return {matches,unmatched,analysed:items.length,kevVendors:idx.vendors};
 }
 /* INVENTORY-MATCH-END */
+/* BOARD-TRACKER-START */
+/* Fix tracker + Board Summary grouping. Pure functions (no JSX). Tracker data lives only in this browser (localStorage). */
+const BT_STATUSES=[{id:"todo",label:"Not started"},{id:"doing",label:"In progress"},{id:"fixed",label:"Fixed"},{id:"accepted",label:"Risk accepted"}];
+const BT_KEY="rs_tracker_v1";
+const BT_ID=/^CVE-\d{4}-\d{4,}$/;
+function btLabel(id){ const s=BT_STATUSES.find(x=>x.id===id); return s?s.label:"Not started"; }
+function trkLoad(){
+  try{ const o=JSON.parse(localStorage.getItem(BT_KEY)||"{}"); const m={};
+    Object.keys(o||{}).forEach(k=>{ const e=o[k]; if(BT_ID.test(k)&&e&&BT_STATUSES.some(s=>s.id===e.s&&s.id!=="todo")) m[k]={s:e.s,note:String(e.note||"").slice(0,300),at:String(e.at||"")}; });
+    return m; }catch(e){ return {}; }
+}
+function trkSave(m){ try{ localStorage.setItem(BT_KEY,JSON.stringify(m)); return true; }catch(e){ return false; } }
+/* Pure update: "todo" removes the entry, so absence means Not started. */
+function trkSet(m,id,s,note,now){
+  const n=Object.assign({},m);
+  if(!BT_ID.test(id)||!BT_STATUSES.some(x=>x.id===s)) return n;
+  if(s==="todo") delete n[id]; else n[id]={s,note:String(note||"").slice(0,300),at:(now||new Date().toISOString()).slice(0,10)};
+  return n;
+}
+function trkCounts(m,ids){ const c={todo:0,doing:0,fixed:0,accepted:0}; ids.forEach(id=>{ const e=m[id]; c[e?e.s:"todo"]++; }); return c; }
+function btCsvCell(x){ return '"'+String(x==null?"":x).replace(/"/g,'""')+'"'; }
+/* CSV of every tracked CVE, plus the Act items of this profile (so untouched items appear as Not started). */
+function trkToCsv(m,rows){
+  const seen={}; const out=[["CVE","Vendor","Product","Urgency (your profile)","Status","Note","Updated"]];
+  (rows||[]).forEach(r=>{ const v=r.v; seen[v.id]=1; const e=m[v.id];
+    out.push([v.id,v.vendor||"",v.product||"",r.a?(r.a.notInStack?"Not in your stack":r.a.tier):"",btLabel(e?e.s:"todo"),e?e.note:"",e?e.at:""]); });
+  Object.keys(m).forEach(id=>{ if(!seen[id]) out.push([id,"","","",btLabel(m[id].s),m[id].note,m[id].at]); });
+  return out.map(r=>r.map(btCsvCell).join(",")).join("\n");
+}
+function btParseCsvLine(line){
+  const out=[]; let cur="", q=false;
+  for(let i=0;i<line.length;i++){ const ch=line[i];
+    if(q){ if(ch==='"'){ if(line[i+1]==='"'){ cur+='"'; i++; } else q=false; } else cur+=ch; }
+    else if(ch==='"') q=true; else if(ch===","){ out.push(cur); cur=""; } else cur+=ch; }
+  out.push(cur); return out;
+}
+/* Import: needs a CVE column and a Status column (header detected). Unknown rows are counted, never guessed. */
+function trkFromCsv(text){
+  const lines=String(text||"").replace(/^﻿/,"").split(/\r?\n/).filter(l=>l.trim());
+  if(!lines.length) return {map:{},imported:0,skipped:0,error:"The file is empty."};
+  const head=btParseCsvLine(lines[0]).map(h=>h.trim().toLowerCase());
+  const ci=head.indexOf("cve"), si=head.indexOf("status"), ni=head.indexOf("note"), ui=head.indexOf("updated");
+  if(ci<0||si<0) return {map:{},imported:0,skipped:0,error:"Needs a CVE column and a Status column."};
+  const byLabel={}; BT_STATUSES.forEach(s=>{ byLabel[s.label.toLowerCase()]=s.id; byLabel[s.id]=s.id; });
+  const map={}; let imported=0, skipped=0;
+  lines.slice(1).forEach(l=>{ const c=btParseCsvLine(l); const id=(c[ci]||"").trim().toUpperCase(); const s=byLabel[(c[si]||"").trim().toLowerCase()];
+    if(!BT_ID.test(id)||!s){ skipped++; return; }
+    imported++; if(s!=="todo") map[id]={s,note:String(ni>=0?c[ni]||"":"").slice(0,300),at:String(ui>=0?c[ui]||"":"").slice(0,10)}; else map[id]=null; });
+  return {map,imported,skipped};
+}
+/* Merge an import over the current tracker; null means the file says Not started, which clears the entry. */
+function trkMerge(cur,imp){ const n=Object.assign({},cur); Object.keys(imp).forEach(id=>{ if(imp[id]===null) delete n[id]; else n[id]=imp[id]; }); return n; }
+function btFixRank(v){ return (v.fixedVersions&&v.fixedVersions.length)?2:((v.solution||v.workaround||(v.advisoryUrls&&v.advisoryUrls.length))?1:0); }
+function btFixText(v){ const r=btFixRank(v); return r===2?"fix version named":r===1?"vendor advisory linked":"no fix recorded"; }
+/* Act items grouped by vendor (405 product groups barely compress 584 items; 200 vendor groups do). Nothing is cut. Order inside a group uses visible tie-breakers only:
+   ransomware use (CISA), real EPSS, fix published, newest added. Groups: most CVEs first, then ransomware count, then name. */
+function boardGroups(rows){
+  const G={};
+  (rows||[]).filter(r=>r.a&&!r.a.notInStack&&r.a.tier==="Act").forEach(r=>{
+    const v=r.v, name=(v.vendor||(v.product||"Other sources").split(" ")[0]).trim(), key=name.toLowerCase();
+    (G[key]=G[key]||{key,name,items:[]}).items.push(r);
+  });
+  const epssVal=v=>(v.epss!=null&&!v.epssEst)?v.epss:-1;
+  return Object.values(G).map(g=>{
+    g.items.sort((x,y)=>(!!y.v.ransomware-!!x.v.ransomware)||(epssVal(y.v)-epssVal(x.v))||(btFixRank(y.v)-btFixRank(x.v))||String(y.v.dateAdded||"").localeCompare(String(x.v.dateAdded||""))||x.v.id.localeCompare(y.v.id));
+    g.items.forEach(r=>{ const v=r.v; r.why=[].concat(v.ransomware?["ransomware-linked (CISA)"]:[],(v.epss!=null&&!v.epssEst)?["EPSS "+(v.epss<0.01?"<1%":Math.round(v.epss*100)+"%")]:["EPSS not scored yet"],[btFixText(v)],v.dateAdded?["added "+v.dateAdded]:[]); });
+    g.n=g.items.length; g.ransom=g.items.filter(r=>r.v.ransomware).length; g.fixes=g.items.filter(r=>btFixRank(r.v)>0).length;
+    return g;
+  }).sort((a,b)=>(b.n-a.n)||(b.ransom-a.ransom)||a.name.localeCompare(b.name));
+}
+function btEsc(x){ return String(x==null?"":x).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+/* Standalone, print-ready report (opens in its own tab, so printing never depends on the app layout). Light theme, every vendor listed. */
+function btReportHtml(o){
+  const g=o.groups, m=o.tracker||{};
+  const sum=g.reduce((a,x)=>{ const c=trkCounts(m,x.items.map(r=>r.v.id)); a.n+=x.n; a.r+=x.ransom; a.f+=x.fixes; a.fx+=c.fixed; a.d+=c.doing; a.a+=c.accepted; a.t+=c.todo; return a; },{n:0,r:0,f:0,fx:0,d:0,a:0,t:0});
+  const rowsHtml=g.map(x=>{ const c=trkCounts(m,x.items.map(r=>r.v.id)); return "<tr><td>"+btEsc(x.name)+"</td><td>"+x.n+"</td><td>"+x.ransom+"</td><td>"+x.fixes+"</td><td>"+c.fixed+"</td><td>"+c.doing+"</td><td>"+c.accepted+"</td><td>"+c.todo+"</td></tr>"; }).join("");
+  return '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"/><title>SyncRisk board summary '+btEsc(o.date)+'</title><style>'+
+  'body{font:13px/1.55 system-ui,Segoe UI,Arial,sans-serif;color:#111;max-width:900px;margin:24px auto;padding:0 20px}h1{font-size:22px;margin:4px 0}h2{font-size:15px;margin:22px 0 8px}.m{color:#555}'+
+  '.k{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0}.k div{border:1px solid #ccc;border-radius:6px;padding:8px 14px;min-width:110px}.k b{display:block;font-size:22px}table{width:100%;border-collapse:collapse;font-size:12px}'+
+  'th,td{border-bottom:1px solid #ddd;padding:5px 8px;text-align:right}th:first-child,td:first-child{text-align:left}th{background:#f3f3f3}tr{page-break-inside:avoid}tfoot td{font-weight:700;border-top:2px solid #999}'+
+  'button{padding:7px 14px;font-size:13px;cursor:pointer}@media print{.np{display:none}body{margin:0}}</style></head><body>'+
+  '<div class="np" style="margin-bottom:10px"><button onclick="window.print()">Print / Save as PDF</button></div>'+
+  '<div class="m">SyncRisk board summary &middot; '+btEsc(o.date)+'</div><h1>'+btEsc(o.headline)+'</h1><div class="m">'+btEsc(o.context)+'</div>'+
+  '<div class="k"><div><b>'+o.act.toLocaleString()+'</b>Act</div><div><b>'+o.attend.toLocaleString()+'</b>Attend</div><div><b>'+o.track.toLocaleString()+'</b>Track</div><div><b>'+o.nis.toLocaleString()+'</b>Not in your stack</div></div>'+
+  '<p>All Act and Attend items are confirmed exploited in the wild (CISA Known Exploited Vulnerabilities). None is ranked as skippable.</p>'+
+  '<h2>Remediation progress, Act items</h2><div class="k"><div><b>'+sum.fx+'</b>Fixed</div><div><b>'+sum.d+'</b>In progress</div><div><b>'+sum.a+'</b>Risk accepted</div><div><b>'+sum.t+'</b>Not started</div></div>'+
+  '<p class="m">Statuses are recorded by the person running this report, in their own browser. They are not verified by SyncRisk.</p>'+
+  '<h2>Act items by vendor</h2><p class="m">Vendors with the most Act CVEs first, then ransomware use. Every vendor is listed.</p>'+
+  '<table><thead><tr><th>Vendor</th><th>Act CVEs</th><th>Ransomware-linked</th><th>With fix info</th><th>Fixed</th><th>In progress</th><th>Risk accepted</th><th>Not started</th></tr></thead><tbody>'+rowsHtml+'</tbody>'+
+  '<tfoot><tr><td>Total ('+g.length+' vendors)</td><td>'+sum.n+'</td><td>'+sum.r+'</td><td>'+sum.f+'</td><td>'+sum.fx+'</td><td>'+sum.d+'</td><td>'+sum.a+'</td><td>'+sum.t+'</td></tr></tfoot></table>'+
+  '<h2>How this was decided</h2><p>CISA\'s SSVC decision tree combines exploitation, automatability and technical impact (published by CISA) with your mission and well-being. Sector: '+btEsc(o.wellBeing)+'. Company size and region do not change the result.</p>'+
+  '<h2>What to trust less</h2><p>'+o.facts.map(btEsc).join("<br/>")+'</p>'+
+  '<p class="m">Data as of '+btEsc(o.date)+'. Sources: CISA KEV, CVE records, FIRST EPSS. SyncRisk prioritises known-exploited vulnerabilities. It is not a breach-detection tool.</p></body></html>';
+}
+/* BOARD-TRACKER-END */
 
 
 </script>
