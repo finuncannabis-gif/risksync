@@ -1210,6 +1210,7 @@ const NAV_ITEMS = [
   { id:"dashboard",  label:"Dashboard",          icon:"ti-layout-dashboard",   group:"main"    },
   { id:"threats",    label:"Threat Feed",         icon:"ti-satellite",          group:"main"    },
   { id:"analysis",   label:"Exposure Analysis",       icon:"ti-chart-radar",        group:"main"    },
+  { id:"inventory",  label:"My Inventory",        icon:"ti-clipboard-list",     group:"main"    },
   { id:"why10",      label:"Why These 25",        icon:"ti-layout-grid",        group:"main"    },
   { id:"pipeline",   label:"Priority Pipeline",     icon:"ti-cone",               group:"main"    },
   { id:"industry",   label:"Industry Profile",icon:"ti-building",           group:"intel"   },
@@ -1991,12 +1992,100 @@ function App() {
           {nav==="sources"   && <DataSourcesPage profile={profile} liveVulns={liveVulns}/>}
           {nav==="simulator" && <div style={{height:"100%",overflow:"auto",padding:20}}><Simulator     profile={profile} liveVulns={liveVulns}/></div>}
           {nav==="scorecard" && <ScorecardPage  {...pageProps}/>}
+          {nav==="inventory" && <InventoryPage  {...pageProps}/>}
           {nav==="bulletin"  && <BulletinPage   profile={profile} liveVulns={liveVulns}/>}
         </div>
       </div>
     </div>
   );
 }
+
+/* INVENTORY-PAGE-START */
+const INV_SAMPLE="vendor,product,version,critical\nMicrosoft,Exchange Server 2019,,yes\nFortinet,FortiOS,7.2.4,yes\nCisco,IOS XE,17.3.1,\nApache,Tomcat,9.0.50,\nAcme,Widget,1.0,";
+const INV_TIER_RANK={Act:0,Attend:1,"Track*":2,Track:3};
+function InventoryPage({profile,liveVulns}){
+  const base=(liveVulns&&liveVulns.length>0)?liveVulns:null;
+  const [text,setText]=useState("");
+  const [res,setRes]=useState(null);
+  const [showAll,setShowAll]=useState(false);
+  const analyse=txt=>{
+    if(!base) return;
+    const idx=invKevIndex(base);
+    const items=parseInventory(txt,idx.vendors);
+    const r=matchInventory(items,base);
+    const rows=r.matches.map(m=>{
+      const vend=Object.assign({},profile.vendors||{});
+      m.items.forEach(i=>{ if(m.v.vendor) vend[m.v.vendor]=Math.max(vend[m.v.vendor]||0,i.critical?2:1); });
+      const a=ssvcAssess(m.v,Object.assign({},profile,{vendors:vend}));
+      return Object.assign({},m,{a,fixed:m.ver.k==="patched"});
+    });
+    rows.sort((x,y)=>(x.fixed-y.fixed)||((INV_TIER_RANK[x.a.tier]??9)-(INV_TIER_RANK[y.a.tier]??9))||((x.conf==="strong"?0:1)-(y.conf==="strong"?0:1))||(y.a.score-x.a.score));
+    setRes({rows,unmatched:r.unmatched,analysed:r.analysed}); setShowAll(false);
+  };
+  const onFile=e=>{
+    const f=e.target.files&&e.target.files[0]; if(!f) return;
+    const rd=new FileReader(); rd.onload=()=>{ const t=String(rd.result||""); setText(t); analyse(t); }; rd.readAsText(f);
+  };
+  const exportCsv=()=>{
+    const esc=x=>'"'+String(x==null?"":x).replace(/"/g,'""')+'"';
+    const head=["CVE","Vendor","Product","Your item","Match","Tier","Score","Version check","Due date","Why matched"];
+    const lines=res.rows.map(r=>[r.v.id,r.v.vendor||"",r.v.product||"",r.items.map(i=>[i.vendor,i.product,i.version].filter(Boolean).join(" ")).join(" | "),r.conf,r.a.tier,r.a.score,r.ver.text,r.v.dueDate||"",r.why]);
+    const csv=[head].concat(lines).map(l=>l.map(esc).join(",")).join("\n");
+    const url=URL.createObjectURL(new Blob([csv],{type:"text/csv"})); const a=document.createElement("a"); a.href=url; a.download="syncrisk-inventory-"+new Date().toISOString().slice(0,10)+".csv"; a.click(); URL.revokeObjectURL(url);
+  };
+  const open=res?res.rows.filter(r=>!r.fixed):[];
+  const cnt=t=>open.filter(r=>r.a.tier===t).length;
+  const shown=res?(showAll?res.rows:res.rows.slice(0,100)):[];
+  const cell={padding:"7px 10px",fontSize:11,color:C.muted,borderBottom:`1px solid ${C.border}`,verticalAlign:"top"};
+  const verCol=k=>k==="vulnerable"?C.red:k==="patched"?C.green:k==="check"?C.amber:C.muted;
+  return(
+    <div style={{padding:20,overflow:"auto",height:"100%"}} className="fadein">
+      <DemoBanner liveVulns={liveVulns}/>
+      <div style={{fontSize:10,fontWeight:700,color:C.muted,textTransform:"uppercase",letterSpacing:1,marginBottom:4}}>My inventory</div>
+      <div style={{fontSize:20,fontWeight:800,color:"#fff",marginBottom:3}}>Which known-exploited vulnerabilities affect the software you run?</div>
+      <div style={{fontSize:11,color:C.muted,marginBottom:14}}>Paste or upload your software list. Matching runs in your browser and your list is never uploaded or stored.</div>
+      <Panel title="Your software list" right={<button onClick={()=>{setText(INV_SAMPLE);}} style={{fontSize:10,padding:"3px 10px",borderRadius:4,border:`1px solid ${C.border}`,background:"transparent",color:C.muted,cursor:"pointer"}}>Use a sample</button>}>
+        <textarea value={text} onChange={e=>setText(e.target.value)} placeholder={"One item per line. Any of these work:\nFortinet FortiOS 7.2.4\nvendor,product,version,critical\nCisco,IOS XE,17.3.1,yes"} style={{width:"100%",minHeight:130,boxSizing:"border-box",background:C.bg,color:C.text,border:`1px solid ${C.border}`,borderRadius:6,padding:10,fontSize:12,fontFamily:"monospace",resize:"vertical"}}/>
+        <div style={{display:"flex",gap:10,alignItems:"center",marginTop:10,flexWrap:"wrap"}}>
+          <button disabled={!base||!text.trim()} onClick={()=>analyse(text)} style={{fontSize:12,fontWeight:700,padding:"7px 16px",borderRadius:6,border:"none",background:(!base||!text.trim())?C.border:C.accent,color:"#fff",cursor:(!base||!text.trim())?"default":"pointer"}}>Find exploited vulnerabilities</button>
+          <label style={{fontSize:11,color:C.muted,cursor:"pointer"}}>or upload a file (.csv, .txt) <input type="file" accept=".csv,.txt,.tsv,text/csv,text/plain" onChange={onFile} style={{display:"none"}}/><span style={{textDecoration:"underline",color:C.accent}}>Choose file</span></label>
+          <span style={{fontSize:10,color:C.dim}}>Add a "critical" column (yes) to mark business-critical items.</span>
+        </div>
+      </Panel>
+      {res&&res.analysed===0&&<Panel title="Nothing to analyse"><div style={{fontSize:12,color:C.muted}}>No usable lines were found. Try one item per line, such as "Fortinet FortiOS 7.2.4".</div></Panel>}
+      {res&&res.analysed>0&&<>
+        <div style={{display:"flex",gap:10,flexWrap:"wrap",marginBottom:12}}>
+          <Kpi label="Act now" value={cnt("Act")} sub="confirmed exploited, high urgency" color={C.red}/>
+          <Kpi label="Attend" value={cnt("Attend")} sub="schedule soon" color={C.amber}/>
+          <Kpi label="Track" value={cnt("Track*")+cnt("Track")} sub="monitor" color={C.green}/>
+          <Kpi label="Likely already fixed" value={res.rows.length-open.length} sub="your version is at or above the fix" color={C.muted}/>
+          <Kpi label="Items checked" value={res.analysed} sub={res.analysed-res.unmatched.length+" matched, "+res.unmatched.length+" not found"} color={C.text}/>
+        </div>
+        <Panel title={"Affected vulnerabilities ("+res.rows.length+")"} right={res.rows.length>0&&<button onClick={exportCsv} style={{fontSize:10,padding:"3px 10px",borderRadius:4,border:`1px solid ${C.border}`,background:"transparent",color:C.muted,cursor:"pointer"}}>Export CSV</button>}>
+          {res.rows.length===0?<div style={{fontSize:12,color:C.muted}}>None of your items match a vulnerability in CISA's known-exploited catalog.</div>:
+          <div style={{overflowX:"auto"}}><table style={{width:"100%",borderCollapse:"collapse"}}>
+            <thead><tr>{["CVE","Your item","Match","Urgency","Version check"].map(h=><th key={h} style={{...cell,textAlign:"left",fontSize:9,textTransform:"uppercase",letterSpacing:.6,color:C.dim}}>{h}</th>)}</tr></thead>
+            <tbody>{shown.map(r=>(
+              <tr key={r.v.id} style={{opacity:r.fixed?.6:1}}>
+                <td style={{...cell,fontFamily:"monospace",color:C.text,whiteSpace:"nowrap"}}>{r.v.id}<div style={{fontSize:10,color:C.dim,fontFamily:"inherit"}}>{(r.v.desc||"").slice(0,70)}</div></td>
+                <td style={cell}>{r.items.slice(0,2).map(i=>[i.vendor,i.product,i.version].filter(Boolean).join(" ")).join("; ")}{r.items.length>2?" +"+(r.items.length-2):""}{r.critical&&<span style={{color:C.amber}}> · critical</span>}</td>
+                <td style={cell}><Chip label={r.conf==="strong"?"MATCHED":"POSSIBLE"} color={r.conf==="strong"?C.green:C.amber} small/><div style={{fontSize:10,color:C.dim,marginTop:3}}>{r.why}</div></td>
+                <td style={cell}><TierChip score={r.a.score}/> <span style={{color:C.dim}}>{r.a.score}</span>{r.v.dueDate&&<div style={{fontSize:10,color:C.dim,marginTop:3}}>CISA due {r.v.dueDate}</div>}</td>
+                <td style={{...cell,color:verCol(r.ver.k)}}>{r.ver.text}</td>
+              </tr>))}</tbody>
+          </table></div>}
+          {res.rows.length>shown.length&&<button onClick={()=>setShowAll(true)} style={{marginTop:10,fontSize:11,padding:"5px 12px",borderRadius:5,border:`1px solid ${C.border}`,background:"transparent",color:C.muted,cursor:"pointer"}}>Show all {res.rows.length}</button>}
+          <div style={{fontSize:10,color:C.dim,marginTop:10}}>"Matched" means vendor and product names agree. "Possible" means a partial or vendor-only match, so confirm it. CISA's catalog does not list affected versions, so version checks use fixed versions where we have them (about 1 in 3 entries) and otherwise ask you to check the vendor advisory.</div>
+        </Panel>
+        {res.unmatched.length>0&&<Panel title={"Not found in CISA's known-exploited list ("+res.unmatched.length+")"}>
+          <div style={{fontSize:11,color:C.muted,marginBottom:6}}>{res.unmatched.slice(0,40).map(i=>[i.vendor,i.product,i.version].filter(Boolean).join(" ")).join(" · ")}{res.unmatched.length>40?" …":""}</div>
+          <div style={{fontSize:10,color:C.dim}}>This does not mean these are safe. It means none of their vulnerabilities are confirmed as exploited in the CISA catalog, or the name did not match. Check spelling against the vendor's own name.</div>
+        </Panel>}
+      </>}
+    </div>
+  );
+}
+/* INVENTORY-PAGE-END */
 </script>
 
 <script>
@@ -2436,6 +2525,142 @@ function filterByCategory(vulnList, catId) {
   if (!catId || catId === "all") return vulnList;
   return vulnList.filter(v => (v.type||"unknown") === catId);
 }
+/* INVENTORY-MATCH-START */
+const INV_CORP=/\b(inc|incorporated|corp|corporation|co|company|ltd|limited|llc|gmbh|plc|systems|technologies|technology|software|networks|group|foundation|the)\b/g;
+const INV_GENERIC={multiple:1,products:1,product:1,all:1,various:1,and:1,for:1,of:1,server:1,software:1,platform:1,suite:1,application:1,applications:1,services:1,service:1,web:1,management:1,manager:1,enterprise:1,edition:1,version:1,system:1,systems:1,network:1,other:1};
+const INV_ALIAS={ms:"microsoft",msft:"microsoft",mozilla:"mozilla",google:"google",paloalto:"palo alto"};
+function invNorm(s){
+  let t=String(s||"").toLowerCase().replace(/[^a-z0-9.+# ]+/g," ").replace(INV_CORP," ").replace(/\s+/g," ").trim();
+  return INV_ALIAS[t]||t;
+}
+function invTokens(s){ return invNorm(s).split(" ").filter(Boolean); }
+function invMeaningful(tok){ return tok.filter(w=>!INV_GENERIC[w]&&(w.length>=3||/\d/.test(w))); }
+function invVendorEq(a,b){
+  if(!a||!b) return false;
+  return a===b||(a.length>=4&&b.length>=4&&(a.startsWith(b+" ")||b.startsWith(a+" ")));
+}
+function invSplitLine(line,delim){
+  if(delim==="\t") return line.split("\t").map(s=>s.trim());
+  const out=[]; let cur="",q=false;
+  for(let i=0;i<line.length;i++){
+    const c=line[i];
+    if(c==='"'){ if(q&&line[i+1]==='"'){cur+='"';i++;} else q=!q; }
+    else if(c===delim&&!q){ out.push(cur.trim()); cur=""; }
+    else cur+=c;
+  }
+  out.push(cur.trim()); return out;
+}
+function invIsVersion(w){ return /^v?\d+(\.\d+)*[a-z0-9._-]*$/i.test(w)&&/\d/.test(w); }
+/* Pull the vendor off the front of free text by longest match against vendors seen in KEV. */
+function invSplitFree(text,kevVendors){
+  const words=String(text||"").trim().split(/\s+/).filter(Boolean);
+  let version="";
+  if(words.length>1&&invIsVersion(words[words.length-1])&&!/^\d{4}$/.test(words[words.length-1])){ version=words.pop().replace(/^v/i,""); }
+  for(let n=Math.min(4,words.length);n>=1;n--){
+    const cand=invNorm(words.slice(0,n).join(" "));
+    if(cand&&kevVendors.has(cand)) return {vendor:words.slice(0,n).join(" "),product:words.slice(n).join(" "),version};
+  }
+  return {vendor:"",product:words.join(" "),version};
+}
+const INV_TRUE=/^(y|yes|true|1|critical|high|essential)$/i;
+function parseInventory(text,kevVendors){
+  const lines=String(text||"").split(/\r?\n/).map(l=>l.trim()).filter(l=>l&&!l.startsWith("#"));
+  if(!lines.length) return [];
+  const delim=lines[0].includes("\t")?"\t":(lines[0].split(",").length>1?",":(lines[0].split("|").length>1?"|":(lines[0].split(";").length>1?";":null)));
+  let map=null, start=0;
+  if(delim){
+    const h=invSplitLine(lines[0],delim).map(s=>s.toLowerCase());
+    const find=re=>h.findIndex(x=>re.test(x));
+    const vi=find(/^(vendor|publisher|manufacturer|company)/), pi=find(/^(product|software|application|app|name|title)/), ri=find(/^(version|ver)/), ci=find(/^(critical|business)/);
+    if(vi>=0||pi>=0){ map={v:vi,p:pi,r:ri,c:ci}; start=1; }
+  }
+  const items=[];
+  for(let i=start;i<lines.length;i++){
+    const raw=lines[i]; let vendor="",product="",version="",critical=false;
+    if(delim){
+      const c=invSplitLine(raw,delim);
+      if(map){
+        vendor=map.v>=0?c[map.v]||"":""; product=map.p>=0?c[map.p]||"":""; version=map.r>=0?c[map.r]||"":"";
+        critical=map.c>=0&&INV_TRUE.test(c[map.c]||"");
+        if(!vendor&&product){ const f=invSplitFree(product,kevVendors); vendor=f.vendor; product=f.product; if(!version) version=f.version; }
+      } else if(c.length>=2){ vendor=c[0]; product=c[1]; version=c[2]||""; critical=INV_TRUE.test(c[3]||""); }
+      else { const f=invSplitFree(c[0],kevVendors); vendor=f.vendor; product=f.product; version=f.version; }
+    } else { const f=invSplitFree(raw,kevVendors); vendor=f.vendor; product=f.product; version=f.version; }
+    vendor=(vendor||"").trim(); product=(product||"").trim(); version=String(version||"").trim().replace(/^v/i,"");
+    if(!vendor&&!product) continue;
+    items.push({raw,vendor,product,version,critical});
+  }
+  return items;
+}
+function invKevIndex(vulns){
+  const byVendor=new Map(), vendors=new Set();
+  vulns.forEach(v=>{
+    if(!v.kev||!v.vendor) return;
+    const vn=invNorm(v.vendor); if(!vn) return;
+    vendors.add(vn);
+    let pn=invNorm(v.product); if(pn.startsWith(vn+" ")) pn=pn.slice(vn.length+1); else if(pn===vn) pn="";
+    const alts=pn.split(/\s*(?:,|\/|;|\band\b)\s*/).map(a=>invMeaningful(invTokens(a))).filter(a=>a.length);
+    const rec={v,vn,alts};
+    if(!byVendor.has(vn)) byVendor.set(vn,[]); byVendor.get(vn).push(rec);
+  });
+  return {byVendor,vendors};
+}
+function invParseVer(s){ return (String(s||"").match(/\d+/g)||[]).map(Number); }
+function invCmp(a,b){ for(let i=0;i<Math.max(a.length,b.length);i++){ const x=a[i]||0,y=b[i]||0; if(x!==y) return x<y?-1:1; } return 0; }
+function invVersionStatus(have,fx){
+  if(!have) return {k:"unknown",text:"Add a version to check this"};
+  if(!fx||!fx.length) return {k:"check",text:"No fixed version published in our data. Check the vendor advisory."};
+  const h=invParseVer(have);
+  if(h.length>=2){
+    for(const f of fx){
+      const p=invParseVer(f);
+      if(p.length>=2&&p[0]===h[0]&&p[1]===h[1]){
+        return invCmp(h,p)>=0?{k:"patched",text:"Likely fixed: you have "+have+", fixed in "+f}:{k:"vulnerable",text:"Upgrade to "+f+" or later (you have "+have+")"};
+      }
+    }
+  }
+  return {k:"check",text:"Fixed in "+fx.slice(0,4).join(", ")+". Compare with "+have+"."};
+}
+function matchInventory(items,vulns){
+  const idx=invKevIndex(vulns), found=new Map(), unmatched=[];
+  items.forEach(it=>{
+    const vn=invNorm(it.vendor), ptoks=invMeaningful(invTokens(it.product)), pset=new Set(ptoks);
+    let hit=0;
+    const take=(rec,conf,why)=>{
+      hit++;
+      const cur=found.get(rec.v.id);
+      if(!cur) found.set(rec.v.id,{v:rec.v,conf,why,items:[it]});
+      else { if(!cur.items.includes(it)) cur.items.push(it); if(conf==="strong"&&cur.conf!=="strong"){cur.conf="strong";cur.why=why;} }
+    };
+    if(vn){
+      idx.byVendor.forEach((recs,kv)=>{
+        if(!invVendorEq(vn,kv)) return;
+        recs.forEach(rec=>{
+          if(!ptoks.length) return take(rec,"possible","Vendor match only. Add the product to narrow this.");
+          if(!rec.alts.length) return take(rec,"possible","Vendor match. CISA lists this as a general product family.");
+          if(rec.alts.some(a=>a.every(w=>pset.has(w))||ptoks.every(w=>a.includes(w)))) return take(rec,"strong","Vendor and product match");
+          if(rec.alts.some(a=>a.some(w=>pset.has(w)))) return take(rec,"possible","Vendor matches, product partly matches");
+        });
+      });
+    } else if(ptoks.length){
+      idx.byVendor.forEach(recs=>recs.forEach(rec=>{
+        if(rec.alts.some(a=>a.every(w=>pset.has(w))||ptoks.every(w=>a.includes(w)))) take(rec,"possible","Product name matches. Add the vendor to confirm.");
+      }));
+    }
+    if(!hit) unmatched.push(it);
+  });
+  const matches=[];
+  found.forEach(m=>{
+    const withVer=m.items.filter(i=>i.version);
+    const stat=withVer.length?withVer.map(i=>invVersionStatus(i.version,m.v.fixedVersions)):[invVersionStatus("",m.v.fixedVersions)];
+    const ver=stat.find(s=>s.k==="vulnerable")||stat.find(s=>s.k==="check")||stat.find(s=>s.k==="unknown")||stat[0];
+    m.ver=ver; m.critical=m.items.some(i=>i.critical); matches.push(m);
+  });
+  return {matches,unmatched,analysed:items.length,kevVendors:idx.vendors};
+}
+/* INVENTORY-MATCH-END */
+
+
 </script>
 
 <script>
