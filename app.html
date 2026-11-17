@@ -1846,7 +1846,7 @@ function OpcHeader({ title, subtitle, profile, dataStatus, onResync, activeCateg
             {ds.state==="loading"?"SYNCING FEEDS...":ds.state==="live"?"FEEDS SYNCED":"STATIC MODE"}
           </span>
         </div>
-        {ds.state==="live"&&<span style={{fontSize:10, color:C.dim}}>KEV: {Math.floor((ds.count||0)*0.14)} · NVD: {Math.floor((ds.count||0)*0.86)}</span>}
+        {ds.state==="live"&&<span style={{fontSize:10, color:C.dim}}>KEV: {ds.kevCount||0} · Other advisories: {(ds.count||0)-(ds.kevCount||0)}</span>}
         <div style={{marginLeft:"auto"}}>
           <button onClick={onResync} style={{display:"flex", alignItems:"center", gap:4, padding:"3px 10px", borderRadius:4, border:`1px solid ${C.border}`, background:"transparent", color:C.muted, fontSize:10, cursor:"pointer"}}>
             <i className="ti ti-refresh" style={{fontSize:10}}/> Sync Now
@@ -1901,7 +1901,7 @@ function App() {
       .then(vulns => {
         if (vulns.length > 0) {
           setLiveVulns(vulns);
-          setDataStatus({ state:"live", msg:`${vulns.length} CVEs loaded`, count:vulns.length, lastUpdated:new Date() });
+          setDataStatus({ state:"live", msg:`${vulns.length} CVEs loaded`, count:vulns.length, kevCount:vulns.filter(v=>v.kev).length, lastUpdated:new Date() });
         } else {
           setDataStatus({ state:"fallback", msg:`Using ${VULNS.length} curated CVEs`, count:VULNS.length, lastUpdated:null });
         }
@@ -1914,7 +1914,7 @@ function App() {
         .then(vulns => {
           if (vulns.length > 0) {
             setLiveVulns(vulns);
-            setDataStatus({ state:"live", msg:`${vulns.length} CVEs`, count:vulns.length, lastUpdated:new Date() });
+            setDataStatus({ state:"live", msg:`${vulns.length} CVEs`, count:vulns.length, kevCount:vulns.filter(v=>v.kev).length, lastUpdated:new Date() });
           }
         });
     }, 60*60*1000);
@@ -1928,7 +1928,7 @@ function App() {
       .then(vulns => {
         if (vulns.length > 0) {
           setLiveVulns(vulns);
-          setDataStatus({ state:"live", msg:`${vulns.length} CVEs loaded`, count:vulns.length, lastUpdated:new Date() });
+          setDataStatus({ state:"live", msg:`${vulns.length} CVEs loaded`, count:vulns.length, kevCount:vulns.filter(v=>v.kev).length, lastUpdated:new Date() });
         } else {
           setDataStatus({ state:"fallback", msg:`Using ${VULNS.length} curated CVEs`, count:VULNS.length, lastUpdated:null });
         }
