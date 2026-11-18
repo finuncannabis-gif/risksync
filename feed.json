@@ -15,7 +15,7 @@
   {
    "id": "https://syncrisk.co.uk/cve/CVE-2026-114713",
    "url": "https://syncrisk.co.uk/cve/CVE-2026-114713",
-   "title": "CVE-2026-114713: UnrealIRCd UnrealIRCd exploited in the wild",
+   "title": "CVE-2026-114713: UnrealIRCd exploited in the wild",
    "content_text": "Urgency Act (CISA SSVC, typical organisation). CISA due 2026-11-16.",
    "date_published": "2026-11-13T00:00:00Z"
   },
@@ -43,7 +43,7 @@
   {
    "id": "https://syncrisk.co.uk/cve/CVE-2026-116606",
    "url": "https://syncrisk.co.uk/cve/CVE-2026-116606",
-   "title": "CVE-2026-116606: Barracuda Networks Barracuda Email Security Gateway (ESG) exploited in the wild",
+   "title": "CVE-2026-116606: Barracuda Email Security Gateway (ESG) exploited in the wild",
    "content_text": "Urgency Act (CISA SSVC, typical organisation). CISA due 2026-11-13.",
    "date_published": "2026-11-10T00:00:00Z"
   },
@@ -71,7 +71,7 @@
   {
    "id": "https://syncrisk.co.uk/cve/CVE-2026-102895",
    "url": "https://syncrisk.co.uk/cve/CVE-2026-102895",
-   "title": "CVE-2026-102895: GPUStack GPUStack exploited in the wild",
+   "title": "CVE-2026-102895: GPUStack exploited in the wild",
    "content_text": "Urgency Act (CISA SSVC, typical organisation). CISA due 2026-11-12.",
    "date_published": "2026-11-09T00:00:00Z"
   },
@@ -113,7 +113,7 @@
   {
    "id": "https://syncrisk.co.uk/cve/CVE-2026-119977",
    "url": "https://syncrisk.co.uk/cve/CVE-2026-119977",
-   "title": "CVE-2026-119977: WordPress WordPress Core exploited in the wild",
+   "title": "CVE-2026-119977: WordPress Core exploited in the wild",
    "content_text": "Urgency Attend (CISA SSVC, typical organisation). CISA due 2026-11-06.",
    "date_published": "2026-11-03T00:00:00Z"
   },
@@ -176,21 +176,21 @@
   {
    "id": "https://syncrisk.co.uk/cve/CVE-2026-109618",
    "url": "https://syncrisk.co.uk/cve/CVE-2026-109618",
-   "title": "CVE-2026-109618: PHP Group PHP exploited in the wild",
+   "title": "CVE-2026-109618: PHP exploited in the wild",
    "content_text": "Urgency Attend (CISA SSVC, typical organisation). CISA due 2026-10-29.",
    "date_published": "2026-10-26T00:00:00Z"
   },
   {
    "id": "https://syncrisk.co.uk/cve/CVE-2026-109619",
    "url": "https://syncrisk.co.uk/cve/CVE-2026-109619",
-   "title": "CVE-2026-109619: PHP Group PHP exploited in the wild",
+   "title": "CVE-2026-109619: PHP exploited in the wild",
    "content_text": "Urgency Attend (CISA SSVC, typical organisation). CISA due 2026-10-29.",
    "date_published": "2026-10-26T00:00:00Z"
   },
   {
    "id": "https://syncrisk.co.uk/cve/CVE-2026-110447",
    "url": "https://syncrisk.co.uk/cve/CVE-2026-110447",
-   "title": "CVE-2026-110447: Collabora Collabora Online – Built-in CODE Server exploited in the wild",
+   "title": "CVE-2026-110447: Collabora Online – Built-in CODE Server exploited in the wild",
    "content_text": "Urgency Act (CISA SSVC, typical organisation). CISA due 2026-10-26.",
    "date_published": "2026-10-23T00:00:00Z"
   },
@@ -274,14 +274,14 @@
   {
    "id": "https://syncrisk.co.uk/cve/CVE-2026-105133",
    "url": "https://syncrisk.co.uk/cve/CVE-2026-105133",
-   "title": "CVE-2026-105133: Ahsay AhsayCBS exploited in the wild",
+   "title": "CVE-2026-105133: AhsayCBS exploited in the wild",
    "content_text": "Urgency Attend (CISA SSVC, typical organisation). CISA due 2026-10-17.",
    "date_published": "2026-10-14T00:00:00Z"
   },
   {
    "id": "https://syncrisk.co.uk/cve/CVE-2026-105134",
    "url": "https://syncrisk.co.uk/cve/CVE-2026-105134",
-   "title": "CVE-2026-105134: Ahsay AhsayCBS exploited in the wild",
+   "title": "CVE-2026-105134: AhsayCBS exploited in the wild",
    "content_text": "Urgency Act (CISA SSVC, typical organisation). CISA due 2026-10-17.",
    "date_published": "2026-10-14T00:00:00Z"
   },
@@ -309,7 +309,7 @@
   {
    "id": "https://syncrisk.co.uk/cve/CVE-2015-3306",
    "url": "https://syncrisk.co.uk/cve/CVE-2015-3306",
-   "title": "CVE-2015-3306: ProFTPD ProFTPD exploited in the wild",
+   "title": "CVE-2015-3306: ProFTPD exploited in the wild",
    "content_text": "Urgency Act (CISA SSVC, typical organisation). CISA due 2026-10-11.",
    "date_published": "2026-10-08T00:00:00Z"
   },
@@ -337,7 +337,7 @@
   {
    "id": "https://syncrisk.co.uk/cve/CVE-2023-22894",
    "url": "https://syncrisk.co.uk/cve/CVE-2023-22894",
-   "title": "CVE-2023-22894: Strapi Strapi exploited in the wild",
+   "title": "CVE-2023-22894: Strapi exploited in the wild",
    "content_text": "Urgency Attend (CISA SSVC, typical organisation). CISA due 2026-10-11.",
    "date_published": "2026-10-08T00:00:00Z"
   },
@@ -351,7 +351,7 @@
   {
    "id": "https://syncrisk.co.uk/cve/CVE-2026-102489",
    "url": "https://syncrisk.co.uk/cve/CVE-2026-102489",
-   "title": "CVE-2026-102489: Zammad GmbH Zammad exploited in the wild",
+   "title": "CVE-2026-102489: Zammad exploited in the wild",
    "content_text": "Urgency Act (CISA SSVC, typical organisation). CISA due 2026-10-05.",
    "date_published": "2026-10-02T00:00:00Z"
   }

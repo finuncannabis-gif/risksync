@@ -1,0 +1,58 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>How SyncRisk scores vulnerabilities: CISA SSVC methodology | SyncRisk</title><meta name="description" content="How SyncRisk prioritises CISA Known Exploited Vulnerabilities: data sources, the CISA SSVC decision tree, fix trust tiers, and what the product does not do."/><link rel="canonical" href="https://syncrisk.co.uk/methodology"/><style>*{box-sizing:border-box;margin:0;padding:0}body{background:#050c18;color:#dde4f0;font:15px/1.6 Inter,system-ui,sans-serif}
+a{color:#2d7ef7}nav{background:#080d18;border-bottom:1px solid #1a2540;padding:0 20px;height:52px;display:flex;align-items:center;gap:18px}
+nav .logo{font-weight:800;color:#fff;text-decoration:none}nav a.l{font-size:13px;color:#5a6f96;text-decoration:none}
+main{max-width:820px;margin:0 auto;padding:24px 18px 60px}h1{font-size:24px;line-height:1.25;margin:6px 0 10px}h2{font-size:16px;margin:26px 0 10px}
+.crumb{font-size:12px;color:#5a6f96}.mono{font-family:ui-monospace,Menlo,monospace}.card{background:#0c1220;border:1px solid #1a2540;border-radius:8px;padding:14px 16px;margin:10px 0}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}.k{font-size:10px;color:#5a6f96;text-transform:uppercase;letter-spacing:.8px}.v{font-size:15px;font-weight:600;margin-top:2px}
+.pill{display:inline-block;padding:2px 10px;border-radius:4px;font-weight:800;font-size:13px;color:#000}table{width:100%;border-collapse:collapse;font-size:13px}th,td{text-align:left;padding:7px 8px;border-bottom:1px solid #1a2540}
+th{color:#5a6f96;font-size:11px;text-transform:uppercase}.m{color:#8a9bbd;font-size:13px}.tag{font-size:11px;color:#0ed27a;border:1px solid rgba(14,210,122,.4);border-radius:3px;padding:1px 6px;margin-left:6px}
+.cta input{padding:9px 12px;border-radius:6px;border:1px solid #1a2540;background:#080d18;color:#dde4f0;width:min(280px,100%)}.cta button{padding:9px 16px;border:0;border-radius:6px;background:#2d7ef7;color:#fff;font-weight:700;cursor:pointer}
+ul{padding-left:18px}li{margin:4px 0}footer{font-size:12px;color:#5a6f96;margin-top:30px}details{margin:6px 0}summary{cursor:pointer;font-weight:600}</style></head><body><nav><a class="logo" href="/daily">SyncRisk</a><a class="l" href="/cve/">All exploited CVEs</a><a class="l" href="/daily">Daily brief</a><a class="l" href="/methodology">Methodology</a></nav><main>
+<div class="crumb"><a href="/cve/">Exploited CVEs</a> / Methodology</div>
+<h1>How SyncRisk scores vulnerabilities</h1>
+<p class="m">Every number on this site can be traced to a named source. This page says which sources, how the urgency tier is decided, and what we do not claim.</p>
+
+<h2>What we cover</h2>
+<p>SyncRisk covers the vulnerabilities CISA has confirmed as exploited in the wild, its Known Exploited Vulnerabilities (KEV) catalog: 1,782 CVEs as of 2026-11-18. We always work from the full catalog, never a filtered sample. SyncRisk is not a breach-detection tool: it does not tell you whether you have been compromised.</p>
+
+<h2>Data sources</h2>
+<div class="card"><ul>
+<li><b>CISA KEV:</b> which CVEs are exploited, date added, CISA due date, ransomware use, and CISA's required action.</li>
+<li><b>CISA SSVC values:</b> exploitation, automatable and technical impact, published by CISA for 100% of these CVEs. Where CISA has not published them, we derive them from the CVSS vector and label them "derived".</li>
+<li><b>CVE records and NVD:</b> CVSS (a real score on 100% of entries), fixed versions, vendor solutions and workarounds, advisory links.</li>
+<li><b>FIRST EPSS:</b> the 30-day probability of exploitation (a real value on 100% of entries).</li>
+</ul></div>
+<p class="m">The live feed refreshes every 6 hours. These public pages are rebuilt daily and checked against the feed and against CISA's decision table before they are published. A rebuild is refused if the feed is degraded or the number of entries drops sharply.</p>
+
+<h2>How the urgency tier is decided</h2>
+<p>We apply CISA's SSVC (Stakeholder-Specific Vulnerability Categorization) decision tree. We do not add our own multipliers. Four inputs lead to one of four decisions:</p>
+<div class="card"><ul>
+<li><b>Exploitation:</b> every CVE here is <b>active</b>, because it is in CISA KEV.</li>
+<li><b>Automatable:</b> whether exploitation can be automated at scale (yes or no).</li>
+<li><b>Technical impact:</b> partial or total control of the affected system.</li>
+<li><b>Mission and well-being impact:</b> low, medium or high. This is the one input that depends on your organisation, so each CVE page shows the decision for all three levels.</li></ul>
+<table style="margin-top:10px"><tr><th>Decision</th><th>What it means</th></tr>
+<tr><td><span class="pill" style="background:#f04060">Act</span></td><td class="m">Remediate as soon as possible. Needs leadership-level attention.</td></tr>
+<tr><td><span class="pill" style="background:#f5a623">Attend</span></td><td class="m">Remediate sooner than your standard update timeline. Needs supervisory attention.</td></tr>
+<tr><td><span class="pill" style="background:#2d7ef7">Track*</span></td><td class="m">Remediate within standard update timelines and watch for changes.</td></tr>
+<tr><td><span class="pill" style="background:#0ed27a">Track</span></td><td class="m">Remediate within standard update timelines.</td></tr></table></div>
+<p class="m">Where a page shows a single "typical organisation" tier, it assumes Medium mission and well-being impact. In the app, your sector sets the public well-being input, and the vendors you list set how central a product is to your mission. If you list no vendors, the app assumes a product applies to you and says so. Products from vendors you did not list are shown as "Not in your stack" at Track, for awareness. They stay visible and are never removed from the list.</p>
+
+<h2>Order inside a tier</h2>
+<p>We do not cut lists to a fixed top-N. Every item at or above your threshold is shown. Inside a tier the order is: ransomware use (CISA), then EPSS where it is a real value, then whether a fix is published, then newest first. For scanner imports, the number of affected hosts in your file comes before EPSS. Each row says which of these applied.</p>
+
+<h2>Fix guidance and trust order</h2>
+<p>A fix is only as good as its source, so every fix item is labelled. From most to least trusted: vendor advisory, CISA pointer, CERT bulletin, NVD/OSV, news. At the moment 57% of entries have a fixed version, solution, workaround or advisory link recorded. For the rest we say so rather than guess.</p>
+
+<h2>Missing data</h2>
+<p>If a value is not known we show "Not scored yet", never a zero or an estimate presented as fact. Estimated or derived values are labelled where they appear.</p>
+
+<h2>What we do not do</h2>
+<ul><li>We do not detect breaches or tell you whether you have been compromised.</li>
+<li>We do not score vulnerabilities outside the CISA KEV catalog. Scanner Import lists them as "Not in CISA KEV, not scored", which does not mean they are safe.</li>
+<li>CISA's catalog does not list affected version ranges, so version checks use fixed versions where we have them and otherwise ask you to confirm.</li>
+<li>The tool matches your list by vendor and product names. Check "possible" matches yourself.</li></ul>
+
+<p class="m" style="margin-top:14px">Sources: <a href="https://www.cisa.gov/known-exploited-vulnerabilities-catalog" rel="nofollow noopener">CISA KEV catalog</a> · <a href="https://www.cisa.gov/ssvc" rel="nofollow noopener">CISA SSVC</a> · <a href="https://www.first.org/epss/" rel="nofollow noopener">FIRST EPSS</a> · <a href="https://nvd.nist.gov/" rel="nofollow noopener">NVD</a></p>
+<footer>Last updated 2026-11-18. Percentages are computed from the current feed each time these pages are rebuilt.</footer></main></body></html>
