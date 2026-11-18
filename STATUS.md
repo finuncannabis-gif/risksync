@@ -44,6 +44,9 @@
 
 - Milestone 6 (AI-researched fixes) ON HOLD per owner 2026-11-18. Cost estimate (Sonnet 5.5 $2/$10 per M tokens, web search $10/1,000; assumes 4 searches, 30K in, 2K out per CVE): ~$0.12/CVE Sonnet, ~$0.05 Haiku 5.5; pilot of 20 ~ $1-2.50; all ~1,106 fix-less CVEs ~ $50-130; ~ $1/week ongoing. Needs a separate API account (not covered by Pro) with prepaid credit and spend cap. AI fixes must be labelled lowest tier, cite a URL, and be machine-checked against that page. Free pilot option: run 20 CVEs in-session via web search.
 
+## Milestone 9 Scanner Import BUILT 2026-11-18 (branch scanner-import, not merged)
+New "Scanner Import" page: paste CVE IDs or upload CSV/TSV/TXT/JSON (<=10 MB), read in-browser only. CSV with a CVE column reads only that column (+ distinct host counts if a Host column exists); otherwise every CVE ID in the text, with a warning. Found items are treated as in-environment (never skippable). Non-KEV IDs counted, not scored. Order: SSVC tier, ransomware, hosts, real EPSS, fix, newest (shown per row). CSV export + shared status tracker. Tests: import_flow 12, scanner logic 26 (real KEV feed), regressions pass. Sandbox cannot load Babel CDN, so no browser screenshot; check on the Pages preview.
+
 ## Known issues / findings
 1. DONE 2026-11-17: daily.html replaced with SSVC brief; canonical/JSON-LD now syncrisk.co.uk. Contact email now hello@syncrisk.co.uk (Cloudflare Email Routing → finun.cannabis@gmail.com).
 2. DONE 2026-11-17: www→apex 301 redirect rule deployed (Cloudflare). Confirm by opening https://www.syncrisk.co.uk/app.

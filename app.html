@@ -1195,6 +1195,7 @@ const NAV_ITEMS = [
   { id:"threats",    label:"Threat Feed",         icon:"ti-satellite",          group:"main"    },
   { id:"analysis",   label:"Exposure Analysis",       icon:"ti-chart-radar",        group:"main"    },
   { id:"inventory",  label:"My Inventory",        icon:"ti-clipboard-list",     group:"main"    },
+  { id:"import",     label:"Scanner Import",      icon:"ti-file-import",        group:"main"    },
   { id:"why10",      label:"Why These 25",        icon:"ti-layout-grid",        group:"main"    },
   { id:"pipeline",   label:"Priority Pipeline",     icon:"ti-cone",               group:"main"    },
   { id:"industry",   label:"Industry Profile",icon:"ti-building",           group:"intel"   },
@@ -2048,6 +2049,7 @@ function App() {
           {nav==="simulator" && <div style={{height:"100%",overflow:"auto",padding:20}}><Simulator     profile={profile} liveVulns={liveVulns}/></div>}
           {nav==="scorecard" && <ScorecardPage  {...pageProps}/>}
           {nav==="inventory" && <InventoryPage  {...pageProps}/>}
+          {nav==="import" && <ImportPage  {...pageProps}/>}
           {nav==="bulletin"  && <BulletinPage   profile={profile} liveVulns={liveVulns}/>}
         </div>
       </div>
@@ -2058,6 +2060,78 @@ function App() {
 /* INVENTORY-PAGE-START */
 const INV_SAMPLE="vendor,product,version,critical\nMicrosoft,Exchange Server 2019,,yes\nFortinet,FortiOS,7.2.4,yes\nCisco,IOS XE,17.3.1,\nApache,Tomcat,9.0.50,\nAcme,Widget,1.0,";
 const INV_TIER_RANK={Act:0,Attend:1,"Track*":2,Track:3};
+function ImportPage({profile,liveVulns}){
+  const base=(liveVulns&&liveVulns.length>0)?liveVulns:null;
+  const T=useTracker();
+  const [text,setText]=useState("");
+  const [res,setRes]=useState(null);
+  const [showAll,setShowAll]=useState(false);
+  const run=raw=>{
+    if(!base) return;
+    const p=siParseScan(raw);
+    if(p.error){ setRes({error:p.error}); return; }
+    const m=siMatch(p.ids,p.hosts,base);
+    const rows=m.inKev.map(x=>{
+      const prof=Object.assign({},profile,{vendors:Object.assign({},profile.vendors||{},{[x.v.vendor]:Math.max((profile.vendors||{})[x.v.vendor]||0,1)})});
+      return {v:x.v,hosts:x.hosts,a:ssvcAssess(x.v,prof)};
+    });
+    siSort(rows); setRes({rows,notKev:m.notKev,p}); setShowAll(false);
+  };
+  const onFile=e=>{
+    const f=e.target.files&&e.target.files[0]; if(!f) return;
+    if(f.size>SI_MAX_CHARS){ setRes({error:"File is larger than 10 MB. Export a CSV with only the CVE and host columns."}); return; }
+    const rd=new FileReader(); rd.onload=()=>{ const t=String(rd.result||""); setText(t.length>20000?"":t); run(t); }; rd.readAsText(f);
+  };
+  const cnt=t=>res&&res.rows?res.rows.filter(r=>r.a.tier===t).length:0;
+  const shown=res&&res.rows?(showAll?res.rows:res.rows.slice(0,100)):[];
+  const cell={padding:"7px 10px",fontSize:11,color:C.muted,borderBottom:`1px solid ${C.border}`,verticalAlign:"top"};
+  const btn={fontSize:10,padding:"3px 10px",borderRadius:4,border:`1px solid ${C.border}`,background:"transparent",color:C.muted,cursor:"pointer"};
+  return(
+    <div style={{padding:20,overflow:"auto",height:"100%"}} className="fadein">
+      <DemoBanner liveVulns={liveVulns}/>
+      <div style={{fontSize:10,fontWeight:700,color:C.muted,textTransform:"uppercase",letterSpacing:1,marginBottom:4}}>Scanner import</div>
+      <div style={{fontSize:20,fontWeight:800,color:"#fff",marginBottom:3}}>Which of your scanner findings are known to be exploited?</div>
+      <div style={{fontSize:11,color:C.muted,marginBottom:14}}>Upload a scanner export or paste CVE IDs. Everything is read in your browser; nothing is uploaded or stored. Anything found in your own scan is treated as present in your environment.</div>
+      <Panel title="Scanner export or CVE list">
+        <textarea value={text} onChange={e=>setText(e.target.value)} placeholder={"Paste CVE IDs (any separators), or a CSV with a CVE column and optional Host column.\nCVE-2024-3400\nCVE-2021-44228"} style={{width:"100%",minHeight:110,boxSizing:"border-box",background:C.bg,color:C.text,border:`1px solid ${C.border}`,borderRadius:6,padding:10,fontSize:12,fontFamily:"monospace"}}/>
+        <div style={{display:"flex",gap:10,alignItems:"center",marginTop:10,flexWrap:"wrap"}}>
+          <button disabled={!base||!text.trim()} onClick={()=>run(text)} style={{fontSize:12,fontWeight:700,padding:"7px 16px",borderRadius:6,border:"none",background:(!base||!text.trim())?C.border:C.accent,color:"#fff",cursor:(!base||!text.trim())?"default":"pointer"}}>Check against CISA KEV</button>
+          <label style={{fontSize:11,color:C.muted,cursor:"pointer"}}>or upload (.csv, .tsv, .txt, .json, up to 10 MB) <input type="file" accept=".csv,.tsv,.txt,.json,text/csv,text/plain,application/json" onChange={onFile} style={{display:"none"}}/><span style={{textDecoration:"underline",color:C.accent}}>Choose file</span></label>
+        </div>
+      </Panel>
+      {res&&res.error&&<Panel title="Nothing to analyse"><div style={{fontSize:12,color:C.muted}}>{res.error}</div></Panel>}
+      {res&&res.rows&&<>
+        {res.p.note&&<div style={{fontSize:11,color:C.amber,marginBottom:10}}>{res.p.note}</div>}
+        <div style={{display:"flex",gap:10,flexWrap:"wrap",marginBottom:12}}>
+          <Kpi label="Act now" value={cnt("Act")} sub="confirmed exploited, high urgency" color={C.red}/>
+          <Kpi label="Attend" value={cnt("Attend")} sub="schedule soon" color={C.amber}/>
+          <Kpi label="Track" value={cnt("Track*")+cnt("Track")} sub="monitor" color={C.green}/>
+          <Kpi label="CVEs read" value={res.p.ids.length} sub={res.rows.length+" in CISA KEV, "+res.notKev.length+" not"} color={C.text}/>
+        </div>
+        <Panel title={"Known-exploited findings ("+res.rows.length+")"} right={<span style={{display:"flex",gap:6}}>{res.rows.length>0&&<button onClick={()=>downloadCsv(siCsv(res.rows,res.notKev,T.map),"syncrisk-scanner-"+new Date().toISOString().slice(0,10)+".csv")} style={btn}>Export CSV</button>}</span>}>
+          {res.rows.length===0?<div style={{fontSize:12,color:C.muted}}>None of the CVEs in your file are in CISA's known-exploited catalog.</div>:
+          <div style={{overflowX:"auto"}}><table style={{width:"100%",borderCollapse:"collapse"}}>
+            <thead><tr>{["CVE","Urgency","Why this order","Hosts","Fix status"].map(h=><th key={h} style={{...cell,textAlign:"left",fontSize:9,textTransform:"uppercase",letterSpacing:.6,color:C.dim}}>{h}</th>)}</tr></thead>
+            <tbody>{shown.map(r=>(
+              <tr key={r.v.id}>
+                <td style={{...cell,fontFamily:"monospace",color:C.text,whiteSpace:"nowrap"}}>{r.v.id}<div style={{fontSize:10,color:C.dim,fontFamily:"inherit"}}>{[r.v.vendor,r.v.product].filter(Boolean).join(" ")}</div></td>
+                <td style={cell}><TierChip score={r.a.score}/> <span style={{color:C.dim}}>{r.a.score}</span>{r.v.dueDate&&<div style={{fontSize:10,color:C.dim,marginTop:3}}>CISA due {r.v.dueDate}</div>}</td>
+                <td style={{...cell,fontSize:10}}>{siWhy(r).join(" · ")}</td>
+                <td style={cell}>{r.hosts==null?"n/a":r.hosts}</td>
+                <td style={cell}><TrackSelect id={r.v.id} T={T}/></td>
+              </tr>))}</tbody>
+          </table></div>}
+          {res.rows.length>shown.length&&<button onClick={()=>setShowAll(true)} style={{marginTop:10,fontSize:11,padding:"5px 12px",borderRadius:5,border:`1px solid ${C.border}`,background:"transparent",color:C.muted,cursor:"pointer"}}>Show all {res.rows.length}</button>}
+          <div style={{fontSize:10,color:C.dim,marginTop:10}}>Order: urgency tier (CISA SSVC), ransomware use, hosts in your file, EPSS, fix published, newest. Status is saved in this browser only.</div>
+        </Panel>
+        {res.notKev.length>0&&<Panel title={"Not in CISA KEV, not scored ("+res.notKev.length+")"}>
+          <div style={{fontSize:11,color:C.muted,marginBottom:6,fontFamily:"monospace"}}>{res.notKev.slice(0,40).join(" · ")}{res.notKev.length>40?" …":""}</div>
+          <div style={{fontSize:10,color:C.dim}}>These are not confirmed exploited in the CISA catalog. That is not the same as safe; they are simply not scored here.</div>
+        </Panel>}
+      </>}
+    </div>
+  );
+}
 function InventoryPage({profile,liveVulns}){
   const base=(liveVulns&&liveVulns.length>0)?liveVulns:null;
   const T=useTracker();
@@ -2799,7 +2873,7 @@ function btReportHtml(o){
   'button{padding:7px 14px;font-size:13px;cursor:pointer}@media print{.np{display:none}body{margin:0}}</style></head><body>'+
   '<div class="np" style="margin-bottom:10px"><button onclick="window.print()">Print / Save as PDF</button></div>'+
   '<div class="m">SyncRisk board summary &middot; '+btEsc(o.date)+'</div><h1>'+btEsc(o.headline)+'</h1><div class="m">'+btEsc(o.context)+'</div>'+
-  '<div class="k"><div><b>'+o.act.toLocaleString()+'</b>Act</div><div><b>'+o.attend.toLocaleString()+'</b>Attend</div><div><b>'+o.track.toLocaleString()+'</b>Track</div><div><b>'+o.nis.toLocaleString()+'</b>Not in your stack</div></div>'+
+  '<div class="k"><div><b>'+o.act.toLocaleString()+'</b>Act</div><div><b>'+o.attend.toLocaleString()+'</b>Attend</div><div><b>'+o.track.toLocaleString()+'</b>Track</div><div><b>'+o.nis.toLocaleString()+'</b>'+btEsc(o.nisLabel||'Not in your stack')+'</div></div>'+
   '<p>All Act and Attend items are confirmed exploited in the wild (CISA Known Exploited Vulnerabilities). None is ranked as skippable.</p>'+
   '<h2>Remediation progress, Act items</h2><div class="k"><div><b>'+sum.fx+'</b>Fixed</div><div><b>'+sum.d+'</b>In progress</div><div><b>'+sum.a+'</b>Risk accepted</div><div><b>'+sum.t+'</b>Not started</div></div>'+
   '<p class="m">Statuses are recorded by the person running this report, in their own browser. They are not verified by SyncRisk.</p>'+
@@ -2811,6 +2885,71 @@ function btReportHtml(o){
   '<p class="m">Data as of '+btEsc(o.date)+'. Sources: CISA KEV, CVE records, FIRST EPSS. SyncRisk prioritises known-exploited vulnerabilities. It is not a breach-detection tool.</p></body></html>';
 }
 /* BOARD-TRACKER-END */
+/* SCANNER-IMPORT-START */
+/* Reads scanner exports / pasted CVE lists in the browser. Pure functions (no JSX). Nothing is uploaded. */
+const SI_MAX_CHARS=10*1024*1024;
+const SI_CVE_COL=/^(vulnerability[ _-]?)?(cve|cves)([ _-]?(id|ids|number))?$|^vulnerability(id| id)?$|^vuln[ _-]?id$/i;
+const SI_HOST_COL=/^(host|hosts|hostname|host name|ip|ip address|ipaddress|asset|assets|asset name|dns name|dns|fqdn|computer|computer name|machine|device|device name|target|server)$/i;
+function siCves(s){ return (String(s||"").match(/CVE-\d{4}-\d{4,}/gi)||[]).map(x=>x.toUpperCase()); }
+/* Full CSV/TSV tokenizer: quoted fields may contain delimiters, quotes ("") and newlines (scanner descriptions do). */
+function siParseTable(text,delim){
+  const rows=[]; let row=[], cur="", q=false;
+  for(let i=0;i<text.length;i++){ const ch=text[i];
+    if(q){ if(ch==='"'){ if(text[i+1]==='"'){ cur+='"'; i++; } else q=false; } else cur+=ch; }
+    else if(ch==='"'&&cur==="") q=true;
+    else if(ch===delim){ row.push(cur); cur=""; }
+    else if(ch==="\n"||ch==="\r"){ if(ch==="\r"&&text[i+1]==="\n") i++; row.push(cur); cur=""; if(row.length>1||row[0]!=="") rows.push(row); row=[]; }
+    else cur+=ch; }
+  row.push(cur); if(row.length>1||row[0]!=="") rows.push(row);
+  return rows;
+}
+function siDelim(text){ const first=text.split(/\r?\n/,1)[0]||""; const c=d=>first.split(d).length-1; const t=c("\t"),m=c(","),s=c(";"); return (t>0&&t>=m&&t>=s)?"\t":(s>m?";":","); }
+/* -> {error} or {mode:"column"|"text", ids:[unique CVE ids], hosts:{id:n}|null, hostCol:bool, idsRead:n, note} */
+function siParseScan(raw){
+  const text=String(raw||"").replace(/^﻿/,"");
+  if(!text.trim()) return {error:"Nothing to read. Paste a list or choose a file."};
+  if(text.length>SI_MAX_CHARS) return {error:"That file is larger than 10 MB. Export only the findings, or split it."};
+  const delim=siDelim(text); const rows=text.indexOf(delim)>=0?siParseTable(text,delim):[];
+  const head=rows.length>1?rows[0].map(h=>h.trim()):[];
+  const cveCols=[], hostCols=[]; head.forEach((h,i)=>{ if(SI_CVE_COL.test(h)) cveCols.push(i); else if(SI_HOST_COL.test(h)) hostCols.push(i); });
+  if(cveCols.length){
+    const seen=new Map(); let any=false;
+    rows.slice(1).forEach(r=>{ const ids=new Set(); cveCols.forEach(i=>siCves(r[i]).forEach(x=>ids.add(x)));
+      const host=hostCols.map(i=>(r[i]||"").trim()).find(x=>x)||"";
+      ids.forEach(id=>{ any=true; if(!seen.has(id)) seen.set(id,new Set()); if(host) seen.get(id).add(host); }); });
+    if(any){ const ids=[...seen.keys()]; let hosts=null;
+      if(hostCols.length){ hosts={}; ids.forEach(id=>{ hosts[id]=seen.get(id).size; }); }
+      return {mode:"column",ids,hosts,hostCol:hostCols.length>0,idsRead:ids.length,
+        note:"Read the \""+cveCols.map(i=>head[i]).join("\", \"")+"\" column"+(cveCols.length>1?"s":"")+" of "+(rows.length-1).toLocaleString()+" rows."+(hostCols.length?" Host counts come from the \""+head[hostCols[0]]+"\" column.":" No host column was found, so host counts are not shown.")}; }
+  }
+  const ids=[...new Set(siCves(text))];
+  if(!ids.length) return {error:"No CVE IDs (like CVE-2024-3400) were found in that text."};
+  return {mode:"text",ids,hosts:null,hostCol:false,idsRead:ids.length,
+    note:"No CVE column was found, so every CVE ID in the text was read. IDs that only appear in descriptions or references are included. Use a CSV with a CVE column for exact results."};
+}
+function siFixRank(v){ return (v.fixedVersions&&v.fixedVersions.length)?2:((v.solution||v.workaround||(v.advisoryUrls&&v.advisoryUrls.length))?1:0); }
+/* Match ids against the full KEV base. Not-in-KEV ids are returned unscored. */
+function siMatch(ids,hosts,vulns){
+  const kev=new Map(); (vulns||[]).forEach(v=>{ if(v.kev&&!kev.has(v.id)) kev.set(v.id,v); });
+  const inKev=[], notKev=[];
+  ids.forEach(id=>{ const v=kev.get(id); if(v) inKev.push({v,hosts:hosts?hosts[id]:null}); else notKev.push(id); });
+  return {inKev,notKev};
+}
+const SI_TIER_RANK={Act:0,Attend:1,"Track*":2,Track:3};
+/* Order: tier, ransomware (CISA), hosts affected (from your file), real EPSS, fix published, newest. Each is shown on the row. */
+function siSort(rows){
+  const e=v=>(v.epss!=null&&!v.epssEst)?v.epss:-1;
+  return rows.sort((x,y)=>((SI_TIER_RANK[x.a.tier]??9)-(SI_TIER_RANK[y.a.tier]??9))||(!!y.v.ransomware-!!x.v.ransomware)||((y.hosts||0)-(x.hosts||0))||(e(y.v)-e(x.v))||(siFixRank(y.v)-siFixRank(x.v))||String(y.v.dateAdded||"").localeCompare(String(x.v.dateAdded||""))||x.v.id.localeCompare(y.v.id));
+}
+function siWhy(r){ const v=r.v; return [].concat(v.ransomware?["ransomware-linked (CISA)"]:[],r.hosts!=null?[r.hosts+(r.hosts===1?" host":" hosts")+" in your file"]:[],(v.epss!=null&&!v.epssEst)?["EPSS "+(v.epss<0.01?"<1%":Math.round(v.epss*100)+"%")]:["EPSS not scored yet"],[siFixRank(v)===2?"fix version named":siFixRank(v)===1?"vendor advisory linked":"no fix recorded"],v.dateAdded?["added "+v.dateAdded]:[]); }
+function siCsv(rows,notKev,tracker){
+  const q=x=>'"'+String(x==null?"":x).replace(/"/g,'""')+'"';
+  const out=[["CVE","Vendor","Product","Tier","Why this order","Hosts in file","CISA due","Status","Note"]];
+  rows.forEach(r=>{ const e=tracker[r.v.id]; out.push([r.v.id,r.v.vendor||"",r.v.product||"",r.a.tier,siWhy(r).join("; "),r.hosts==null?"":r.hosts,r.v.dueDate||"",btLabel(e?e.s:"todo"),e?e.note:""]); });
+  notKev.forEach(id=>out.push([id,"","","Not in CISA KEV (not scored)","","","","",""]));
+  return out.map(l=>l.map(q).join(",")).join("\n");
+}
+/* SCANNER-IMPORT-END */
 
 
 </script>
