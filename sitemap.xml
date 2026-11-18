@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-<url><loc>https://syncrisk.co.uk/daily</loc><lastmod>2026-11-17</lastmod></url>
-<url><loc>https://syncrisk.co.uk/</loc><lastmod>2026-11-17</lastmod></url>
-<url><loc>https://syncrisk.co.uk/cve/</loc><lastmod>2026-11-17</lastmod></url>
+<url><loc>https://syncrisk.co.uk/daily</loc></url>
+<url><loc>https://syncrisk.co.uk/</loc></url>
+<url><loc>https://syncrisk.co.uk/cve/</loc><lastmod>2026-11-13</lastmod></url>
 <url><loc>https://syncrisk.co.uk/cve/CVE-2024-3400</loc><lastmod>2024-04-12</lastmod></url>
 <url><loc>https://syncrisk.co.uk/cve/CVE-2023-35082</loc><lastmod>2024-01-18</lastmod></url>
 <url><loc>https://syncrisk.co.uk/cve/CVE-2023-22518</loc><lastmod>2023-11-07</lastmod></url>
