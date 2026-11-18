@@ -2758,7 +2758,7 @@ function invVersionStatus(have,fx){
       }
     }
   }
-  return {k:"check",text:"Fixed in "+fx.slice(0,4).join(", ")+". Compare with "+have+"."};
+  return {k:"check",text:"Fixed in "+Array.from(new Set(fx)).slice(0,4).join(", ")+". Compare with "+have+"."};
 }
 /* Affected-version ranges from CVE records (kev_versions.json, built daily). Positive matches only call a version affected;
    "outside" is said only for a complete block (no part of the record was unreadable) that has numeric ranges. Never "safe". */
