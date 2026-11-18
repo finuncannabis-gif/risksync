@@ -1,6 +1,6 @@
 # SyncRisk (RiskSync) — working rules for Claude
 
-Live: https://syncrisk.co.uk/app (dashboard) · /daily (public brief). Stack: vanilla HTML/JS (React via CDN+Babel in app.html), Cloudflare Pages + Functions, Worker `risksync-enricher` (cron 6h), KV `RISKSYNC_KV`. Free tier limits apply.
+Live: https://syncrisk.co.uk/app (dashboard; client-side access-code gate from M8, deters casual visitors only) · /daily (brief; currently has its own demo gate that blocks first-time visitors, decision pending) · /cve/ (public pages, refreshed daily by GitHub Action). Stack: vanilla HTML/JS (React via CDN+Babel in app.html), Cloudflare Pages + Functions, Worker `risksync-enricher` (cron 6h), KV `RISKSYNC_KV`. Free tier limits apply.
 
 ## Product goal
 Explainable, context-aware prioritization of CISA-KEV (known-exploited) vulnerabilities for small/mid security teams, MSPs, vCISOs. Not breach detection. Every number must be traceable to a real source.
