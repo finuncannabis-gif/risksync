@@ -50,6 +50,9 @@ New "Scanner Import" page: paste CVE IDs or upload CSV/TSV/TXT/JSON (<=10 MB), r
 ## Milestone 10 Feeds + vendor pages BUILT 2026-11-18 (branch vendor-feeds, not merged)
 build-cve-pages.mjs now also writes vendor/<slug>.html (295 vendors, all KEV CVEs, tiers, ransomware, due), feed.xml (Atom) and feed.json (JSON Feed 1.1) with the newest 50 additions; sitemap +295 urls; hub and CVE-page breadcrumbs link to vendor pages. Validator checks vendor row counts vs feed, unscored rows say "Not scored yet", feeds parse and match newest 50, sitemap count. Guards: slug collision refuses publish. Workflow commit list extended. Tested on the real 2026-11-17 feed: 7,422 checks, 0 failures, no churn on rerun, tamper tests caught. Generated files are NOT in the branch: after merge, run the Action once (Actions > Refresh CVE pages > Run workflow).
 
+## Milestone 11 Methodology + top-N wording BUILT 2026-11-18 (branch methodology, not merged)
+/methodology static page (sources, SSVC tree, order inside a tier, fix trust tiers, missing data, limits; percentages computed from the feed), built by the Action, in sitemap (+1), linked from CVE/vendor/hub footers, site nav and app Data Sources. Removed top-N wording: nav "Why These 25" -> "How We Rank"; "TOP 25 CONTEXTUAL THREATS" and bulletin "Top 25 Threats" -> "Highest-urgency threats"; "Your top threats" -> "Highest urgency for you"; "of your top 10 threats" -> "of your N highest-urgency threats"; /daily and daily-demo card title text only (gate untouched); landing line. Validator +4 checks (7,426 total, 0 failures); render smoke strings updated. Run the Action once after merge.
+
 ## Known issues / findings
 1. DONE 2026-11-17: daily.html replaced with SSVC brief; canonical/JSON-LD now syncrisk.co.uk. Contact email now hello@syncrisk.co.uk (Cloudflare Email Routing → finun.cannabis@gmail.com).
 2. DONE 2026-11-17: www→apex 301 redirect rule deployed (Cloudflare). Confirm by opening https://www.syncrisk.co.uk/app.

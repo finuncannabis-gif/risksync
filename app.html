@@ -705,7 +705,7 @@ const generateEmail = () => {
       Your ${ind?.label} organisation faces <span style=\"color:${col}\">${lbl.toLowerCase()}</span> cybersecurity exposure this week.
     </div>
     <div style=\"font-size:12px;color:#8a9bc0;line-height:1.8\">
-      Based on ${(profile.sources||[]).length} active intelligence sources, <strong style=\"color:#dde4f0\">${kevHits.length} of your top 10 threats are actively exploited</strong> in the wild (CISA KEV confirmed). 
+      Based on ${(profile.sources||[]).length} active intelligence sources, <strong style=\"color:#dde4f0\">${kevHits.length} of your ${top10.length} highest-urgency threats are actively exploited</strong> in the wild (CISA KEV confirmed). 
       Using the CISA SSVC decision tree with your sector and vendors, <strong>${S.act}</strong> items need action now and ${S.attend} need attention.
     </div>
     <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"margin-top:16px\">
@@ -746,7 +746,7 @@ const generateEmail = () => {
   ${sections.top5Threats ? `
   <!-- TOP 5 THREATS -->
   <tr><td style=\"background:#080d18;border-left:1px solid #1a2540;border-right:1px solid #1a2540;border-top:1px solid #1a2540;padding:24px 28px\">
-    <div style=\"font-size:9px;font-weight:700;color:#5a6f96;letter-spacing:1px;margin-bottom:14px\">TOP 25 CONTEXTUAL THREATS \u2014 ${ind?.label?.toUpperCase()}</div>
+    <div style=\"font-size:9px;font-weight:700;color:#5a6f96;letter-spacing:1px;margin-bottom:14px\">HIGHEST-URGENCY THREATS \u2014 ${ind?.label?.toUpperCase()}</div>
     <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"border:1px solid #1a2540;border-radius:6px;overflow:hidden\">
       <tr style=\"background:#0c1220\">
         <td style=\"padding:8px 12px;font-size:9px;color:#5a6f96;font-weight:700\">#</td>
@@ -841,7 +841,7 @@ const generateEmail = () => {
   const toggleSection = key => setSections(s => ({...s, [key]: !s[key]}));
 
   const SECTION_LABELS = {
-    execSummary:'Daily Risk Summary', top5Threats:'Top 25 Threats',
+    execSummary:'Daily Risk Summary', top5Threats:'Highest-urgency threats',
     kevAlert:'KEV Alert Banner', controlRec:'Recommended Action',
     regulatoryNote:'Regulatory Note', newSince:'New Since Yesterday',
   };
@@ -1016,7 +1016,7 @@ const generateEmail = () => {
                   Your {ind?.label} organisation faces <span style={{color:col}}>{lbl.toLowerCase()}</span> cybersecurity exposure today.
                 </div>
                 <div style={{fontSize:12, color:'#8a9bc0', lineHeight:1.8, marginBottom:16}}>
-                  Based on {(profile.sources||[]).length} active intelligence sources, <strong style={{color:'#dde4f0'}}>{kevHits.length} of your top 10 threats are actively exploited</strong> in the wild (CISA KEV confirmed). Using the CISA SSVC decision tree with your sector and vendors, <strong style={{color:col}}>{S.act}</strong> items need action now and {S.attend} need attention.
+                  Based on {(profile.sources||[]).length} active intelligence sources, <strong style={{color:'#dde4f0'}}>{kevHits.length} of your {top10.length} highest-urgency threats are actively exploited</strong> in the wild (CISA KEV confirmed). Using the CISA SSVC decision tree with your sector and vendors, <strong style={{color:col}}>{S.act}</strong> items need action now and {S.attend} need attention.
                 </div>
                 <div style={{display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:8}}>
                   {[
@@ -1074,7 +1074,7 @@ const generateEmail = () => {
             {/* Top 5 Threats */}
             {sections.top5Threats && (
               <div style={{background:'#080d18', borderLeft:'1px solid #1a2540', borderRight:'1px solid #1a2540', borderTop:'1px solid #1a2540', padding:'24px 28px'}}>
-                <div style={{fontSize:9, fontWeight:700, color:C.muted, letterSpacing:1, marginBottom:14}}>TOP 25 CONTEXTUAL THREATS — {ind?.label?.toUpperCase()}</div>
+                <div style={{fontSize:9, fontWeight:700, color:C.muted, letterSpacing:1, marginBottom:14}}>HIGHEST-URGENCY THREATS — {ind?.label?.toUpperCase()}</div>
                 <div style={{border:'1px solid #1a2540', borderRadius:6, overflow:'hidden'}}>
                   <div style={{display:'grid', gridTemplateColumns:'28px 1fr 140px 72px 52px', padding:'8px 12px', background:'#0c1220'}}>
                     {['#','DESCRIPTION','CVE','SEV','SCORE'].map(h=>(
@@ -1196,7 +1196,7 @@ const NAV_ITEMS = [
   { id:"analysis",   label:"Exposure Analysis",       icon:"ti-chart-radar",        group:"main"    },
   { id:"inventory",  label:"My Inventory",        icon:"ti-clipboard-list",     group:"main"    },
   { id:"import",     label:"Scanner Import",      icon:"ti-file-import",        group:"main"    },
-  { id:"why10",      label:"Why These 25",        icon:"ti-layout-grid",        group:"main"    },
+  { id:"why10",      label:"How We Rank",        icon:"ti-layout-grid",        group:"main"    },
   { id:"pipeline",   label:"Priority Pipeline",     icon:"ti-cone",               group:"main"    },
   { id:"industry",   label:"Industry Profile",icon:"ti-building",           group:"intel"   },
   { id:"sources",    label:"Data Sources",        icon:"ti-radar",              group:"intel"   },
@@ -1549,7 +1549,7 @@ function DashboardPage({profile,liveVulns,activeCategory,setNav}){
             </div>))}
         </Panel>
       </div>
-      <Panel title="Your top threats" right={<button onClick={()=>setNav&&setNav("threats")} style={{fontSize:10,padding:"3px 10px",borderRadius:4,border:`1px solid ${C.border}`,background:"transparent",color:C.accent,cursor:"pointer"}}>Show all</button>}>
+      <Panel title="Highest urgency for you" right={<button onClick={()=>setNav&&setNav("threats")} style={{fontSize:10,padding:"3px 10px",borderRadius:4,border:`1px solid ${C.border}`,background:"transparent",color:C.accent,cursor:"pointer"}}>Show all</button>}>
         {top.map((v,i)=>(
           <div key={v.id} onClick={()=>setSelectedVuln(v)} style={{display:"flex",alignItems:"center",gap:12,padding:"9px 0",borderBottom:i<top.length-1?`1px solid ${C.border}`:"none",cursor:"pointer"}}>
             <div style={{width:20,fontSize:11,fontWeight:800,color:C.muted}}>{i+1}</div>
@@ -1776,8 +1776,11 @@ function DataSourcesPage({profile,liveVulns}){
         <div style={{fontSize:11,color:C.muted,lineHeight:1.6,marginBottom:6}}>These are not connected, and nothing on any page uses them.</div>
         <div style={{display:"flex",flexWrap:"wrap",gap:6}}>{planned.map(s=>(<span key={s.id} style={{fontSize:10,padding:"3px 10px",borderRadius:12,border:`1px solid ${C.border}`,color:C.muted}}>{s.name}</span>))}</div>
       </Panel>
+      <Panel title="Methodology">
+        <div style={{fontSize:11,color:C.muted,lineHeight:1.6}}>How scores are decided, where each number comes from and what the product does not do: <a href="/methodology" target="_blank" rel="noopener" style={{color:C.accent}}>syncrisk.co.uk/methodology</a>.</div>
+      </Panel>
       <Panel title="Where a value is not known">
-        <div style={{fontSize:11,color:C.muted,lineHeight:1.6}}>Values that are estimated, derived or assumed are labelled on the item, and the Data quality panel in Why These 25 shows how much of the confirmed-exploited set is real.</div>
+        <div style={{fontSize:11,color:C.muted,lineHeight:1.6}}>Values that are estimated, derived or assumed are labelled on the item, and the Data quality panel in How We Rank shows how much of the confirmed-exploited set is real.</div>
       </Panel>
     </div>
   );
@@ -2010,7 +2013,7 @@ function App() {
     dashboard: "OP-CENTER / OVERVIEW",
     threats:   "THREAT FEED",
     analysis:  "EXPOSURE ANALYSIS",
-    why10:     "WHY THESE 25",
+    why10:     "HOW WE RANK",
     pipeline:  "PRIORITY PIPELINE",
     industry:  "INDUSTRY PROFILE",
     sources:   "DATA SOURCES",
