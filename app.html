@@ -746,7 +746,7 @@ const generateEmail = () => {
   ${sections.top5Threats ? `
   <!-- TOP 5 THREATS -->
   <tr><td style=\"background:#080d18;border-left:1px solid #1a2540;border-right:1px solid #1a2540;border-top:1px solid #1a2540;padding:24px 28px\">
-    <div style=\"font-size:9px;font-weight:700;color:#5a6f96;letter-spacing:1px;margin-bottom:14px\">HIGHEST-URGENCY THREATS \u2014 ${ind?.label?.toUpperCase()}</div>
+    <div style=\"font-size:9px;font-weight:700;color:#5a6f96;letter-spacing:1px;margin-bottom:14px\">HIGHEST-URGENCY THREATS \u2014 ${ind?.label?.toUpperCase()} (SHOWING ${top10.length} OF ${S.total})</div>
     <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"border:1px solid #1a2540;border-radius:6px;overflow:hidden\">
       <tr style=\"background:#0c1220\">
         <td style=\"padding:8px 12px;font-size:9px;color:#5a6f96;font-weight:700\">#</td>
@@ -1074,7 +1074,7 @@ const generateEmail = () => {
             {/* Top 5 Threats */}
             {sections.top5Threats && (
               <div style={{background:'#080d18', borderLeft:'1px solid #1a2540', borderRight:'1px solid #1a2540', borderTop:'1px solid #1a2540', padding:'24px 28px'}}>
-                <div style={{fontSize:9, fontWeight:700, color:C.muted, letterSpacing:1, marginBottom:14}}>HIGHEST-URGENCY THREATS — {ind?.label?.toUpperCase()}</div>
+                <div style={{fontSize:9, fontWeight:700, color:C.muted, letterSpacing:1, marginBottom:14}}>HIGHEST-URGENCY THREATS — {ind?.label?.toUpperCase()} (SHOWING {top10.length} OF {S.total})</div>
                 <div style={{border:'1px solid #1a2540', borderRadius:6, overflow:'hidden'}}>
                   <div style={{display:'grid', gridTemplateColumns:'28px 1fr 140px 72px 52px', padding:'8px 12px', background:'#0c1220'}}>
                     {['#','DESCRIPTION','CVE','SEV','SCORE'].map(h=>(
@@ -1549,7 +1549,7 @@ function DashboardPage({profile,liveVulns,activeCategory,setNav}){
             </div>))}
         </Panel>
       </div>
-      <Panel title="Highest urgency for you" right={<button onClick={()=>setNav&&setNav("threats")} style={{fontSize:10,padding:"3px 10px",borderRadius:4,border:`1px solid ${C.border}`,background:"transparent",color:C.accent,cursor:"pointer"}}>Show all</button>}>
+      <Panel title={"Highest urgency for you (showing "+top.length+" of "+S.total.toLocaleString()+")"} right={<button onClick={()=>setNav&&setNav("threats")} style={{fontSize:10,padding:"3px 10px",borderRadius:4,border:`1px solid ${C.border}`,background:"transparent",color:C.accent,cursor:"pointer"}}>Show all</button>}>
         {top.map((v,i)=>(
           <div key={v.id} onClick={()=>setSelectedVuln(v)} style={{display:"flex",alignItems:"center",gap:12,padding:"9px 0",borderBottom:i<top.length-1?`1px solid ${C.border}`:"none",cursor:"pointer"}}>
             <div style={{width:20,fontSize:11,fontWeight:800,color:C.muted}}>{i+1}</div>
