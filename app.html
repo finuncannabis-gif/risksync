@@ -2117,7 +2117,7 @@ function ImportPage({profile,liveVulns}){
             <thead><tr>{["CVE","Urgency","Why this order","Hosts","Fix status"].map(h=><th key={h} style={{...cell,textAlign:"left",fontSize:9,textTransform:"uppercase",letterSpacing:.6,color:C.dim}}>{h}</th>)}</tr></thead>
             <tbody>{shown.map(r=>(
               <tr key={r.v.id}>
-                <td style={{...cell,fontFamily:"monospace",color:C.text,whiteSpace:"nowrap"}}>{r.v.id}<div style={{fontSize:10,color:C.dim,fontFamily:"inherit"}}>{[r.v.vendor,r.v.product].filter(Boolean).join(" ")}</div></td>
+                <td style={{...cell,fontFamily:"monospace",color:C.text,whiteSpace:"nowrap"}}>{r.v.id}<div style={{fontSize:10,color:C.dim,fontFamily:"inherit"}}>{(r.v.product&&r.v.vendor&&r.v.product.toLowerCase().indexOf(r.v.vendor.toLowerCase())===0)?r.v.product:[r.v.vendor,r.v.product].filter(Boolean).join(" ")}</div></td>
                 <td style={cell}>{scored(r)?<><TierChip score={r.a.score}/> <span style={{color:C.dim}}>{r.a.score}</span></>:<span style={{color:C.dim}}>Not scored yet</span>}{r.v.dueDate&&<div style={{fontSize:10,color:C.dim,marginTop:3}}>CISA due {r.v.dueDate}</div>}</td>
                 <td style={{...cell,fontSize:10}}>{siWhy(r).join(" · ")}</td>
                 <td style={cell}>{r.hosts==null?"n/a":r.hosts}</td>
