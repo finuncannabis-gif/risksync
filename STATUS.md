@@ -70,3 +70,9 @@ scripts/build-kev-versions.mjs reads CVE records (cvelistV5, via raw.githubuserc
 - Go on daily.html fix · LLM pilot as script vs in-Worker · pricing model (per-CVE credits vs subscription) · email provider choice.
 6. /app is behind a client-side access-code gate ("Private demo"). The code is readable in the public repo (base64), so it is not security, and it blocks outside visitors. Decide: remove/loosen (public sample-data demo) vs keep.
 7. Cloudflare Pages previews have no KV binding, so preview /daily and /app run on the unscored fallback feed (expected).
+
+## M13 — Worker under git (branch `worker-deploy`, not merged)
+- `worker/enricher.js` = live `risksync-enricher` code (read via Cloudflare connector, last modified 2026-09-28). Old repo copy moved to `worker/enricher-old-repo-copy.js` (reference only; has runNvdBulkSync, not live). `functions/` now only subscribe.js + threats.js.
+- `worker/wrangler.jsonc`: KV RISKSYNC_KV, cron `0 */6 * * *` (UNCONFIRMED vs dashboard), `keep_vars` true. Secrets GITHUB_TOKEN, SYNC_SECRET stay in dashboard.
+- Checks: node --check OK; vs live payload (1,781 KEV): cvss3Base 0 mismatches, classifyPlatform 0 mismatches.
+- Nothing deployed until Workers Builds is connected (root `worker`, deploy `npx wrangler deploy`) and owner says "merge".
