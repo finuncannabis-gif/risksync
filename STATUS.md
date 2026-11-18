@@ -47,6 +47,9 @@
 ## Milestone 9 Scanner Import BUILT 2026-11-18 (branch scanner-import, not merged)
 New "Scanner Import" page: paste CVE IDs or upload CSV/TSV/TXT/JSON (<=10 MB), read in-browser only. CSV with a CVE column reads only that column (+ distinct host counts if a Host column exists); otherwise every CVE ID in the text, with a warning. Found items are treated as in-environment (never skippable). Non-KEV IDs counted, not scored. Order: SSVC tier, ransomware, hosts, real EPSS, fix, newest (shown per row). CSV export + shared status tracker. Tests: import_flow 12, scanner logic 26 (real KEV feed), regressions pass. Sandbox cannot load Babel CDN, so no browser screenshot; check on the Pages preview.
 
+## Milestone 10 Feeds + vendor pages BUILT 2026-11-18 (branch vendor-feeds, not merged)
+build-cve-pages.mjs now also writes vendor/<slug>.html (295 vendors, all KEV CVEs, tiers, ransomware, due), feed.xml (Atom) and feed.json (JSON Feed 1.1) with the newest 50 additions; sitemap +295 urls; hub and CVE-page breadcrumbs link to vendor pages. Validator checks vendor row counts vs feed, unscored rows say "Not scored yet", feeds parse and match newest 50, sitemap count. Guards: slug collision refuses publish. Workflow commit list extended. Tested on the real 2026-11-17 feed: 7,422 checks, 0 failures, no churn on rerun, tamper tests caught. Generated files are NOT in the branch: after merge, run the Action once (Actions > Refresh CVE pages > Run workflow).
+
 ## Known issues / findings
 1. DONE 2026-11-17: daily.html replaced with SSVC brief; canonical/JSON-LD now syncrisk.co.uk. Contact email now hello@syncrisk.co.uk (Cloudflare Email Routing → finun.cannabis@gmail.com).
 2. DONE 2026-11-17: www→apex 301 redirect rule deployed (Cloudflare). Confirm by opening https://www.syncrisk.co.uk/app.
