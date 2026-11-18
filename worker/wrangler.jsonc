@@ -6,5 +6,6 @@
     { "binding": "RISKSYNC_KV", "id": "c017b4f2cfbc4b8382d510b40ff4ec98" }
   ],
   "triggers": { "crons": ["0 */6 * * *"] },
+  "observability": { "enabled": true },
   "keep_vars": true
 }

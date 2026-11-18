@@ -76,3 +76,4 @@ scripts/build-kev-versions.mjs reads CVE records (cvelistV5, via raw.githubuserc
 - `worker/wrangler.jsonc`: KV RISKSYNC_KV, cron `0 */6 * * *` (UNCONFIRMED vs dashboard), `keep_vars` true. Secrets GITHUB_TOKEN, SYNC_SECRET stay in dashboard.
 - Checks: node --check OK; vs live payload (1,781 KEV): cvss3Base 0 mismatches, classifyPlatform 0 mismatches.
 - Nothing deployed until Workers Builds is connected (root `worker`, deploy `npx wrangler deploy`) and owner says "merge".
+- Dashboard confirmed 2026-11-18: cron every 6h; var CACHE_KEY=threats_v1 (plaintext); secrets GITHUB_TOKEN, SYNC_SECRET, NVD_API_KEY (NVD_API_KEY unused by live code, leave); KV RISKSYNC_KV; logs on (mirrored via observability.enabled).
