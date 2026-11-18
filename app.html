@@ -8,8 +8,32 @@
 body{margin:0;padding:16px;background:#080d18;color:#dde4f0;font-family:monospace;font-size:12px}
 .ok{color:#0ed27a}.err{color:#f04060}.hi{color:#2d7ef7}
 </style>
+<style>
+#rs-gate{position:fixed;top:0;left:0;right:0;bottom:0;background:#07090f;z-index:99999;display:flex;align-items:center;justify-content:center;}
+.rs-gate-box{background:#0c1220;border:1px solid #2d7ef7;border-radius:12px;padding:40px;width:360px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.6)}
+.rs-gate-logo{width:40px;height:40px;background:#2d7ef7;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;margin:0 auto 16px}
+.rs-gate-title{font-size:20px;font-weight:800;color:#fff;margin-bottom:6px;font-family:Inter,sans-serif}
+.rs-gate-sub{font-size:12px;color:#5a6f96;margin-bottom:28px;font-family:Inter,sans-serif}
+.rs-gate-input{width:100%;padding:12px 14px;border-radius:6px;border:1px solid #1a2540;background:#07090f;color:#dde4f0;font-size:14px;font-family:monospace;outline:none;margin-bottom:10px;box-sizing:border-box;text-align:center;letter-spacing:2px}
+.rs-gate-input:focus{border-color:#2d7ef7}
+.rs-gate-btn{width:100%;padding:12px;border-radius:6px;border:none;background:#2d7ef7;color:#fff;font-size:14px;font-weight:700;cursor:pointer;transition:opacity .15s}
+.rs-gate-btn:hover{opacity:.85}
+.rs-gate-err{color:#f04060;font-size:12px;margin-top:8px;display:none}
+.rs-gate-footer{font-size:10px;color:#2e3f62;margin-top:20px}
+</style>
 </head>
 <body>
+<div id="rs-gate" style="display:none">
+  <div class="rs-gate-box">
+    <div class="rs-gate-logo">🛡</div>
+    <div class="rs-gate-title">RiskSync Platform</div>
+    <div class="rs-gate-sub">Private demo — enter access code to continue</div>
+    <input class="rs-gate-input" id="rs-pwd" type="password" placeholder="Access code" autocomplete="off" onkeydown="if(event.keyCode===13)rsUnlock()"/>
+    <button class="rs-gate-btn" onclick="rsUnlock()">Enter Platform →</button>
+    <div class="rs-gate-err" id="rs-err">Incorrect access code</div>
+    <div class="rs-gate-footer">Authorised demo access only · SyncRisk © 2026</div>
+  </div>
+</div>
 <div id="root">
   <div style="position:fixed;top:0;left:0;right:0;bottom:0;background:#080d18;display:flex;align-items:center;justify-content:center;font-family:monospace;flex-direction:column;gap:16px">
     <div style="width:44px;height:44px;border-radius:11px;background:#2d7ef7;display:flex;align-items:center;justify-content:center">
@@ -768,46 +792,6 @@ const generateEmail = () => {
 </table>
 </td></tr>
 </table>
-<style>
-#rs-gate{position:fixed;top:0;left:0;right:0;bottom:0;background:#07090f;z-index:99999;display:flex;align-items:center;justify-content:center;}
-.rs-gate-box{background:#0c1220;border:1px solid #2d7ef7;border-radius:12px;padding:40px;width:360px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.6)}
-.rs-gate-logo{width:40px;height:40px;background:#2d7ef7;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;margin:0 auto 16px}
-.rs-gate-title{font-size:20px;font-weight:800;color:#fff;margin-bottom:6px;font-family:Inter,sans-serif}
-.rs-gate-sub{font-size:12px;color:#5a6f96;margin-bottom:28px;font-family:Inter,sans-serif}
-.rs-gate-input{width:100%;padding:12px 14px;border-radius:6px;border:1px solid #1a2540;background:#07090f;color:#dde4f0;font-size:14px;font-family:monospace;outline:none;margin-bottom:10px;box-sizing:border-box;text-align:center;letter-spacing:2px}
-.rs-gate-input:focus{border-color:#2d7ef7}
-.rs-gate-btn{width:100%;padding:12px;border-radius:6px;border:none;background:#2d7ef7;color:#fff;font-size:14px;font-weight:700;cursor:pointer;transition:opacity .15s}
-.rs-gate-btn:hover{opacity:.85}
-.rs-gate-err{color:#f04060;font-size:12px;margin-top:8px;display:none}
-.rs-gate-footer{font-size:10px;color:#2e3f62;margin-top:20px}
-</style>
-<div id="rs-gate">
-  <div class="rs-gate-box">
-    <div class="rs-gate-logo">🛡</div>
-    <div class="rs-gate-title">RiskSync Platform</div>
-    <div class="rs-gate-sub">Private demo — enter access code to continue</div>
-    <input class="rs-gate-input" id="rs-pwd" type="password" placeholder="Access code" onkeydown="if(event.keyCode===13)rsUnlock()"/>
-    <button class="rs-gate-btn" onclick="rsUnlock()">Enter Platform →</button>
-    <div class="rs-gate-err" id="rs-err">Incorrect access code</div>
-    <div class="rs-gate-footer">Authorised demo access only · SyncRisk © 2026</div>
-  </div>
-</div>
-<script>
-(function(){
-  if(sessionStorage.getItem('rs_demo')==='Umlza1N5bmMyMDI2'){document.getElementById('rs-gate').style.display='none';return;}
-  document.body.style.overflow='hidden';
-})();
-function rsUnlock(){
-  if(btoa(document.getElementById('rs-pwd').value)==='Umlza1N5bmMyMDI2'){
-    sessionStorage.setItem('rs_demo','Umlza1N5bmMyMDI2');
-    document.getElementById('rs-gate').style.display='none';
-    document.body.style.overflow='';
-  }else{
-    document.getElementById('rs-err').style.display='block';
-    document.getElementById('rs-pwd').value='';
-  }
-}
-<\/script>
 </body>
 </html>`;
   };
@@ -2832,7 +2816,10 @@ function btReportHtml(o){
 </script>
 
 <script>
-(function(){
+/* Access gate: the app is not compiled, started or fed until the code is entered. Not real security (code is visible in page source); see STATUS.md. */
+var RS_GATE_KEY='rs_app_demo', RS_GATE_VAL='Umlza1N5bmMyMDI2';
+function rsBoot(){
+  if(window._rsBooted) return; window._rsBooted=true;
   if(typeof Babel === 'undefined'){ window._rsErr('Babel CDN failed to load. Check internet connection.'); return; }
   if(typeof React === 'undefined'){ window._rsErr('React CDN failed to load.'); return; }
   var opts = {presets:['react'], sourceType:'script'};
@@ -2852,6 +2839,23 @@ function btReportHtml(o){
   try{
     ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(App));
   }catch(e){ window._rsErr('Render error: '+e.message+'<br><pre>'+e.stack+'</pre>'); }
+}
+function rsUnlock(){
+  var ok=false; try{ ok=(btoa(document.getElementById('rs-pwd').value)===RS_GATE_VAL); }catch(e){}
+  if(ok){
+    try{ sessionStorage.setItem(RS_GATE_KEY,RS_GATE_VAL); }catch(e){}
+    document.getElementById('rs-gate').style.display='none';
+    rsBoot();
+  }else{
+    document.getElementById('rs-err').style.display='block';
+    document.getElementById('rs-pwd').value='';
+  }
+}
+(function(){
+  var unlocked=false; try{ unlocked=(sessionStorage.getItem(RS_GATE_KEY)===RS_GATE_VAL); }catch(e){}
+  if(unlocked){ rsBoot(); return; }
+  document.getElementById('rs-gate').style.display='flex';
+  document.getElementById('load-status') && (document.getElementById('load-status').textContent='Locked');
 })();
 </script>
 </body>
