@@ -25,7 +25,7 @@
 - Tests: render 32, inventory 12, engine 39, board_flow 17 (jsdom, real feed), board_logic 21. Screenshots from the real 1,781-KEV feed.
 - Limits: per-browser only (accounts = milestone 7); CSV import trusts the file (rows not a CVE id or known status are skipped and counted).
 
-## Milestone 7 (branch `auto-refresh`, NOT merged until owner says "merge")
+## Milestone 7 DONE 2026-11-18 (merged 688e6fc; first manual run succeeded, bot commit 26e28a8; daily 05:17 UTC)
 - `.github/workflows/refresh-cve-pages.yml`: daily 05:17 UTC + manual button; fetch /threats, build, validate, commit to main only if changed (Cloudflare then deploys). Aborts (nothing published) on: fallback feed, <1,700 KEV, <90% SSVC coverage, >5% drop, failed validation.
 - Generator writes only changed pages ("Last updated" date changes only with content); sitemap lastmod no longer changes daily. First run after merge rewrites all pages once (footer wording).
 - `scripts/validate-cve-pages.mjs` + `scripts/ssvc_table9.json` (independent CISA table). Tested: idempotent, new-entry, removal, refuse-on-bad-feed (shrink/no-SSVC/fallback).
