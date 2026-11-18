@@ -2650,10 +2650,10 @@ function getReferenceLinks(vuln){
     ? "https://www.cisa.gov/known-exploited-vulnerabilities-catalog"
     : "https://www.cisa.gov/news-events/cybersecurity-advisories"});
   (vuln.advisoryUrls||[]).forEach((u,i)=>links.push({label:"Vendor advisory"+((vuln.advisoryUrls.length>1)?" "+(i+1):""), url:u}));
-  /* Fix pointers (kev_fixes.json, built daily): c = a URL CISA lists in its own KEV notes; b = a CERT/CSIRT bulletin. Neither states a fixed version. */
+  /* Fix pointers (kev_fixes.json, built daily): c = a URL CISA lists in its own KEV notes; b = a CERT/CSIRT bulletin; n = a link NVD tags as vendor advisory/patch/mitigation. Neither states a fixed version. */
   ((window.KEV_FIXES||{})[vuln.id]||[]).forEach(p=>{
     if(!p||!p[1]||(vuln.advisoryUrls||[]).indexOf(p[1])>=0) return;
-    links.push({label:(p[0]==="c"?"CISA pointer":"CERT bulletin"), url:p[1]});
+    links.push({label:(p[0]==="c"?"CISA pointer":p[0]==="b"?"CERT bulletin":"NVD-tagged advisory"), url:p[1]});
   });
   (vuln.references||[]).forEach(ref=>{
     if(!ref || !ref.url) return;

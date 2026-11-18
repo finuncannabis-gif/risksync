@@ -4,6 +4,8 @@
 // in the feed (advisoryUrls), so this file carries only the two tiers the feed lacks:
 //   "c" = CISA pointer: a URL in CISA's own KEV "notes" field (CISA points at it; it is not necessarily the vendor's page).
 //   "b" = CERT bulletin: a CVE-record reference on a CERT/CSIRT host (CERT/CC, CISA ICS advisories, JVN, NCSC, CERT-EU...).
+//   "n" = NVD-tagged: a NVD reference tagged Vendor Advisory / Patch / Mitigation (NVD's tag, not verified by us). Fetched only for entries
+//          the other sources leave empty, a few per run, cached in kev_nvd.json (no API key needed; the public limit is 5 requests / 30 s).
 // Nothing here states a fixed version. Generic pages (NVD, the KEV catalog itself) and news/blog links are dropped.
 import fs from 'fs'; import path from 'path';
 const SRC = process.argv[2] || 'https://syncrisk.co.uk/threats', OUT = process.argv[3] || '.', LOCAL = process.argv[4] || '';
@@ -33,10 +35,15 @@ export function fromRecord(rec) {
   for (const r of refs) { const u = cleanUrl(r.url); if (/^https:\/\//.test(u) && !isGeneric(u) && isCertUrl(u)) out.push({t: 'b', u}); }
   return out;
 }
+export function fromNvd(j) {
+  const refs = (((j && j.vulnerabilities && j.vulnerabilities[0]) || {}).cve || {}).references || [], out = [];
+  for (const r of refs) { const u = cleanUrl(r.url); if (/^https:\/\//.test(u) && !isGeneric(u) && (r.tags || []).some(t => ['Vendor Advisory', 'Patch', 'Mitigation'].includes(t))) out.push({t: 'n', u}); }
+  return out;
+}
 export function merge(list, existing) {
   const seen = new Set((existing || []).map(x => x)), out = [];
   for (const x of list) { if (seen.has(x.u)) continue; seen.add(x.u); out.push(x); }
-  out.sort((a, b) => (a.t === b.t ? 0 : a.t === 'c' ? -1 : 1)); // CISA pointer outranks CERT bulletin
+  const R = {c: 0, b: 1, n: 2}; out.sort((a, b) => R[a.t] - R[b.t]); // CISA pointer > CERT bulletin > NVD-tagged
   return out.slice(0, 3).map(x => [x.t, x.u]);
 }
 
@@ -62,6 +69,23 @@ if (import.meta.url === 'file://' + process.argv[1] || process.argv[1].endsWith(
     try { const rec = await getRec(id); if (rec) fetched++; else missing++;
       const l = merge([...fromNotes(notes.get(id)), ...fromRecord(rec)], have.get(id)); if (l.length) out[id] = l; }
     catch (e) { failed++; } } }));
+  // ---- NVD pass: only for entries still empty, a few per run, cached ----
+  const nvdFile = path.join(OUT, 'kev_nvd.json'), today = Math.floor(Date.now() / 86400000), KEY = process.env.NVD_API_KEY || '';
+  let nvd = {n: {}}; try { nvd = JSON.parse(fs.readFileSync(nvdFile, 'utf8')); } catch (e) { /* first run */ }
+  const empty = kevs.filter(v => !(v.fixedVersions && v.fixedVersions.length) && !v.solution && !(v.advisoryUrls && v.advisoryUrls.length) && !out[v.id]).map(v => v.id);
+  const todo = empty.filter(id => !nvd.n[id] || today - nvd.n[id][0] >= 30).sort((a, b) => ((nvd.n[a] || [0])[0] - (nvd.n[b] || [0])[0]) || a.localeCompare(b)).slice(0, +(process.env.NVD_PER_RUN || (KEY ? 150 : 40)));
+  const gapMs = +(process.env.NVD_GAP_MS || (KEY ? 700 : 6500)), tpl = process.env.NVD_URL || 'https://services.nvd.nist.gov/rest/json/cves/2.0?cveId=';
+  let nvdDone = 0, nvdStop = '';
+  for (const id of todo) {
+    try { const r = await fetch(tpl + id, {headers: Object.assign({'User-Agent': 'SyncRiskPagesBot/1.0 (+https://syncrisk.co.uk)'}, KEY ? {apiKey: KEY} : {})});
+      if (!r.ok) { nvdStop = 'HTTP ' + r.status; break; }
+      const l = fromNvd(await r.json()); nvd.n[id] = [today].concat(l.slice(0, 3).map(x => x.u)); nvdDone++; }
+    catch (e) { nvdStop = String(e.message || e).slice(0, 60); break; }
+    await new Promise(r => setTimeout(r, gapMs));
+  }
+  for (const id of empty) { const e = nvd.n[id]; if (e && e.length > 1) out[id] = e.slice(1).map(u => ['n', u]); }
+  const nvdBody = JSON.stringify(nvd) + '\n'; if (!fs.existsSync(nvdFile) || fs.readFileSync(nvdFile, 'utf8') !== nvdBody) fs.writeFileSync(nvdFile, nvdBody);
+  console.log(`NVD pass: ${nvdDone} of ${todo.length} looked up${nvdStop ? ' (stopped: ' + nvdStop + ')' : ''}; ${Object.keys(nvd.n).length} cached, ${empty.filter(id => nvd.n[id]).length}/${empty.length} empty entries checked`);
   const problems = [], T = !!process.env.KV_TEST;
   if (!T && ids.length < 1700) problems.push(`only ${ids.length} KEV ids in feed`);
   if (!T && notes.size < 1700) problems.push(`CISA KEV feed has only ${notes.size} entries`);
@@ -70,10 +94,10 @@ if (import.meta.url === 'file://' + process.argv[1] || process.argv[1].endsWith(
   if (fs.existsSync(file)) { const prev = Object.keys(JSON.parse(fs.readFileSync(file, 'utf8')).f || {}).length; if (Object.keys(out).length < 0.8 * prev) problems.push(`entries fell from ${prev} to ${Object.keys(out).length}`); }
   if (problems.length) { console.error('REFUSING TO PUBLISH kev_fixes.json:\n - ' + problems.join('\n - ')); process.exit(1); }
   const sorted = {}; Object.keys(out).sort().forEach(k => sorted[k] = out[k]);
-  const body = JSON.stringify({src: 'CISA KEV notes; CERT hosts in CVE records', f: sorted}) + '\n';
+  const body = JSON.stringify({src: 'CISA KEV notes; CERT hosts in CVE records; NVD-tagged references', f: sorted}) + '\n';
   const same = fs.existsSync(file) && fs.readFileSync(file, 'utf8') === body; if (!same) fs.writeFileSync(file, body);
   // coverage report over the gap: KEV entries with no fix info in the feed
   const gap = kevs.filter(v => !(v.fixedVersions && v.fixedVersions.length) && !v.solution && !(v.advisoryUrls && v.advisoryUrls.length));
-  const gapHit = gap.filter(v => sorted[v.id]).length, c = Object.values(sorted).filter(l => l.some(x => x[0] === 'c')).length, b = Object.values(sorted).filter(l => l.some(x => x[0] === 'b')).length;
-  console.log(`${ids.length} KEV ids: ${fetched} records read, ${missing} not found, ${failed} failed; pointers for ${Object.keys(sorted).length} (CISA pointer ${c}, CERT bulletin ${b}); gap entries now covered ${gapHit}/${gap.length}; ${same ? 'unchanged' : 'written'}; ${(body.length / 1024).toFixed(0)} KB`);
+  const nCount = Object.values(sorted).filter(l => l.some(x => x[0] === 'n')).length, gapHit = gap.filter(v => sorted[v.id]).length, c = Object.values(sorted).filter(l => l.some(x => x[0] === 'c')).length, b = Object.values(sorted).filter(l => l.some(x => x[0] === 'b')).length;
+  console.log(`${ids.length} KEV ids: ${fetched} records read, ${missing} not found, ${failed} failed; pointers for ${Object.keys(sorted).length} (CISA pointer ${c}, CERT bulletin ${b}, NVD-tagged ${nCount}); gap entries now covered ${gapHit}/${gap.length}; ${same ? 'unchanged' : 'written'}; ${(body.length / 1024).toFixed(0)} KB`);
 }

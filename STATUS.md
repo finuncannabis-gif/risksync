@@ -87,3 +87,8 @@ scripts/build-kev-versions.mjs reads CVE records (cvelistV5, via raw.githubuserc
 - Action: new step (continue-on-error) BEFORE page build; commit step now pushes to the branch it ran on (was hard-coded main: a branch run would have pushed to main).
 - app.html `getReferenceLinks` appends labelled pointers from /kev_fixes.json; CVE pages show them with a tier tag; validator checks them. Tests: render 32, inventory 12, import 13, board 17, ranges_ui 3, engine 39, pages 1,781/0 failures.
 - M14 MERGED 2026-11-18 (5f57d17). First Action run: kev_fixes.json has 886 CVEs (CISA pointer 835, CERT bulletin 78); 423 of 776 no-fix entries (54.5%) now have a labelled pointer; 353 still have none. Some CISA-notes URLs are web.archive.org copies of old vendor pages (CISA's choice, tier unchanged).
+
+## M14b — NVD-tagged pointers for the remaining no-fix entries (branch `fix-pointers-nvd`, not merged)
+- After M14, 353 of 776 no-fix KEV entries had nothing. New free source: NVD references tagged Vendor Advisory / Patch / Mitigation (tier "n", label "NVD-tagged"; NVD's tag, not verified by us; ranks below CISA pointer and CERT bulletin).
+- Public NVD limit is 5 requests/30 s, so the Action looks up 40 entries per run (6.5 s apart, about 4.5 min), cached in `kev_nvd.json` (rechecked after 30 days). The 353 fill in over ~9 daily runs. Stops cleanly on any HTTP error (429 etc.) and keeps the cache. Optional later: set NVD_API_KEY as a repo secret and pass it in the workflow for 150 per run.
+- Tested with a mock NVD server (tag filter, http/generic URLs dropped, 429 stop, cache idempotent), pages build+validate 1,781/0 failures, render 32, inventory 12. Real NVD coverage unmeasured: sandbox cannot reach NVD.
