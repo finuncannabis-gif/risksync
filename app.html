@@ -2082,7 +2082,9 @@ function ImportPage({profile,liveVulns}){
     if(f.size>SI_MAX_CHARS){ setRes({error:"File is larger than 10 MB. Export a CSV with only the CVE and host columns."}); return; }
     const rd=new FileReader(); rd.onload=()=>{ const t=String(rd.result||""); setText(t.length>20000?"":t); run(t); }; rd.readAsText(f);
   };
-  const cnt=t=>res&&res.rows?res.rows.filter(r=>r.a.tier===t).length:0;
+  const scored=r=>!!(r.v.ssvc&&r.v.ssvc.e);
+  const cnt=t=>res&&res.rows?res.rows.filter(r=>scored(r)&&r.a.tier===t).length:0;
+  const unscored=res&&res.rows?res.rows.filter(r=>!scored(r)).length:0;
   const shown=res&&res.rows?(showAll?res.rows:res.rows.slice(0,100)):[];
   const cell={padding:"7px 10px",fontSize:11,color:C.muted,borderBottom:`1px solid ${C.border}`,verticalAlign:"top"};
   const btn={fontSize:10,padding:"3px 10px",borderRadius:4,border:`1px solid ${C.border}`,background:"transparent",color:C.muted,cursor:"pointer"};
@@ -2106,6 +2108,7 @@ function ImportPage({profile,liveVulns}){
           <Kpi label="Act now" value={cnt("Act")} sub="confirmed exploited, high urgency" color={C.red}/>
           <Kpi label="Attend" value={cnt("Attend")} sub="schedule soon" color={C.amber}/>
           <Kpi label="Track" value={cnt("Track*")+cnt("Track")} sub="monitor" color={C.green}/>
+          {unscored>0&&<Kpi label="Not scored yet" value={unscored} sub="scoring feed unavailable" color={C.muted}/>}
           <Kpi label="CVEs read" value={res.p.ids.length} sub={res.rows.length+" in CISA KEV, "+res.notKev.length+" not"} color={C.text}/>
         </div>
         <Panel title={"Known-exploited findings ("+res.rows.length+")"} right={<span style={{display:"flex",gap:6}}>{res.rows.length>0&&<button onClick={()=>downloadCsv(siCsv(res.rows,res.notKev,T.map),"syncrisk-scanner-"+new Date().toISOString().slice(0,10)+".csv")} style={btn}>Export CSV</button>}</span>}>
@@ -2115,7 +2118,7 @@ function ImportPage({profile,liveVulns}){
             <tbody>{shown.map(r=>(
               <tr key={r.v.id}>
                 <td style={{...cell,fontFamily:"monospace",color:C.text,whiteSpace:"nowrap"}}>{r.v.id}<div style={{fontSize:10,color:C.dim,fontFamily:"inherit"}}>{[r.v.vendor,r.v.product].filter(Boolean).join(" ")}</div></td>
-                <td style={cell}><TierChip score={r.a.score}/> <span style={{color:C.dim}}>{r.a.score}</span>{r.v.dueDate&&<div style={{fontSize:10,color:C.dim,marginTop:3}}>CISA due {r.v.dueDate}</div>}</td>
+                <td style={cell}>{scored(r)?<><TierChip score={r.a.score}/> <span style={{color:C.dim}}>{r.a.score}</span></>:<span style={{color:C.dim}}>Not scored yet</span>}{r.v.dueDate&&<div style={{fontSize:10,color:C.dim,marginTop:3}}>CISA due {r.v.dueDate}</div>}</td>
                 <td style={{...cell,fontSize:10}}>{siWhy(r).join(" · ")}</td>
                 <td style={cell}>{r.hosts==null?"n/a":r.hosts}</td>
                 <td style={cell}><TrackSelect id={r.v.id} T={T}/></td>
@@ -2945,7 +2948,7 @@ function siWhy(r){ const v=r.v; return [].concat(v.ransomware?["ransomware-linke
 function siCsv(rows,notKev,tracker){
   const q=x=>'"'+String(x==null?"":x).replace(/"/g,'""')+'"';
   const out=[["CVE","Vendor","Product","Tier","Why this order","Hosts in file","CISA due","Status","Note"]];
-  rows.forEach(r=>{ const e=tracker[r.v.id]; out.push([r.v.id,r.v.vendor||"",r.v.product||"",r.a.tier,siWhy(r).join("; "),r.hosts==null?"":r.hosts,r.v.dueDate||"",btLabel(e?e.s:"todo"),e?e.note:""]); });
+  rows.forEach(r=>{ const e=tracker[r.v.id]; out.push([r.v.id,r.v.vendor||"",r.v.product||"",(r.v.ssvc&&r.v.ssvc.e)?r.a.tier:"Not scored yet",siWhy(r).join("; "),r.hosts==null?"":r.hosts,r.v.dueDate||"",btLabel(e?e.s:"todo"),e?e.note:""]); });
   notKev.forEach(id=>out.push([id,"","","Not in CISA KEV (not scored)","","","","",""]));
   return out.map(l=>l.map(q).join(",")).join("\n");
 }
