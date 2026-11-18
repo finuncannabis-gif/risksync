@@ -25,7 +25,8 @@
 - Tests: render 32, inventory 12, engine 39, board_flow 17 (jsdom, real feed), board_logic 21. Screenshots from the real 1,781-KEV feed.
 - Limits: per-browser only (accounts = milestone 7); CSV import trusts the file (rows not a CVE id or known status are skipped and counted).
 
-## Milestone 8 Layer 1 (branch `app-gate`, NOT merged until owner says "merge")
+## Milestone 8 Layer 1 DONE 2026-11-18 (merged 5c9996b)
+- Owner decisions 2026-11-18: /daily gate stays unchanged; Layer 2 (Cloudflare Access on /app) on hold.
 - CORRECTION: until now `/app` had NO gate. The gate markup/script in app.html sat inside the bulletin-export template string (so "Copy/Download HTML" briefs also carried an access-code overlay). `/daily` has its own separate gate (key rs_daily_demo), which blocks first-time visitors arriving via `/` -> `/daily`; decision on that pending.
 - Now: real gate on `/app` (key rs_app_demo, same code). The app is not compiled, started or fed until unlocked. Gate removed from the export template. Client-side only: code visible in page source/public repo, so it deters casual visitors only.
 - Tested in headless Chrome (tests/gate_test.py, 11 checks) + existing suites (render 32, inventory 12, board 17, engine 39).
