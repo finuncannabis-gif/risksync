@@ -79,3 +79,10 @@ scripts/build-kev-versions.mjs reads CVE records (cvelistV5, via raw.githubuserc
 - Dashboard confirmed 2026-11-18: cron every 6h; var CACHE_KEY=threats_v1 (plaintext); secrets GITHUB_TOKEN, SYNC_SECRET, NVD_API_KEY (NVD_API_KEY unused by live code, leave); KV RISKSYNC_KV; logs on (mirrored via observability.enabled).
 - Cloudflare dashboard "Connect GitHub" did not open a repo picker, so M13 deploys via GitHub Action `.github/workflows/deploy-worker.yml` (push to main touching worker/**, or manual run). Secrets: CLOUDFLARE_API_TOKEN (Worker-scoped, Individual Workers Editor), CLOUDFLARE_ACCOUNT_ID.
 - M13 DONE 2026-11-18: Action deploy succeeded (run 44258500096); /threats ok:true, 1,782 KEV / 2,887 total. Pending confirmation: first cron after deploy (12:00 UTC) should advance `updatedAt` past 2026-11-18T06:00:42Z. Rollback: Worker → Deployments.
+
+## M14 — Fix pointers for KEV entries without fix data (branch `fix-pointers`, not merged)
+- Real gap (feed 2026-11-17, 1,781 KEV): 1,186 lack a named fixed version; 776 lack any fix info (no version, vendor text, or advisory link). The older "1,106" figure was a different measure.
+- `scripts/build-fix-pointers.mjs` -> `kev_fixes.json` {f:{CVE:[[tier,url],…]}}; tiers: c = CISA pointer (URL in KEV `notes`), b = CERT bulletin (CERT/CSIRT host in CVE record refs). Vendor links already live in the feed. Never states a version. Guards: ≥1,700 ids, CISA feed ≥1,700, ≤2% fetch failures, no <80% shrink. Max 3 links per CVE.
+- Measured on real CVE records alone: CERT bulletins cover 75 CVEs, 45 of the 776 gap (5.8%). CISA-notes coverage unmeasured (CISA blocked from sandbox): first Action run reports it.
+- Action: new step (continue-on-error) BEFORE page build; commit step now pushes to the branch it ran on (was hard-coded main: a branch run would have pushed to main).
+- app.html `getReferenceLinks` appends labelled pointers from /kev_fixes.json; CVE pages show them with a tier tag; validator checks them. Tests: render 32, inventory 12, import 13, board 17, ranges_ui 3, engine 39, pages 1,781/0 failures.

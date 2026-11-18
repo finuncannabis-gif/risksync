@@ -2638,6 +2638,7 @@ function getRemediation(vuln){
    NVD, MITRE and CISA links are deterministic — always shown when the id looks like a real CVE.
    Any real NVD reference links the vuln carries (vendor advisories, patches, exploit writeups)
    are appended after — however many actually exist, not capped at a fixed set. */
+try{ fetch("/kev_fixes.json").then(r=>r.ok?r.json():null).then(j=>{ if(j&&j.f) window.KEV_FIXES=j.f; }).catch(()=>{}); }catch(e){}
 function getReferenceLinks(vuln){
   const links = [];
   const isCve = vuln.id && vuln.id.startsWith("CVE-");
@@ -2649,6 +2650,11 @@ function getReferenceLinks(vuln){
     ? "https://www.cisa.gov/known-exploited-vulnerabilities-catalog"
     : "https://www.cisa.gov/news-events/cybersecurity-advisories"});
   (vuln.advisoryUrls||[]).forEach((u,i)=>links.push({label:"Vendor advisory"+((vuln.advisoryUrls.length>1)?" "+(i+1):""), url:u}));
+  /* Fix pointers (kev_fixes.json, built daily): c = a URL CISA lists in its own KEV notes; b = a CERT/CSIRT bulletin. Neither states a fixed version. */
+  ((window.KEV_FIXES||{})[vuln.id]||[]).forEach(p=>{
+    if(!p||!p[1]||(vuln.advisoryUrls||[]).indexOf(p[1])>=0) return;
+    links.push({label:(p[0]==="c"?"CISA pointer":"CERT bulletin"), url:p[1]});
+  });
   (vuln.references||[]).forEach(ref=>{
     if(!ref || !ref.url) return;
     const tag = (ref.tags && ref.tags[0]) || "Reference";
