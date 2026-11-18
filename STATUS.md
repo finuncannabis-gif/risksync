@@ -86,3 +86,4 @@ scripts/build-kev-versions.mjs reads CVE records (cvelistV5, via raw.githubuserc
 - Measured on real CVE records alone: CERT bulletins cover 75 CVEs, 45 of the 776 gap (5.8%). CISA-notes coverage unmeasured (CISA blocked from sandbox): first Action run reports it.
 - Action: new step (continue-on-error) BEFORE page build; commit step now pushes to the branch it ran on (was hard-coded main: a branch run would have pushed to main).
 - app.html `getReferenceLinks` appends labelled pointers from /kev_fixes.json; CVE pages show them with a tier tag; validator checks them. Tests: render 32, inventory 12, import 13, board 17, ranges_ui 3, engine 39, pages 1,781/0 failures.
+- M14 MERGED 2026-11-18 (5f57d17). First Action run: kev_fixes.json has 886 CVEs (CISA pointer 835, CERT bulletin 78); 423 of 776 no-fix entries (54.5%) now have a labelled pointer; 353 still have none. Some CISA-notes URLs are web.archive.org copies of old vendor pages (CISA's choice, tier unchanged).
