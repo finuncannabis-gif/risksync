@@ -25,6 +25,12 @@
 - Tests: render 32, inventory 12, engine 39, board_flow 17 (jsdom, real feed), board_logic 21. Screenshots from the real 1,781-KEV feed.
 - Limits: per-browser only (accounts = milestone 7); CSV import trusts the file (rows not a CVE id or known status are skipped and counted).
 
+## Milestone 7 (branch `auto-refresh`, NOT merged until owner says "merge")
+- `.github/workflows/refresh-cve-pages.yml`: daily 05:17 UTC + manual button; fetch /threats, build, validate, commit to main only if changed (Cloudflare then deploys). Aborts (nothing published) on: fallback feed, <1,700 KEV, <90% SSVC coverage, >5% drop, failed validation.
+- Generator writes only changed pages ("Last updated" date changes only with content); sitemap lastmod no longer changes daily. First run after merge rewrites all pages once (footer wording).
+- `scripts/validate-cve-pages.mjs` + `scripts/ssvc_table9.json` (independent CISA table). Tested: idempotent, new-entry, removal, refuse-on-bad-feed (shrink/no-SSVC/fallback).
+- OWNER STEPS: add the workflow file via the GitHub web UI if the app cannot push it; Settings > Actions > General > Workflow permissions = Read and write; run once manually. If Cloudflare WAF blocks the runner (curl 403), add a skip rule for User-Agent "SyncRiskPagesBot".
+
 ## Parked 2026-11-17 (owner: revisit later)
 - Milestone 4 match alerts / subscriber system. Reason: needs subscriber storage, double opt-in + unsubscribe, and a Worker-vs-new-Worker decision (A: add to risksync-enricher, B: separate Worker).
 - FINDING: `/subscribe` only sends a Resend welcome email; it stores no subscriber list and has no unsubscribe link. Sign-ups (incl. CVE-page "Notify me") exist only in Resend's sent-mail log. Check there for any real sign-ups.
