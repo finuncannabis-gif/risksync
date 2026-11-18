@@ -2141,6 +2141,8 @@ function ImportPage({profile,liveVulns}){
 function InventoryPage({profile,liveVulns}){
   const base=(liveVulns&&liveVulns.length>0)?liveVulns:null;
   const T=useTracker();
+  const [ranges,setRanges]=useState(null);
+  useEffect(()=>{ let dead=false; fetch("/kev_versions.json").then(r=>r.ok?r.json():null).then(j=>{ if(!dead&&j&&j.v) setRanges(j.v); }).catch(()=>{}); return ()=>{dead=true;}; },[]);
   const [text,setText]=useState("");
   const [res,setRes]=useState(null);
   const [showAll,setShowAll]=useState(false);
@@ -2148,7 +2150,7 @@ function InventoryPage({profile,liveVulns}){
     if(!base) return;
     const idx=invKevIndex(base);
     const items=parseInventory(txt,idx.vendors);
-    const r=matchInventory(items,base);
+    const r=matchInventory(items,base,ranges);
     const rows=r.matches.map(m=>{
       const vend=Object.assign({},profile.vendors||{});
       m.items.forEach(i=>{ if(m.v.vendor) vend[m.v.vendor]=Math.max(vend[m.v.vendor]||0,i.critical?2:1); });
@@ -2173,7 +2175,7 @@ function InventoryPage({profile,liveVulns}){
   const cnt=t=>open.filter(r=>r.a.tier===t).length;
   const shown=res?(showAll?res.rows:res.rows.slice(0,100)):[];
   const cell={padding:"7px 10px",fontSize:11,color:C.muted,borderBottom:`1px solid ${C.border}`,verticalAlign:"top"};
-  const verCol=k=>k==="vulnerable"?C.red:k==="patched"?C.green:k==="check"?C.amber:C.muted;
+  const verCol=k=>k==="vulnerable"?C.red:k==="patched"?C.green:k==="check"?C.amber:k==="outside"?C.accent:C.muted;
   return(
     <div style={{padding:20,overflow:"auto",height:"100%"}} className="fadein">
       <DemoBanner liveVulns={liveVulns}/>
@@ -2212,7 +2214,7 @@ function InventoryPage({profile,liveVulns}){
               </tr>))}</tbody>
           </table></div>}
           {res.rows.length>shown.length&&<button onClick={()=>setShowAll(true)} style={{marginTop:10,fontSize:11,padding:"5px 12px",borderRadius:5,border:`1px solid ${C.border}`,background:"transparent",color:C.muted,cursor:"pointer"}}>Show all {res.rows.length}</button>}
-          <div style={{fontSize:10,color:C.dim,marginTop:10}}>"Matched" means vendor and product names agree. "Possible" means a partial or vendor-only match, so confirm it. CISA's catalog does not list affected versions, so version checks use fixed versions where we have them (about 1 in 3 entries) and otherwise ask you to check the vendor advisory.</div>
+          <div style={{fontSize:10,color:C.dim,marginTop:10}}>"Matched" means vendor and product names agree. "Possible" means a partial or vendor-only match, so confirm it. CISA's catalog does not list affected versions, so version checks use fixed versions where we have them and, where the CVE record lists clear numeric ranges, those ranges (vendor-published). Otherwise they ask you to check the vendor advisory.</div>
         </Panel>
         {res.unmatched.length>0&&<Panel title={"Not found in CISA's known-exploited list ("+res.unmatched.length+")"}>
           <div style={{fontSize:11,color:C.muted,marginBottom:6}}>{res.unmatched.slice(0,40).map(i=>[i.vendor,i.product,i.version].filter(Boolean).join(" ")).join(" · ")}{res.unmatched.length>40?" …":""}</div>
@@ -2758,7 +2760,28 @@ function invVersionStatus(have,fx){
   }
   return {k:"check",text:"Fixed in "+fx.slice(0,4).join(", ")+". Compare with "+have+"."};
 }
-function matchInventory(items,vulns){
+/* Affected-version ranges from CVE records (kev_versions.json, built daily). Positive matches only call a version affected;
+   "outside" is said only for a complete block (no part of the record was unreadable) that has numeric ranges. Never "safe". */
+const INV_VER_STRICT=/^\d+(?:\.\d+)*(?:[-.]?h\d+)?$/i;
+function invRangeStatus(have,blocks,ptoks){
+  if(!blocks||!blocks.length||!have||!INV_VER_STRICT.test(have)) return null;
+  const h=invParseVer(have), pset=new Set(ptoks||[]);
+  if(!pset.size) return null;
+  const sel=blocks.filter(b=>invMeaningful(invTokens(b.p)).some(w=>pset.has(w)));
+  if(!sel.length) return null;
+  const inR=(r)=>{ const a=invParseVer(r[0]), z=invParseVer(r[1]); const lo=invCmp(h,a)>=0, c=invCmp(h,z); return lo&&(r[2]?c<=0:c<0); };
+  for(const b of sel){
+    for(const r of b.r) if(inR(r)) return {k:"vulnerable",text:"Affected: "+have+" is inside a range the CVE record lists as affected ("+(r[0]==="0"?"before ":r[0]+" up to ")+(r[2]?"and including ":"but not including ")+r[1]+"). Vendor-published (CVE record). Confirm with the vendor advisory."};
+    for(const x of b.x) if(invCmp(h,invParseVer(x))===0) return {k:"vulnerable",text:"Affected: the CVE record lists version "+x+" as affected. Vendor-published (CVE record). Confirm with the vendor advisory."};
+  }
+  const complete=sel.every(b=>!b.f&&b.r.length);
+  if(complete){
+    const shown=[]; sel.forEach(b=>b.r.forEach(r=>{ if(shown.length<3) shown.push(r[0]+"-"+r[1]); }));
+    return {k:"outside",text:"Not inside the affected ranges listed in the CVE record ("+shown.join(", ")+"). That is not a guarantee of safety: confirm with the vendor advisory."};
+  }
+  return null;
+}
+function matchInventory(items,vulns,ranges){
   const idx=invKevIndex(vulns), found=new Map(), unmatched=[];
   items.forEach(it=>{
     const vn=invNorm(it.vendor), ptoks=invMeaningful(invTokens(it.product)), pset=new Set(ptoks);
@@ -2789,8 +2812,14 @@ function matchInventory(items,vulns){
   const matches=[];
   found.forEach(m=>{
     const withVer=m.items.filter(i=>i.version);
-    const stat=withVer.length?withVer.map(i=>invVersionStatus(i.version,m.v.fixedVersions)):[invVersionStatus("",m.v.fixedVersions)];
-    const ver=stat.find(s=>s.k==="vulnerable")||stat.find(s=>s.k==="check")||stat.find(s=>s.k==="unknown")||stat[0];
+    const rb=ranges&&ranges[m.v.id];
+    const stat=withVer.length?withVer.map(i=>{
+      const base=invVersionStatus(i.version,m.v.fixedVersions), rs=rb?invRangeStatus(i.version,rb,invMeaningful(invTokens(i.product))):null;
+      if(!rs) return base;
+      if(rs.k==="vulnerable") return base.k==="vulnerable"?base:rs;   /* fixed-version text is more actionable when both agree */
+      return (base.k==="patched"||base.k==="vulnerable")?base:rs;       /* "outside" never overrides a named fix comparison */
+    }):[invVersionStatus("",m.v.fixedVersions)];
+    const ver=stat.find(s=>s.k==="vulnerable")||stat.find(s=>s.k==="check")||stat.find(s=>s.k==="outside")||stat.find(s=>s.k==="unknown")||stat[0];
     m.ver=ver; m.critical=m.items.some(i=>i.critical); matches.push(m);
   });
   return {matches,unmatched,analysed:items.length,kevVendors:idx.vendors};
