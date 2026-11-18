@@ -1,0 +1,10 @@
+{
+  "name": "risksync-enricher",
+  "main": "enricher.js",
+  "compatibility_date": "2026-09-01",
+  "kv_namespaces": [
+    { "binding": "RISKSYNC_KV", "id": "c017b4f2cfbc4b8382d510b40ff4ec98" }
+  ],
+  "triggers": { "crons": ["0 */6 * * *"] },
+  "keep_vars": true
+}
