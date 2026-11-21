@@ -6,6 +6,34 @@
  "description": "Latest additions to CISA's Known Exploited Vulnerabilities catalog, with SSVC urgency.",
  "items": [
   {
+   "id": "https://syncrisk.co.uk/cve/CVE-2025-42884",
+   "url": "https://syncrisk.co.uk/cve/CVE-2025-42884",
+   "title": "CVE-2025-42884: SAP NetWeaver exploited in the wild",
+   "content_text": "Urgency Attend (CISA SSVC, typical organisation). CISA due 2026-11-23.",
+   "date_published": "2026-11-20T00:00:00Z"
+  },
+  {
+   "id": "https://syncrisk.co.uk/cve/CVE-2026-123890",
+   "url": "https://syncrisk.co.uk/cve/CVE-2026-123890",
+   "title": "CVE-2026-123890: Broadcom VMware vCenter exploited in the wild",
+   "content_text": "Urgency Act (CISA SSVC, typical organisation). CISA due 2026-11-23.",
+   "date_published": "2026-11-20T00:00:00Z"
+  },
+  {
+   "id": "https://syncrisk.co.uk/cve/CVE-2026-129448",
+   "url": "https://syncrisk.co.uk/cve/CVE-2026-129448",
+   "title": "CVE-2026-129448: Apache Roller exploited in the wild",
+   "content_text": "Urgency Act (CISA SSVC, typical organisation). CISA due 2026-11-23.",
+   "date_published": "2026-11-20T00:00:00Z"
+  },
+  {
+   "id": "https://syncrisk.co.uk/cve/CVE-2026-76466",
+   "url": "https://syncrisk.co.uk/cve/CVE-2026-76466",
+   "title": "CVE-2026-76466: Cisco Expressway Series exploited in the wild",
+   "content_text": "Urgency Act (CISA SSVC, typical organisation). CISA due 2026-11-23.",
+   "date_published": "2026-11-20T00:00:00Z"
+  },
+  {
    "id": "https://syncrisk.co.uk/cve/CVE-2024-10441",
    "url": "https://syncrisk.co.uk/cve/CVE-2024-10441",
    "title": "CVE-2024-10441: Synology DiskStation Manager (DSM) exploited in the wild",
@@ -326,34 +354,6 @@
    "title": "CVE-2026-104935: Ivanti Connect Secure exploited in the wild",
    "content_text": "Urgency Act (CISA SSVC, typical organisation). CISA due 2026-10-16.",
    "date_published": "2026-10-13T00:00:00Z"
-  },
-  {
-   "id": "https://syncrisk.co.uk/cve/CVE-2026-96951",
-   "url": "https://syncrisk.co.uk/cve/CVE-2026-96951",
-   "title": "CVE-2026-96951: Microsoft Windows exploited in the wild",
-   "content_text": "Urgency Attend (CISA SSVC, typical organisation). CISA due 2026-10-16.",
-   "date_published": "2026-10-13T00:00:00Z"
-  },
-  {
-   "id": "https://syncrisk.co.uk/cve/CVE-2015-3306",
-   "url": "https://syncrisk.co.uk/cve/CVE-2015-3306",
-   "title": "CVE-2015-3306: ProFTPD exploited in the wild",
-   "content_text": "Urgency Act (CISA SSVC, typical organisation). CISA due 2026-10-11.",
-   "date_published": "2026-10-08T00:00:00Z"
-  },
-  {
-   "id": "https://syncrisk.co.uk/cve/CVE-2015-5477",
-   "url": "https://syncrisk.co.uk/cve/CVE-2015-5477",
-   "title": "CVE-2015-5477: ISC BIND exploited in the wild",
-   "content_text": "Urgency Act (CISA SSVC, typical organisation). CISA due 2026-10-11.",
-   "date_published": "2026-10-08T00:00:00Z"
-  },
-  {
-   "id": "https://syncrisk.co.uk/cve/CVE-2016-3081",
-   "url": "https://syncrisk.co.uk/cve/CVE-2016-3081",
-   "title": "CVE-2016-3081: Apache Struts exploited in the wild",
-   "content_text": "Urgency Attend (CISA SSVC, typical organisation). CISA due 2026-10-11.",
-   "date_published": "2026-10-08T00:00:00Z"
   }
  ]
 }
