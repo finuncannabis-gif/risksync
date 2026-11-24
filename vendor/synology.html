@@ -11,12 +11,12 @@ th{color:#5a6f96;font-size:11px;text-transform:uppercase}.m{color:#8a9bbd;font-s
 ul{padding-left:18px}li{margin:4px 0}footer{font-size:12px;color:#5a6f96;margin-top:30px}details{margin:6px 0}summary{cursor:pointer;font-weight:600}</style></head><body><nav><a class="logo" href="/daily">SyncRisk</a><a class="l" href="/cve/">All exploited CVEs</a><a class="l" href="/daily">Daily brief</a><a class="l" href="/methodology">Methodology</a></nav><main>
 <div class="crumb"><a href="/cve/">Exploited CVEs</a> / Synology</div>
 <h1>Synology: vulnerabilities exploited in the wild</h1>
-<p class="m">1 Synology CVEs are in CISA's Known Exploited Vulnerabilities catalog, as of 2026-11-19. Urgency is CISA's SSVC decision for a typical organisation (Medium mission and well-being impact); your own tier depends on your environment.</p>
+<p class="m">1 Synology CVEs are in CISA's Known Exploited Vulnerabilities catalog, as of 2026-11-24. Urgency is CISA's SSVC decision for a typical organisation (Medium mission and well-being impact); your own tier depends on your environment.</p>
 <div class="grid">
 <div class="card"><div class="k">Act</div><div class="v">1</div></div>
 <div class="card"><div class="k">Attend</div><div class="v">0</div></div>
 <div class="card"><div class="k">Track</div><div class="v">0</div></div>
-<div class="card"><div class="k">Ransomware use (CISA)</div><div class="v">0</div></div>
+<div class="card"><div class="k">Ransomware use (CISA)</div><div class="v">1</div></div>
 
 </div>
 <div class="card cta"><div class="v">Get early access</div><p class="m" style="margin:4px 0 10px">Check your own software list against every CISA-confirmed exploited vulnerability, scored with CISA's SSVC decision tree. Leave your email and we'll tell you when it opens.</p>
@@ -25,6 +25,6 @@ ul{padding-left:18px}li{margin:4px 0}footer{font-size:12px;color:#5a6f96;margin-
 fetch('/subscribe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:v,industry:'all',source:'cve-page:vendor:synology'})}).then(function(r){return r.json()}).then(function(d){m.textContent=d.ok?'Thanks, check your inbox.':'Could not subscribe. Try again later.'}).catch(function(){m.textContent='Could not subscribe. Try again later.'});return false}</script>
 <h2>All 1 CVEs</h2>
 <div style="overflow-x:auto"><table><tr><th>CVE</th><th>Product</th><th>Urgency</th><th>Added</th><th>CISA due</th><th>Ransomware</th></tr>
-<tr><td><a href="/cve/CVE-2024-10441" class="mono">CVE-2024-10441</a></td><td class="m">Synology DiskStation Manager (DSM)</td><td><span class="pill" style="background:#f04060">Act</span></td><td class="m" style="white-space:nowrap">2026-11-18</td><td class="m" style="white-space:nowrap">2026-11-21</td><td class="m">Not recorded</td></tr></table></div>
+<tr><td><a href="/cve/CVE-2024-10441" class="mono">CVE-2024-10441</a></td><td class="m">Synology DiskStation Manager (DSM)</td><td><span class="pill" style="background:#f04060">Act</span></td><td class="m" style="white-space:nowrap">2026-11-18</td><td class="m" style="white-space:nowrap">2026-11-21</td><td class="m">Known</td></tr></table></div>
 <p class="m" style="margin-top:10px">Order: urgency tier, ransomware use, newest. Each CVE page shows fix sources labelled by trust level.</p>
-<footer>Last updated 2026-11-19. Source: CISA KEV, CVE records, FIRST EPSS. Not a breach-detection tool. <a href="/methodology">How we score</a>.</footer></main></body></html>
+<footer>Last updated 2026-11-24. Source: CISA KEV, CVE records, FIRST EPSS. Not a breach-detection tool. <a href="/methodology">How we score</a>.</footer></main></body></html>

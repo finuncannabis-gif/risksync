@@ -6,6 +6,20 @@
  "description": "Latest additions to CISA's Known Exploited Vulnerabilities catalog, with SSVC urgency.",
  "items": [
   {
+   "id": "https://syncrisk.co.uk/cve/CVE-2026-133968",
+   "url": "https://syncrisk.co.uk/cve/CVE-2026-133968",
+   "title": "CVE-2026-133968: Project MONAI MONAI Label exploited in the wild",
+   "content_text": "Urgency Act (CISA SSVC, typical organisation). CISA due 2026-11-26.",
+   "date_published": "2026-11-23T00:00:00Z"
+  },
+  {
+   "id": "https://syncrisk.co.uk/cve/CVE-2026-134624",
+   "url": "https://syncrisk.co.uk/cve/CVE-2026-134624",
+   "title": "CVE-2026-134624: N-able MailAssure exploited in the wild",
+   "content_text": "Urgency Attend (CISA SSVC, typical organisation). CISA due 2026-11-26.",
+   "date_published": "2026-11-23T00:00:00Z"
+  },
+  {
    "id": "https://syncrisk.co.uk/cve/CVE-2025-42884",
    "url": "https://syncrisk.co.uk/cve/CVE-2025-42884",
    "title": "CVE-2025-42884: SAP NetWeaver exploited in the wild",
@@ -37,7 +51,7 @@
    "id": "https://syncrisk.co.uk/cve/CVE-2024-10441",
    "url": "https://syncrisk.co.uk/cve/CVE-2024-10441",
    "title": "CVE-2024-10441: Synology DiskStation Manager (DSM) exploited in the wild",
-   "content_text": "Urgency Act (CISA SSVC, typical organisation). CISA due 2026-11-21.",
+   "content_text": "Urgency Act (CISA SSVC, typical organisation). CISA due 2026-11-21. Ransomware use known (CISA).",
    "date_published": "2026-11-18T00:00:00Z"
   },
   {
@@ -340,20 +354,6 @@
    "title": "CVE-2026-105134: AhsayCBS exploited in the wild",
    "content_text": "Urgency Act (CISA SSVC, typical organisation). CISA due 2026-10-17.",
    "date_published": "2026-10-14T00:00:00Z"
-  },
-  {
-   "id": "https://syncrisk.co.uk/cve/CVE-2026-76519",
-   "url": "https://syncrisk.co.uk/cve/CVE-2026-76519",
-   "title": "CVE-2026-76519: Cisco Secure Email Gateway exploited in the wild",
-   "content_text": "Urgency Act (CISA SSVC, typical organisation). CISA due 2026-10-17.",
-   "date_published": "2026-10-14T00:00:00Z"
-  },
-  {
-   "id": "https://syncrisk.co.uk/cve/CVE-2026-104935",
-   "url": "https://syncrisk.co.uk/cve/CVE-2026-104935",
-   "title": "CVE-2026-104935: Ivanti Connect Secure exploited in the wild",
-   "content_text": "Urgency Act (CISA SSVC, typical organisation). CISA due 2026-10-16.",
-   "date_published": "2026-10-13T00:00:00Z"
   }
  ]
 }
