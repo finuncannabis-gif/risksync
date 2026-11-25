@@ -6,6 +6,27 @@
  "description": "Latest additions to CISA's Known Exploited Vulnerabilities catalog, with SSVC urgency.",
  "items": [
   {
+   "id": "https://syncrisk.co.uk/cve/CVE-2026-131914",
+   "url": "https://syncrisk.co.uk/cve/CVE-2026-131914",
+   "title": "CVE-2026-131914: Idunno AntiCsrf exploited in the wild",
+   "content_text": "Urgency Act (CISA SSVC, typical organisation). CISA due 2026-11-27.",
+   "date_published": "2026-11-24T00:00:00Z"
+  },
+  {
+   "id": "https://syncrisk.co.uk/cve/CVE-2026-132165",
+   "url": "https://syncrisk.co.uk/cve/CVE-2026-132165",
+   "title": "CVE-2026-132165: Drupal Core exploited in the wild",
+   "content_text": "Urgency Track (CISA SSVC, typical organisation). CISA due 2026-11-27.",
+   "date_published": "2026-11-24T00:00:00Z"
+  },
+  {
+   "id": "https://syncrisk.co.uk/cve/CVE-2026-132224",
+   "url": "https://syncrisk.co.uk/cve/CVE-2026-132224",
+   "title": "CVE-2026-132224: Optimizely Web Experimentation exploited in the wild",
+   "content_text": "Urgency Attend (CISA SSVC, typical organisation). CISA due 2026-11-27.",
+   "date_published": "2026-11-24T00:00:00Z"
+  },
+  {
    "id": "https://syncrisk.co.uk/cve/CVE-2026-133968",
    "url": "https://syncrisk.co.uk/cve/CVE-2026-133968",
    "title": "CVE-2026-133968: Project MONAI MONAI Label exploited in the wild",
@@ -333,27 +354,6 @@
    "title": "CVE-2026-21589: Atlassian Multiple Products exploited in the wild",
    "content_text": "Urgency Attend (CISA SSVC, typical organisation). CISA due 2026-10-18.",
    "date_published": "2026-10-15T00:00:00Z"
-  },
-  {
-   "id": "https://syncrisk.co.uk/cve/CVE-2026-0322",
-   "url": "https://syncrisk.co.uk/cve/CVE-2026-0322",
-   "title": "CVE-2026-0322: Palo Alto Networks PAN-OS exploited in the wild",
-   "content_text": "Urgency Attend (CISA SSVC, typical organisation). CISA due 2026-10-17.",
-   "date_published": "2026-10-14T00:00:00Z"
-  },
-  {
-   "id": "https://syncrisk.co.uk/cve/CVE-2026-105133",
-   "url": "https://syncrisk.co.uk/cve/CVE-2026-105133",
-   "title": "CVE-2026-105133: AhsayCBS exploited in the wild",
-   "content_text": "Urgency Attend (CISA SSVC, typical organisation). CISA due 2026-10-17.",
-   "date_published": "2026-10-14T00:00:00Z"
-  },
-  {
-   "id": "https://syncrisk.co.uk/cve/CVE-2026-105134",
-   "url": "https://syncrisk.co.uk/cve/CVE-2026-105134",
-   "title": "CVE-2026-105134: AhsayCBS exploited in the wild",
-   "content_text": "Urgency Act (CISA SSVC, typical organisation). CISA due 2026-10-17.",
-   "date_published": "2026-10-14T00:00:00Z"
   }
  ]
 }
