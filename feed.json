@@ -6,6 +6,76 @@
  "description": "Latest additions to CISA's Known Exploited Vulnerabilities catalog, with SSVC urgency.",
  "items": [
   {
+   "id": "https://syncrisk.co.uk/cve/CVE-2023-25914",
+   "url": "https://syncrisk.co.uk/cve/CVE-2023-25914",
+   "title": "CVE-2023-25914: Danfoss AK-SM 800A Series exploited in the wild",
+   "content_text": "Urgency Attend (CISA SSVC, typical organisation). CISA due 2026-11-28.",
+   "date_published": "2026-11-25T00:00:00Z"
+  },
+  {
+   "id": "https://syncrisk.co.uk/cve/CVE-2023-25915",
+   "url": "https://syncrisk.co.uk/cve/CVE-2023-25915",
+   "title": "CVE-2023-25915: Danfoss AK-SM 800A Series exploited in the wild",
+   "content_text": "Urgency Attend (CISA SSVC, typical organisation). CISA due 2026-11-28.",
+   "date_published": "2026-11-25T00:00:00Z"
+  },
+  {
+   "id": "https://syncrisk.co.uk/cve/CVE-2025-41450",
+   "url": "https://syncrisk.co.uk/cve/CVE-2025-41450",
+   "title": "CVE-2025-41450: Danfoss AK-SM 800A Series exploited in the wild",
+   "content_text": "Urgency Track (CISA SSVC, typical organisation). CISA due 2026-12-09.",
+   "date_published": "2026-11-25T00:00:00Z"
+  },
+  {
+   "id": "https://syncrisk.co.uk/cve/CVE-2026-103406",
+   "url": "https://syncrisk.co.uk/cve/CVE-2026-103406",
+   "title": "CVE-2026-103406: Hewlett Packard Enterprise (HPE) Juniper Session Smart Conductor and Session Smart Router exploited in the wild",
+   "content_text": "Urgency Attend (CISA SSVC, typical organisation). CISA due 2026-11-28.",
+   "date_published": "2026-11-25T00:00:00Z"
+  },
+  {
+   "id": "https://syncrisk.co.uk/cve/CVE-2026-133275",
+   "url": "https://syncrisk.co.uk/cve/CVE-2026-133275",
+   "title": "CVE-2026-133275: Mitel MiCollab exploited in the wild",
+   "content_text": "Urgency Attend (CISA SSVC, typical organisation). CISA due 2026-11-28.",
+   "date_published": "2026-11-25T00:00:00Z"
+  },
+  {
+   "id": "https://syncrisk.co.uk/cve/CVE-2026-133303",
+   "url": "https://syncrisk.co.uk/cve/CVE-2026-133303",
+   "title": "CVE-2026-133303: Mitel MiCollab exploited in the wild",
+   "content_text": "Urgency Attend (CISA SSVC, typical organisation). CISA due 2026-11-28.",
+   "date_published": "2026-11-25T00:00:00Z"
+  },
+  {
+   "id": "https://syncrisk.co.uk/cve/CVE-2026-133311",
+   "url": "https://syncrisk.co.uk/cve/CVE-2026-133311",
+   "title": "CVE-2026-133311: Mitel MiCollab exploited in the wild",
+   "content_text": "Urgency Track (CISA SSVC, typical organisation). CISA due 2026-12-09.",
+   "date_published": "2026-11-25T00:00:00Z"
+  },
+  {
+   "id": "https://syncrisk.co.uk/cve/CVE-2026-133323",
+   "url": "https://syncrisk.co.uk/cve/CVE-2026-133323",
+   "title": "CVE-2026-133323: Mitel MiCollab exploited in the wild",
+   "content_text": "Urgency Act (CISA SSVC, typical organisation). CISA due 2026-11-28.",
+   "date_published": "2026-11-25T00:00:00Z"
+  },
+  {
+   "id": "https://syncrisk.co.uk/cve/CVE-2026-133324",
+   "url": "https://syncrisk.co.uk/cve/CVE-2026-133324",
+   "title": "CVE-2026-133324: Mitel MiCollab exploited in the wild",
+   "content_text": "Urgency Attend (CISA SSVC, typical organisation). CISA due 2026-11-28.",
+   "date_published": "2026-11-25T00:00:00Z"
+  },
+  {
+   "id": "https://syncrisk.co.uk/cve/CVE-2026-133469",
+   "url": "https://syncrisk.co.uk/cve/CVE-2026-133469",
+   "title": "CVE-2026-133469: Vates Xen Orchestra exploited in the wild",
+   "content_text": "Urgency Act (CISA SSVC, typical organisation). CISA due 2026-11-28.",
+   "date_published": "2026-11-25T00:00:00Z"
+  },
+  {
    "id": "https://syncrisk.co.uk/cve/CVE-2026-131914",
    "url": "https://syncrisk.co.uk/cve/CVE-2026-131914",
    "title": "CVE-2026-131914: Idunno AntiCsrf exploited in the wild",
@@ -284,76 +354,6 @@
    "title": "CVE-2026-110447: Collabora Online – Built-in CODE Server exploited in the wild",
    "content_text": "Urgency Act (CISA SSVC, typical organisation). CISA due 2026-10-26.",
    "date_published": "2026-10-23T00:00:00Z"
-  },
-  {
-   "id": "https://syncrisk.co.uk/cve/CVE-2026-114625",
-   "url": "https://syncrisk.co.uk/cve/CVE-2026-114625",
-   "title": "CVE-2026-114625: Arista VeloCloud Orchestrator exploited in the wild",
-   "content_text": "Urgency Attend (CISA SSVC, typical organisation). CISA due 2026-10-26.",
-   "date_published": "2026-10-23T00:00:00Z"
-  },
-  {
-   "id": "https://syncrisk.co.uk/cve/CVE-2026-106931",
-   "url": "https://syncrisk.co.uk/cve/CVE-2026-106931",
-   "title": "CVE-2026-106931: EG Secure Solutions SiteGuard Server Edition exploited in the wild",
-   "content_text": "Urgency Attend (CISA SSVC, typical organisation). CISA due 2026-10-23.",
-   "date_published": "2026-10-20T00:00:00Z"
-  },
-  {
-   "id": "https://syncrisk.co.uk/cve/CVE-2026-110936",
-   "url": "https://syncrisk.co.uk/cve/CVE-2026-110936",
-   "title": "CVE-2026-110936: Siemens Software Center exploited in the wild",
-   "content_text": "Urgency Attend (CISA SSVC, typical organisation). CISA due 2026-11-03.",
-   "date_published": "2026-10-20T00:00:00Z"
-  },
-  {
-   "id": "https://syncrisk.co.uk/cve/CVE-2026-96652",
-   "url": "https://syncrisk.co.uk/cve/CVE-2026-96652",
-   "title": "CVE-2026-96652: Plex Media Server exploited in the wild",
-   "content_text": "Urgency Track (CISA SSVC, typical organisation). CISA due 2026-11-03.",
-   "date_published": "2026-10-20T00:00:00Z"
-  },
-  {
-   "id": "https://syncrisk.co.uk/cve/CVE-2026-96654",
-   "url": "https://syncrisk.co.uk/cve/CVE-2026-96654",
-   "title": "CVE-2026-96654: Plex Media Server exploited in the wild",
-   "content_text": "Urgency Attend (CISA SSVC, typical organisation). CISA due 2026-10-23.",
-   "date_published": "2026-10-20T00:00:00Z"
-  },
-  {
-   "id": "https://syncrisk.co.uk/cve/CVE-2026-96655",
-   "url": "https://syncrisk.co.uk/cve/CVE-2026-96655",
-   "title": "CVE-2026-96655: Plex Media Server exploited in the wild",
-   "content_text": "Urgency Track (CISA SSVC, typical organisation). CISA due 2026-11-03.",
-   "date_published": "2026-10-20T00:00:00Z"
-  },
-  {
-   "id": "https://syncrisk.co.uk/cve/CVE-2026-96656",
-   "url": "https://syncrisk.co.uk/cve/CVE-2026-96656",
-   "title": "CVE-2026-96656: Plex Media Server exploited in the wild",
-   "content_text": "Urgency Attend (CISA SSVC, typical organisation). CISA due 2026-10-23.",
-   "date_published": "2026-10-20T00:00:00Z"
-  },
-  {
-   "id": "https://syncrisk.co.uk/cve/CVE-2025-61624",
-   "url": "https://syncrisk.co.uk/cve/CVE-2025-61624",
-   "title": "CVE-2025-61624: Fortinet Multiple Products exploited in the wild",
-   "content_text": "Urgency Attend (CISA SSVC, typical organisation). CISA due 2026-10-19.",
-   "date_published": "2026-10-16T00:00:00Z"
-  },
-  {
-   "id": "https://syncrisk.co.uk/cve/CVE-2026-102764",
-   "url": "https://syncrisk.co.uk/cve/CVE-2026-102764",
-   "title": "CVE-2026-102764: BeyondTrust Remote Support exploited in the wild",
-   "content_text": "Urgency Act (CISA SSVC, typical organisation). CISA due 2026-10-19.",
-   "date_published": "2026-10-16T00:00:00Z"
-  },
-  {
-   "id": "https://syncrisk.co.uk/cve/CVE-2026-21589",
-   "url": "https://syncrisk.co.uk/cve/CVE-2026-21589",
-   "title": "CVE-2026-21589: Atlassian Multiple Products exploited in the wild",
-   "content_text": "Urgency Attend (CISA SSVC, typical organisation). CISA due 2026-10-18.",
-   "date_published": "2026-10-15T00:00:00Z"
   }
  ]
 }
