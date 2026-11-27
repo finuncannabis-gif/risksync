@@ -1031,6 +1031,7 @@
 <url><loc>https://syncrisk.co.uk/cve/CVE-2019-1003029</loc><lastmod>2022-04-25</lastmod></url>
 <url><loc>https://syncrisk.co.uk/cve/CVE-2019-1458</loc><lastmod>2022-01-10</lastmod></url>
 <url><loc>https://syncrisk.co.uk/cve/CVE-2005-2773</loc><lastmod>2022-03-25</lastmod></url>
+<url><loc>https://syncrisk.co.uk/cve/CVE-2026-97229</loc><lastmod>2026-10-29</lastmod></url>
 <url><loc>https://syncrisk.co.uk/cve/CVE-2017-8543</loc><lastmod>2022-05-24</lastmod></url>
 <url><loc>https://syncrisk.co.uk/cve/CVE-2024-21182</loc><lastmod>2026-06-01</lastmod></url>
 <url><loc>https://syncrisk.co.uk/cve/CVE-2013-2551</loc><lastmod>2022-03-28</lastmod></url>
@@ -1221,10 +1222,8 @@
 <url><loc>https://syncrisk.co.uk/cve/CVE-2015-2502</loc><lastmod>2022-04-13</lastmod></url>
 <url><loc>https://syncrisk.co.uk/cve/CVE-2024-38094</loc><lastmod>2024-10-22</lastmod></url>
 <url><loc>https://syncrisk.co.uk/cve/CVE-2013-5223</loc><lastmod>2022-03-25</lastmod></url>
-<url><loc>https://syncrisk.co.uk/cve/CVE-2026-102764</loc><lastmod>2026-10-16</lastmod></url>
 <url><loc>https://syncrisk.co.uk/cve/CVE-2023-49897</loc><lastmod>2023-12-21</lastmod></url>
 <url><loc>https://syncrisk.co.uk/cve/CVE-2013-7331</loc><lastmod>2022-05-25</lastmod></url>
-<url><loc>https://syncrisk.co.uk/cve/CVE-2026-102489</loc><lastmod>2026-10-02</lastmod></url>
 <url><loc>https://syncrisk.co.uk/cve/CVE-2019-13720</loc><lastmod>2022-05-23</lastmod></url>
 <url><loc>https://syncrisk.co.uk/cve/CVE-2021-22017</loc><lastmod>2022-01-10</lastmod></url>
 <url><loc>https://syncrisk.co.uk/cve/CVE-2021-3493</loc><lastmod>2022-10-20</lastmod></url>
@@ -1568,6 +1567,7 @@
 <url><loc>https://syncrisk.co.uk/cve/CVE-2021-30883</loc><lastmod>2022-05-23</lastmod></url>
 <url><loc>https://syncrisk.co.uk/cve/CVE-2018-14634</loc><lastmod>2026-01-26</lastmod></url>
 <url><loc>https://syncrisk.co.uk/cve/CVE-2026-18577</loc><lastmod>2026-08-03</lastmod></url>
+<url><loc>https://syncrisk.co.uk/cve/CVE-2026-102489</loc><lastmod>2026-10-02</lastmod></url>
 <url><loc>https://syncrisk.co.uk/cve/CVE-2026-82329</loc><lastmod>2026-09-02</lastmod></url>
 <url><loc>https://syncrisk.co.uk/cve/CVE-2019-7193</loc><lastmod>2022-06-08</lastmod></url>
 <url><loc>https://syncrisk.co.uk/cve/CVE-2023-28204</loc><lastmod>2023-05-22</lastmod></url>
@@ -1605,7 +1605,6 @@
 <url><loc>https://syncrisk.co.uk/cve/CVE-2023-21715</loc><lastmod>2023-02-14</lastmod></url>
 <url><loc>https://syncrisk.co.uk/cve/CVE-2022-20775</loc><lastmod>2026-02-25</lastmod></url>
 <url><loc>https://syncrisk.co.uk/cve/CVE-2020-8599</loc><lastmod>2021-11-03</lastmod></url>
-<url><loc>https://syncrisk.co.uk/cve/CVE-2026-97229</loc><lastmod>2026-10-29</lastmod></url>
 <url><loc>https://syncrisk.co.uk/cve/CVE-2026-15410</loc><lastmod>2026-07-14</lastmod></url>
 <url><loc>https://syncrisk.co.uk/cve/CVE-2021-37973</loc><lastmod>2021-11-03</lastmod></url>
 <url><loc>https://syncrisk.co.uk/cve/CVE-2020-3118</loc><lastmod>2021-11-03</lastmod></url>
@@ -1624,7 +1623,6 @@
 <url><loc>https://syncrisk.co.uk/cve/CVE-2024-4761</loc><lastmod>2024-05-16</lastmod></url>
 <url><loc>https://syncrisk.co.uk/cve/CVE-2021-30762</loc><lastmod>2021-11-03</lastmod></url>
 <url><loc>https://syncrisk.co.uk/cve/CVE-2023-36033</loc><lastmod>2023-11-14</lastmod></url>
-<url><loc>https://syncrisk.co.uk/cve/CVE-2026-102490</loc><lastmod>2026-10-02</lastmod></url>
 <url><loc>https://syncrisk.co.uk/cve/CVE-2026-64849</loc><lastmod>2026-08-19</lastmod></url>
 <url><loc>https://syncrisk.co.uk/cve/CVE-2025-6558</loc><lastmod>2025-07-22</lastmod></url>
 <url><loc>https://syncrisk.co.uk/cve/CVE-2020-8467</loc><lastmod>2021-11-03</lastmod></url>
@@ -1750,6 +1748,7 @@
 <url><loc>https://syncrisk.co.uk/cve/CVE-2021-33739</loc><lastmod>2021-11-03</lastmod></url>
 <url><loc>https://syncrisk.co.uk/cve/CVE-2021-22600</loc><lastmod>2022-04-11</lastmod></url>
 <url><loc>https://syncrisk.co.uk/cve/CVE-2025-47827</loc><lastmod>2025-10-14</lastmod></url>
+<url><loc>https://syncrisk.co.uk/cve/CVE-2026-102490</loc><lastmod>2026-10-02</lastmod></url>
 <url><loc>https://syncrisk.co.uk/cve/CVE-2026-86060</loc><lastmod>2026-09-10</lastmod></url>
 <url><loc>https://syncrisk.co.uk/cve/CVE-2020-16010</loc><lastmod>2021-11-03</lastmod></url>
 <url><loc>https://syncrisk.co.uk/cve/CVE-2024-38106</loc><lastmod>2024-08-13</lastmod></url>
@@ -1803,7 +1802,6 @@
 <url><loc>https://syncrisk.co.uk/cve/CVE-2025-60710</loc><lastmod>2026-04-13</lastmod></url>
 <url><loc>https://syncrisk.co.uk/cve/CVE-2018-19320</loc><lastmod>2022-10-24</lastmod></url>
 <url><loc>https://syncrisk.co.uk/cve/CVE-2019-7287</loc><lastmod>2022-05-23</lastmod></url>
-<url><loc>https://syncrisk.co.uk/cve/CVE-2026-104286</loc><lastmod>2026-10-01</lastmod></url>
 <url><loc>https://syncrisk.co.uk/cve/CVE-2022-2856</loc><lastmod>2022-08-18</lastmod></url>
 <url><loc>https://syncrisk.co.uk/cve/CVE-2026-20045</loc><lastmod>2026-01-21</lastmod></url>
 <url><loc>https://syncrisk.co.uk/cve/CVE-2021-31979</loc><lastmod>2021-11-03</lastmod></url>
@@ -1882,6 +1880,7 @@
 <url><loc>https://syncrisk.co.uk/cve/CVE-2018-0175</loc><lastmod>2022-03-03</lastmod></url>
 <url><loc>https://syncrisk.co.uk/cve/CVE-2020-0041</loc><lastmod>2021-11-03</lastmod></url>
 <url><loc>https://syncrisk.co.uk/cve/CVE-2018-0167</loc><lastmod>2022-03-03</lastmod></url>
+<url><loc>https://syncrisk.co.uk/cve/CVE-2026-102764</loc><lastmod>2026-10-16</lastmod></url>
 <url><loc>https://syncrisk.co.uk/cve/CVE-2022-41049</loc><lastmod>2022-11-14</lastmod></url>
 <url><loc>https://syncrisk.co.uk/cve/CVE-2017-0001</loc><lastmod>2022-03-03</lastmod></url>
 <url><loc>https://syncrisk.co.uk/cve/CVE-2023-36584</loc><lastmod>2023-11-16</lastmod></url>
@@ -2005,6 +2004,7 @@
 <url><loc>https://syncrisk.co.uk/cve/CVE-2013-2597</loc><lastmod>2022-09-15</lastmod></url>
 <url><loc>https://syncrisk.co.uk/cve/CVE-2021-36742</loc><lastmod>2021-11-03</lastmod></url>
 <url><loc>https://syncrisk.co.uk/cve/CVE-2024-23225</loc><lastmod>2024-03-06</lastmod></url>
+<url><loc>https://syncrisk.co.uk/cve/CVE-2026-104286</loc><lastmod>2026-10-01</lastmod></url>
 <url><loc>https://syncrisk.co.uk/cve/CVE-2023-20963</loc><lastmod>2023-04-13</lastmod></url>
 <url><loc>https://syncrisk.co.uk/cve/CVE-2026-72529</loc><lastmod>2026-08-20</lastmod></url>
 <url><loc>https://syncrisk.co.uk/cve/CVE-2026-8398</loc><lastmod>2026-05-27</lastmod></url>
@@ -2014,7 +2014,6 @@
 <url><loc>https://syncrisk.co.uk/cve/CVE-2025-32701</loc><lastmod>2025-05-13</lastmod></url>
 <url><loc>https://syncrisk.co.uk/cve/CVE-2025-21335</loc><lastmod>2025-01-14</lastmod></url>
 <url><loc>https://syncrisk.co.uk/cve/CVE-2024-23296</loc><lastmod>2024-03-06</lastmod></url>
-<url><loc>https://syncrisk.co.uk/cve/CVE-2025-61624</loc><lastmod>2026-10-16</lastmod></url>
 <url><loc>https://syncrisk.co.uk/cve/CVE-2023-41990</loc><lastmod>2024-01-08</lastmod></url>
 <url><loc>https://syncrisk.co.uk/cve/CVE-2026-93952</loc><lastmod>2026-09-22</lastmod></url>
 <url><loc>https://syncrisk.co.uk/cve/CVE-2020-0069</loc><lastmod>2021-11-03</lastmod></url>
@@ -2040,16 +2039,17 @@
 <url><loc>https://syncrisk.co.uk/cve/CVE-2023-36851</loc><lastmod>2023-11-13</lastmod></url>
 <url><loc>https://syncrisk.co.uk/cve/CVE-2021-1048</loc><lastmod>2022-05-23</lastmod></url>
 <url><loc>https://syncrisk.co.uk/cve/CVE-2025-27038</loc><lastmod>2025-06-03</lastmod></url>
-<url><loc>https://syncrisk.co.uk/cve/CVE-2026-114625</loc><lastmod>2026-10-23</lastmod></url>
 <url><loc>https://syncrisk.co.uk/cve/CVE-2023-33107</loc><lastmod>2023-12-05</lastmod></url>
 <url><loc>https://syncrisk.co.uk/cve/CVE-2025-22225</loc><lastmod>2025-03-04</lastmod></url>
 <url><loc>https://syncrisk.co.uk/cve/CVE-2026-123218</loc><lastmod>2026-11-09</lastmod></url>
 <url><loc>https://syncrisk.co.uk/cve/CVE-2026-20349</loc><lastmod>2026-08-11</lastmod></url>
 <url><loc>https://syncrisk.co.uk/cve/CVE-2025-43200</loc><lastmod>2025-06-16</lastmod></url>
+<url><loc>https://syncrisk.co.uk/cve/CVE-2026-76418</loc><lastmod>2026-10-29</lastmod></url>
 <url><loc>https://syncrisk.co.uk/cve/CVE-2026-96951</loc><lastmod>2026-10-13</lastmod></url>
 <url><loc>https://syncrisk.co.uk/cve/CVE-2023-42824</loc><lastmod>2023-10-05</lastmod></url>
 <url><loc>https://syncrisk.co.uk/cve/CVE-2023-4211</loc><lastmod>2023-10-03</lastmod></url>
 <url><loc>https://syncrisk.co.uk/cve/CVE-2026-110936</loc><lastmod>2026-10-20</lastmod></url>
+<url><loc>https://syncrisk.co.uk/cve/CVE-2026-114625</loc><lastmod>2026-10-23</lastmod></url>
 <url><loc>https://syncrisk.co.uk/cve/CVE-2026-53266</loc><lastmod>2026-09-18</lastmod></url>
 <url><loc>https://syncrisk.co.uk/cve/CVE-2021-44168</loc><lastmod>2021-12-10</lastmod></url>
 <url><loc>https://syncrisk.co.uk/cve/CVE-2021-25370</loc><lastmod>2022-11-08</lastmod></url>
@@ -2060,7 +2060,7 @@
 <url><loc>https://syncrisk.co.uk/cve/CVE-2020-9859</loc><lastmod>2021-11-03</lastmod></url>
 <url><loc>https://syncrisk.co.uk/cve/CVE-2026-59822</loc><lastmod>2026-09-02</lastmod></url>
 <url><loc>https://syncrisk.co.uk/cve/CVE-2026-118527</loc><lastmod>2026-10-30</lastmod></url>
-<url><loc>https://syncrisk.co.uk/cve/CVE-2026-76418</loc><lastmod>2026-10-29</lastmod></url>
+<url><loc>https://syncrisk.co.uk/cve/CVE-2025-61624</loc><lastmod>2026-10-16</lastmod></url>
 <url><loc>https://syncrisk.co.uk/cve/CVE-2024-50302</loc><lastmod>2025-03-04</lastmod></url>
 <url><loc>https://syncrisk.co.uk/cve/CVE-2021-25372</loc><lastmod>2023-06-29</lastmod></url>
 <url><loc>https://syncrisk.co.uk/cve/CVE-2021-25371</loc><lastmod>2023-06-29</lastmod></url>
